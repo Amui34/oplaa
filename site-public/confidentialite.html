@@ -1,0 +1,87 @@
+<title>Confidentialité Oplaa</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,700;12..96,800&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --terre:#C4562F; --craie:#FBF6F1; --ink:#2A1D16; --muted:#6E655C; --line:#E7DBCE;
+    --page:#F6ECE2; --card:#fff;
+    --disp:'Bricolage Grotesque',system-ui,sans-serif;
+    --ui:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;
+  }
+  @media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--page:#1B120C;--card:#241A13;--ink:#F6ECE2;--muted:#B8A797;--line:#3A2A20}}
+  :root[data-theme="dark"]{--page:#1B120C;--card:#241A13;--ink:#F6ECE2;--muted:#B8A797;--line:#3A2A20}
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--page);color:var(--ink);font-family:var(--ui);line-height:1.65}
+  .wrap{max-width:720px;margin:0 auto;padding:44px 22px 72px}
+  .brand{display:flex;align-items:center;gap:12px;margin-bottom:30px}
+  .brand svg{width:44px;height:44px;filter:drop-shadow(0 5px 14px rgba(196,86,47,.25))}
+  .brand .wm{font-family:var(--disp);font-weight:800;font-size:28px;letter-spacing:-.045em;color:var(--terre);line-height:1}
+  .brand .sub{font-size:12px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--muted)}
+  h1{font-family:var(--disp);font-weight:800;font-size:clamp(28px,5vw,38px);letter-spacing:-.02em;margin:6px 0 4px;text-wrap:balance}
+  .date{color:var(--muted);font-size:14px;margin-bottom:28px}
+  h2{font-family:var(--disp);font-weight:700;font-size:20px;letter-spacing:-.01em;margin:34px 0 8px}
+  p,li{font-size:16px;color:var(--ink)}
+  p{margin:10px 0}
+  ul{margin:10px 0;padding-left:22px}
+  li{margin:6px 0}
+  a{color:var(--terre);font-weight:600}
+  strong{font-weight:700}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:18px 20px;margin:22px 0}
+  .lead{font-size:17px;color:var(--muted)}
+  footer{margin-top:44px;padding-top:18px;border-top:1px solid var(--line);color:var(--muted);font-size:13px}
+</style>
+<div class="wrap">
+  <div class="brand">
+    <svg viewBox="0 0 128 128" role="img" aria-label="Oplaa"><rect width="128" height="128" rx="30" fill="#C4562F"/><circle cx="64" cy="64" r="33" fill="none" stroke="#FBF6F1" stroke-width="8"/><circle cx="64" cy="64" r="29" fill="#FBF6F1"/><path d="M64 64 L44.14 85.14 A29 29 0 0 1 64 35 Z" fill="#C4562F"/></svg>
+    <div><div class="wm">oplaa</div><div class="sub">Politique de confidentialité</div></div>
+  </div>
+
+  <h1>Politique de confidentialité</h1>
+  <p class="date">Dernière mise à jour : 9 septembre 2026</p>
+
+  <p class="lead">Oplaa est une application de planning d'équipe. Cette page explique quelles données l'application traite, pourquoi, et vos droits. Nous appliquons un principe simple : <strong>le minimum de données, et jamais de revente.</strong></p>
+
+  <h2>Qui est responsable</h2>
+  <p>L'application Oplaa est éditée par <strong>Noa Madar</strong>. Pour toute question, contactez : <a href="mailto:noamadar.noa@gmail.com">noamadar.noa@gmail.com</a>.</p>
+  <p>Lorsqu'un établissement utilise Oplaa pour gérer ses équipes, c'est <strong>l'établissement (l'employeur) qui reste responsable</strong> des données de ses salariés qu'il saisit ; Oplaa agit comme prestataire technique pour les héberger et les afficher.</p>
+
+  <h2>Les données que nous traitons</h2>
+  <ul>
+    <li><strong>Votre compte</strong> : votre adresse email et un mot de passe (chiffré), pour vous connecter.</li>
+    <li><strong>Les données saisies dans l'app</strong> par le responsable : nom de l'établissement, prénoms et noms des employés, poste, contrat, coordonnées, horaires, congés, notes, et éléments de conformité (ex. échéances de documents).</li>
+    <li>Nous <strong>ne collectons pas</strong> votre position, vos contacts, ni de données publicitaires. Il n'y a <strong>ni pisteur, ni publicité</strong>.</li>
+  </ul>
+
+  <h2>Pourquoi</h2>
+  <ul>
+    <li>Créer et partager les plannings, suivre les heures et gérer votre équipe.</li>
+    <li>Permettre à chaque employé de consulter <strong>uniquement</strong> son propre planning.</li>
+    <li>Assurer la connexion sécurisée à votre compte.</li>
+  </ul>
+
+  <h2>Où sont stockées les données</h2>
+  <p>Les données sont enregistrées <strong>sur votre appareil</strong> et, si vous utilisez les comptes, <strong>sur les serveurs de notre hébergeur Supabase</strong> (au sein de l'Union européenne). Les échanges se font en <strong>connexion chiffrée (HTTPS)</strong>. L'accès est protégé par des règles de sécurité par rôle : un employé ne peut jamais voir les salaires ni les informations personnelles de ses collègues.</p>
+
+  <h2>Combien de temps</h2>
+  <p>Les données sont conservées tant que votre compte ou celui de votre établissement est actif. Vous pouvez demander leur suppression à tout moment (voir ci-dessous).</p>
+
+  <h2>Vos droits</h2>
+  <p>Conformément au RGPD, vous pouvez demander l'accès, la rectification, la limitation, la portabilité ou la <strong>suppression</strong> de vos données. Écrivez à <a href="mailto:noamadar.noa@gmail.com">noamadar.noa@gmail.com</a> : nous répondons dans les meilleurs délais.</p>
+
+  <div class="card">
+    <strong>Suppression de compte.</strong> Pour supprimer votre compte et les données associées, envoyez un email à <a href="mailto:noamadar.noa@gmail.com">noamadar.noa@gmail.com</a> avec l'objet « Suppression de compte ». Nous procédons à la suppression et vous confirmons.
+  </div>
+
+  <h2>Partage</h2>
+  <p>Nous ne vendons ni ne louons vos données. Elles ne sont partagées qu'avec notre hébergeur technique (Supabase) strictement pour faire fonctionner l'application, et jamais à des fins publicitaires.</p>
+
+  <h2>Enfants</h2>
+  <p>Oplaa est destinée à un usage professionnel et n'est pas conçue pour les enfants de moins de 16 ans.</p>
+
+  <h2>Modifications</h2>
+  <p>Cette politique peut évoluer. La date de mise à jour en haut de page indique la dernière version.</p>
+
+  <footer>Oplaa — © 2026 Noa Madar. Ce document est fourni à titre informatif et ne constitue pas un conseil juridique.</footer>
+</div>

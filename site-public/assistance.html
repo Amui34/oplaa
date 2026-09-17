@@ -1,0 +1,71 @@
+<title>Assistance Oplaa</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,700;12..96,800&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --terre:#C4562F; --terre-d:#A8471F; --craie:#FBF6F1; --ink:#2A1D16; --muted:#6E655C; --line:#E7DBCE;
+    --page:#F6ECE2; --card:#fff;
+    --disp:'Bricolage Grotesque',system-ui,sans-serif;
+    --ui:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;
+  }
+  @media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--page:#1B120C;--card:#241A13;--ink:#F6ECE2;--muted:#B8A797;--line:#3A2A20}}
+  :root[data-theme="dark"]{--page:#1B120C;--card:#241A13;--ink:#F6ECE2;--muted:#B8A797;--line:#3A2A20}
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--page);color:var(--ink);font-family:var(--ui);line-height:1.6}
+  .wrap{max-width:680px;margin:0 auto;padding:44px 22px 72px}
+  .brand{display:flex;align-items:center;gap:12px;margin-bottom:28px}
+  .brand svg{width:44px;height:44px;filter:drop-shadow(0 5px 14px rgba(196,86,47,.25))}
+  .brand .wm{font-family:var(--disp);font-weight:800;font-size:28px;letter-spacing:-.045em;color:var(--terre);line-height:1}
+  .brand .sub{font-size:12px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--muted)}
+  h1{font-family:var(--disp);font-weight:800;font-size:clamp(28px,5vw,40px);letter-spacing:-.02em;margin:6px 0 6px;text-wrap:balance}
+  .lead{font-size:17px;color:var(--muted);margin:0 0 26px;max-width:56ch}
+  .contact{display:flex;flex-wrap:wrap;gap:12px;margin:24px 0 8px}
+  .btn{display:inline-flex;align-items:center;gap:8px;font-weight:700;font-size:16px;text-decoration:none;border-radius:12px;padding:13px 20px}
+  .btn.p{background:var(--terre);color:#fff}
+  .btn.s{background:var(--card);color:var(--ink);border:1px solid var(--line)}
+  h2{font-family:var(--disp);font-weight:700;font-size:19px;margin:34px 0 6px}
+  details{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:2px 16px;margin:10px 0}
+  summary{font-weight:700;font-size:16px;cursor:pointer;padding:14px 0;list-style:none}
+  summary::-webkit-details-marker{display:none}
+  summary::after{content:"+";float:right;color:var(--terre);font-weight:800}
+  details[open] summary::after{content:"–"}
+  details p{margin:0 0 14px;color:var(--ink);font-size:15px}
+  a{color:var(--terre);font-weight:600}
+  footer{margin-top:44px;padding-top:18px;border-top:1px solid var(--line);color:var(--muted);font-size:13px}
+</style>
+<div class="wrap">
+  <div class="brand">
+    <svg viewBox="0 0 128 128" role="img" aria-label="Oplaa"><rect width="128" height="128" rx="30" fill="#C4562F"/><circle cx="64" cy="64" r="33" fill="none" stroke="#FBF6F1" stroke-width="8"/><circle cx="64" cy="64" r="29" fill="#FBF6F1"/><path d="M64 64 L44.14 85.14 A29 29 0 0 1 64 35 Z" fill="#C4562F"/></svg>
+    <div><div class="wm">oplaa</div><div class="sub">Assistance</div></div>
+  </div>
+
+  <h1>Une question ? On est là.</h1>
+  <p class="lead">Oplaa vous aide à créer les plannings de votre équipe, les partager et suivre les heures. Voici comment nous joindre et les réponses aux questions fréquentes.</p>
+
+  <div class="contact">
+    <a class="btn p" href="mailto:noamadar.noa@gmail.com?subject=Assistance%20Oplaa">✉️ Nous écrire</a>
+    <a class="btn s" href="mailto:noamadar.noa@gmail.com?subject=Suggestion%20Oplaa">💡 Proposer une amélioration</a>
+  </div>
+  <p style="color:var(--muted);font-size:14px">Réponse par email : <a href="mailto:noamadar.noa@gmail.com">noamadar.noa@gmail.com</a> — sous 48 h ouvrées.</p>
+
+  <h2>Questions fréquentes</h2>
+
+  <details open><summary>Comment mes employés accèdent-ils à leur planning ?</summary>
+    <p>Depuis l'app : <strong>Données → Mon compte</strong>. L'employé crée son compte, puis entre le <strong>code d'invitation</strong> que vous lui avez envoyé. Il voit alors uniquement son planning — jamais les salaires ni les informations des autres.</p></details>
+
+  <details><summary>Comment envoyer un code d'invitation ?</summary>
+    <p>Dans l'onglet <strong>Équipe</strong>, appuyez sur <strong>Envoyer</strong> à côté d'un employé, puis choisissez <strong>« Une invitation »</strong>. Un code à usage unique est généré et envoyé par SMS ou email.</p></details>
+
+  <details><summary>Un employé peut-il voir les salaires ou les infos des autres ?</summary>
+    <p>Non. Les employés voient seulement les prénoms et les horaires de leurs collègues. Les salaires, coordonnées et documents restent réservés au responsable.</p></details>
+
+  <details><summary>L'app fonctionne-t-elle sans internet ?</summary>
+    <p>Oui pour créer et consulter vos plannings. Internet est nécessaire uniquement pour la connexion aux comptes et la synchronisation entre appareils.</p></details>
+
+  <details><summary>Comment supprimer mon compte ou mes données ?</summary>
+    <p>Écrivez-nous à <a href="mailto:noamadar.noa@gmail.com?subject=Suppression%20de%20compte">noamadar.noa@gmail.com</a> avec l'objet « Suppression de compte ». Voir aussi notre <a href="./confidentialite.html">politique de confidentialité</a>.</p></details>
+
+  <footer>Oplaa — © 2026 Noa Madar · <a href="./confidentialite.html">Politique de confidentialité</a></footer>
+</div>

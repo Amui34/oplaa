@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="2732" height="2732" viewBox="0 0 2732 2732">
+  <rect width="2732" height="2732" fill="#C4562F"/>
+  <g transform="translate(1366,1180) scale(9) translate(-64,-64)">
+    <circle cx="64" cy="64" r="33" fill="none" stroke="#FBF6F1" stroke-width="8"/>
+    <circle cx="64" cy="64" r="29" fill="#FBF6F1"/>
+    <path d="M64 64 L44.14 85.14 A29 29 0 0 1 64 35 Z" fill="#C4562F"/>
+  </g>
+  <text x="1366" y="1900" text-anchor="middle" font-family="Helvetica, Arial, sans-serif" font-weight="700" font-size="300" letter-spacing="-12" fill="#FBF6F1">oplaa</text>
+</svg>

@@ -1,0 +1,16 @@
+# Dépendances
+node_modules/
+
+# iOS — dépendances & artefacts de build (public/ est régénéré par `npx cap copy ios`)
+ios/App/Pods/
+ios/App/App/public/
+ios/App/build/
+DerivedData/
+build/
+
+# Système
+.DS_Store
+**/.DS_Store
+
+# Archives temporaires
+*.zip

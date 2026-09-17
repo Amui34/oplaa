@@ -1,0 +1,49 @@
+<!doctype html><html lang="fr"><head><meta charset="utf-8">
+<title>Oplaa — Le planning d'équipe, simplifié</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,700;12..96,800&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --terre:#C4562F; --terre-d:#A8471F; --craie:#FBF6F1; --ink:#2A1D16; --muted:#6E655C; --line:#E7DBCE;
+    --page:#F6ECE2; --card:#fff;
+    --disp:'Bricolage Grotesque',system-ui,sans-serif;
+    --ui:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;
+  }
+  @media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--page:#1B120C;--card:#241A13;--ink:#F6ECE2;--muted:#B8A797;--line:#3A2A20}}
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--page);color:var(--ink);font-family:var(--ui);line-height:1.6}
+  .wrap{max-width:680px;margin:0 auto;padding:64px 22px 72px;text-align:center}
+  .logo{width:96px;height:96px;filter:drop-shadow(0 10px 26px rgba(196,86,47,.28))}
+  .wm{font-family:var(--disp);font-weight:800;font-size:52px;letter-spacing:-.05em;color:var(--terre);line-height:1;margin-top:14px}
+  .tag{font-size:19px;color:var(--muted);margin-top:8px}
+  h1{font-family:var(--disp);font-weight:800;font-size:clamp(26px,5vw,36px);letter-spacing:-.02em;margin:40px 0 8px;text-wrap:balance}
+  p.lead{font-size:17px;color:var(--muted);max-width:52ch;margin:0 auto 30px}
+  .links{display:flex;flex-wrap:wrap;gap:14px;justify-content:center;margin-top:26px}
+  .btn{display:inline-flex;align-items:center;gap:8px;font-weight:700;font-size:16px;text-decoration:none;border-radius:12px;padding:14px 22px}
+  .btn.p{background:var(--terre);color:#fff}
+  .btn.s{background:var(--card);color:var(--ink);border:1px solid var(--line)}
+  footer{margin-top:52px;color:var(--muted);font-size:13px}
+  a.mail{color:var(--terre);font-weight:600}
+</style></head>
+<body>
+  <div class="wrap">
+    <svg class="logo" viewBox="0 0 128 128" role="img" aria-label="Oplaa"><rect width="128" height="128" rx="30" fill="#C4562F"/><circle cx="64" cy="64" r="33" fill="none" stroke="#FBF6F1" stroke-width="8"/><circle cx="64" cy="64" r="29" fill="#FBF6F1"/><path d="M64 64 L44.14 85.14 A29 29 0 0 1 64 35 Z" fill="#C4562F"/></svg>
+    <div class="wm">oplaa</div>
+    <div class="tag">Le planning d'équipe, simplifié.</div>
+
+    <h1>Créez, partagez et suivez<br>les plannings de votre équipe.</h1>
+    <p class="lead">Restauration, commerce, café, hôtellerie, santé… Oplaa aide les responsables à organiser les horaires, et chaque employé consulte son planning — rien d'autre.</p>
+
+    <div class="links">
+      <a class="btn p" href="./assistance.html">Assistance &amp; FAQ</a>
+      <a class="btn s" href="./confidentialite.html">Politique de confidentialité</a>
+    </div>
+
+    <footer>
+      Une question ? <a class="mail" href="mailto:noamadar.noa@gmail.com?subject=Oplaa">noamadar.noa@gmail.com</a><br>
+      © 2026 Noa Madar
+    </footer>
+  </div>
+</body></html>

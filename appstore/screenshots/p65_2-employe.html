@@ -1,0 +1,178 @@
+<!doctype html><html><head><meta charset="utf8">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,700;12..96,800&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --terre:#C4562F; --terre-d:#A8471F; --abricot:#D8724A; --craie:#FBF6F1;
+    --brou:#241A13; --brou-2:#2E2118; --ink:#2A1D16; --muted:#6E655C; --line:#E7DBCE;
+    --cuisine:#D8974A; --bar:#8C5A6A; --vert:#3F6B4A;
+    --page:#F3E7DD; --page-ink:#2A1D16; --page-soft:#7A6E62; --card:#fff; --card-line:#E7DBCE;
+    --disp:'Bricolage Grotesque', system-ui, sans-serif;
+    --ui:-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+  }
+  @media (prefers-color-scheme: dark){ :root:not([data-theme="light"]){
+    --page:#1B120C; --page-ink:#F6ECE2; --page-soft:#B8A797; --card:#241A13; --card-line:#3A2A20;
+  }}
+  :root[data-theme="dark"]{
+    --page:#1B120C; --page-ink:#F6ECE2; --page-soft:#B8A797; --card:#241A13; --card-line:#3A2A20;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--page);color:var(--page-ink);font-family:var(--ui);-webkit-font-smoothing:antialiased}
+  .wrap{max-width:1120px;margin:0 auto;padding:40px 22px 64px}
+
+  /* ---------- Header ---------- */
+  .masthead{display:flex;align-items:center;gap:14px;margin-bottom:6px}
+  .logo{width:52px;height:52px;flex:none;filter:drop-shadow(0 6px 18px rgba(196,86,47,.28))}
+  .mk{width:19px;height:19px;flex:none}
+  .wordmark{font-family:var(--disp);font-weight:800;font-size:34px;letter-spacing:-.045em;color:var(--terre);line-height:1}
+  .kicker{font-size:12px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:var(--page-soft)}
+  h1{font-family:var(--disp);font-weight:700;font-size:clamp(26px,4vw,40px);letter-spacing:-.02em;line-height:1.06;
+    text-wrap:balance;margin:18px 0 10px}
+  .lede{max-width:60ch;font-size:16px;line-height:1.6;color:var(--page-soft);margin:0 0 6px}
+  .promo{max-width:64ch;font-size:15px;line-height:1.55;color:var(--page-ink);background:var(--card);
+    border:1px solid var(--card-line);border-left:4px solid var(--terre);border-radius:12px;padding:14px 16px;margin:20px 0 34px}
+  .promo b{color:var(--terre)}
+
+  .section-label{display:flex;align-items:baseline;gap:10px;margin:8px 2px 16px}
+  .section-label .n{font-family:var(--disp);font-weight:700;font-size:15px;color:var(--terre)}
+  .section-label .t{font-size:13px;color:var(--page-soft)}
+  .hint{font-size:12.5px;color:var(--page-soft);margin:6px 2px 0}
+
+  /* ---------- Filmstrip ---------- */
+  .strip{display:flex;gap:22px;overflow-x:auto;padding:8px 2px 22px;scroll-snap-type:x mandatory}
+  .strip::-webkit-scrollbar{height:9px}
+  .strip::-webkit-scrollbar-thumb{background:var(--card-line);border-radius:9px}
+
+  /* App Store screenshot canvas — ratio ≈ 1290×2796 */
+  .shot{flex:none;width:300px;height:650px;border-radius:26px;overflow:hidden;position:relative;
+    scroll-snap-align:center;box-shadow:0 18px 40px rgba(40,24,12,.18);display:flex;flex-direction:column}
+  .cap{padding:26px 22px 0;flex:none}
+  .cap h2{font-family:var(--disp);font-weight:700;font-size:23px;line-height:1.1;letter-spacing:-.015em;
+    text-wrap:balance;margin:0}
+  .cap p{font-size:12.5px;line-height:1.4;margin:8px 0 0;opacity:.82}
+
+  /* the phone screen floating below the caption */
+  .device{margin:18px 16px 0;flex:1;border-radius:22px 22px 0 0;background:#FBF6F1;overflow:hidden;
+    box-shadow:0 -1px 0 rgba(0,0,0,.04), 0 14px 30px rgba(40,24,12,.22);position:relative}
+  .device.dk{background:#241A13}
+
+  /* backgrounds */
+  .bg-terre{background:linear-gradient(160deg,#D0623A,#A8471F)}
+  .bg-terre .cap h2,.bg-terre .cap p{color:#fff}
+  .bg-brou{background:linear-gradient(160deg,#33261C,#1B120C)}
+  .bg-brou .cap h2{color:#fff}.bg-brou .cap p{color:#E6D6C6}
+  .bg-abricot{background:linear-gradient(160deg,#E08B5E,#C4562F)}
+  .bg-abricot .cap h2,.bg-abricot .cap p{color:#fff}
+  .bg-craie{background:linear-gradient(165deg,#FBF6F1,#F0DECE)}
+  .bg-craie .cap h2{color:#2A1D16}.bg-craie .cap p{color:#6E655C}
+  .bg-vert{background:linear-gradient(160deg,#4E7E5A,#2F5238)}
+  .bg-vert .cap h2,.bg-vert .cap p{color:#fff}
+
+  /* ---------- Mini app UI (inside .device) ---------- */
+  .scr{font-family:var(--ui);color:#2A1D16;font-size:11px;height:100%;display:flex;flex-direction:column}
+  .scr.dk{color:#F3E9DF}
+  .top{display:flex;align-items:center;gap:6px;padding:14px 12px 10px}
+  .top .wm{font-family:var(--disp);font-weight:800;font-size:16px;letter-spacing:-.04em;color:#C4562F}
+  .top .est{font-size:9px;color:#8A7C6E;font-weight:600}
+  .pill{margin-left:auto;font-size:8.5px;font-weight:700;padding:4px 8px;border-radius:8px}
+  .pill.d{background:#fff;border:1px solid #E5DACC;color:#544A42}
+  .pill.a{background:#C4562F;color:#fff}
+  .bar{display:flex;gap:6px;padding:0 12px 8px;font-size:9px;font-weight:700;color:#9A8A7C}
+  .seg{background:#F3E4D9;border-radius:8px;padding:2px;display:inline-flex;gap:2px}
+  .seg span{padding:4px 9px;border-radius:6px}
+  .seg .on{background:#fff;color:#2A1D16;box-shadow:0 1px 2px rgba(0,0,0,.06)}
+  .dot{width:7px;height:7px;border-radius:50%;display:inline-block}
+
+  table.grid{border-collapse:collapse;width:100%;font-size:9px}
+  .grid th,.grid td{border:1px solid #EFE2D6;padding:4px 5px;vertical-align:top}
+  .grid thead th{background:#FBF3EC;color:#8A7C6E;font-weight:700;text-align:center}
+  .grid .team{font-weight:800;white-space:nowrap}
+  .grid .h{color:#B0A093;font-weight:600;font-size:8px}
+  .svc{border:1px solid #E9DCCF;border-left:3px solid var(--c,#C4562F);border-radius:6px;padding:3px 5px;margin-bottom:4px;background:#fff}
+  .svc b{display:block;font-size:9px;font-weight:700;color:#2A1D16;line-height:1.1}
+  .svc small{color:#9A8A7C;font-size:8px}
+  .slot{font-size:7.5px;font-weight:800;letter-spacing:.06em;color:#B0A093;margin:2px 0}
+
+  .grNav{display:flex;align-items:center;gap:6px;padding:2px 12px 8px;font-size:10px;font-weight:800}
+  .chip{border:1px solid #E5DACC;border-radius:7px;padding:3px 7px;background:#fff;color:#6E655C;font-weight:700;font-size:9px}
+
+  /* employee greeting */
+  .hello{margin:10px 12px;border-radius:14px;padding:14px;color:#fff;background:linear-gradient(135deg,#C4562F,#8A3A19)}
+  .hello b{font-size:16px;font-weight:800;display:block}
+  .hello small{opacity:.9;font-size:9.5px}
+  .sec-h{font-size:9px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:#8A7C6E;margin:12px 12px 6px}
+  .agenda{margin:0 12px;display:flex;flex-direction:column;gap:6px}
+  .ag{display:flex;gap:8px;align-items:stretch;border:1px solid #E9DCCF;border-radius:11px;background:#fff;padding:8px}
+  .ag .rail{width:4px;border-radius:4px;background:var(--c,#C4562F)}
+  .ag .d{font-weight:800;font-size:10px}
+  .ag .m{color:#8A7C6E;font-size:8.5px}
+  .ag .r{margin-left:auto;text-align:right}
+  .ag .r b{font-size:10px}.ag .r small{color:#9A8A7C;font-size:8px;display:block}
+
+  /* timesheet */
+  .tsbar{margin:10px 12px;border-radius:10px;background:#EAF0E8;color:#2F5238;font-weight:700;font-size:9.5px;padding:8px 10px}
+  table.ts{border-collapse:collapse;width:calc(100% - 24px);margin:6px 12px;font-size:9px}
+  .ts th{color:#9A8A7C;font-weight:700;text-align:left;font-size:8px;text-transform:uppercase;letter-spacing:.05em;padding:0 0 4px}
+  .ts td{border-top:1px solid #EFE2D6;padding:6px 0}
+  .ts .tnum{text-align:right;font-variant-numeric:tabular-nums}
+  .tin{display:inline-block;border:1px solid #D8CBBE;border-radius:5px;padding:2px 5px;font-size:8.5px;background:#fff}
+  .sig{color:#3F6B4A;font-weight:800;font-size:8.5px}
+  .pos{color:#3F6B4A;font-weight:800}.neg{color:#9E2B2B;font-weight:800}
+
+  /* suivi rows */
+  table.sv{border-collapse:collapse;width:calc(100% - 24px);margin:8px 12px;font-size:9px}
+  .sv th{color:#9A8A7C;font-weight:700;text-align:right;font-size:8px;text-transform:uppercase;padding:0 0 5px}
+  .sv th:first-child{text-align:left}
+  .sv td{border-top:1px solid #EFE2D6;padding:6px 0;text-align:right;font-variant-numeric:tabular-nums}
+  .sv td:first-child{text-align:left;font-weight:700}
+  .cost{font-weight:800;color:#2A1D16}
+
+  /* congés cells */
+  .abhead{font-size:9px;font-weight:800;color:#8A7C6E;padding:10px 12px 4px}
+  table.ab{border-collapse:collapse;width:calc(100% - 24px);margin:2px 12px;font-size:9px}
+  .ab td,.ab th{padding:4px;text-align:center}
+  .ab th:first-child,.ab td:first-child{text-align:left;font-weight:700;white-space:nowrap}
+  .ab th{color:#9A8A7C;font-weight:700;font-size:8px}
+  .ac{width:20px;height:20px;border-radius:6px;display:inline-flex;align-items:center;justify-content:center;font-size:10px;border:1px solid #EADFD3;color:#CDBFB1}
+  .ac.on{color:#fff;border:none}
+
+  .tabbar{margin-top:auto;display:flex;border-top:1px solid #EEE1D5;padding:8px 4px;background:rgba(255,255,255,.7)}
+  .tabbar.dk{background:rgba(36,26,19,.7);border-color:#3A2A20}
+  .tb{flex:1;text-align:center;font-size:7.5px;font-weight:700;color:#B0A093}
+  .tb.on{color:#C4562F}
+  .tb i{display:block;font-size:13px;line-height:1;margin-bottom:2px}
+
+  /* ---------- meta footer ---------- */
+  .meta{margin-top:20px;display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:14px}
+  .mcard{background:var(--card);border:1px solid var(--card-line);border-radius:14px;padding:16px}
+  .mcard h3{font-family:var(--disp);font-weight:700;font-size:13px;margin:0 0 8px;color:var(--terre);letter-spacing:.01em}
+  .mcard .v{font-size:14px;line-height:1.5}
+  .mcard .kw{font-size:12px;color:var(--page-soft);word-spacing:1px}
+  .tags{display:flex;flex-wrap:wrap;gap:6px}
+  .tag{font-size:11px;font-weight:600;background:rgba(196,86,47,.1);color:var(--terre);border-radius:999px;padding:3px 9px}
+  footer{margin-top:40px;font-size:12px;color:var(--page-soft);border-top:1px solid var(--card-line);padding-top:16px}
+  @media (max-width:520px){ .shot{width:270px;height:585px} }
+</style>
+<style>html,body{margin:0;background:#fff}
+#stage{width:1284px;height:2778px;overflow:hidden;background:#fff}
+#stage .shot{width:300px;height:649.07px;transform:scale(4.28);transform-origin:0 0;border-radius:0;box-shadow:none}
+</style></head><body><svg width="0" height="0" style="position:absolute" aria-hidden="true"><symbol id="oplaaMark" viewBox="0 0 128 128">
+  <rect width="128" height="128" rx="30" fill="#C4562F"/>
+  <circle cx="64" cy="64" r="33" fill="none" stroke="#FBF6F1" stroke-width="8"/>
+  <circle cx="64" cy="64" r="29" fill="#FBF6F1"/>
+  <path d="M64 64 L44.14 85.14 A29 29 0 0 1 64 35 Z" fill="#C4562F"/>
+</symbol></svg><div id="stage"><div class="shot bg-brou">
+      <div class="cap"><h2>Chacun voit son planning — rien d'autre</h2><p>Jamais les salaires ni les infos des collègues.</p></div>
+      <div class="device"><div class="scr">
+        <div class="top"><svg class="mk" viewBox="0 0 128 128"><use href="#oplaaMark"/></svg><span class="wm">oplaa</span><span class="est">Espace employé</span><span class="pill d" style="margin-left:auto">Données</span></div>
+        <div class="bar" style="padding-bottom:2px"><span class="seg"><span class="on">📅 Mon planning</span><span>👥 L'équipe</span></span></div>
+        <div class="hello"><b>Bonjour Camille 👋</b><small>Ta semaine du 6 au 12 sept. chez Le Bistrot du Coin.</small></div>
+        <div class="sec-h">🗓️ Mes prochains services</div>
+        <div class="agenda">
+          <div class="ag" style="--c:#C4562F"><div class="rail"></div><div><div class="d">Lundi <span class="m">06 sept.</span></div><div class="m">Salle · Midi</div><div class="m">👥 avec Nina</div></div><div class="r"><b>11:30–15:00</b><small>3,5 h</small></div></div>
+          <div class="ag" style="--c:#C4562F"><div class="rail"></div><div><div class="d">Mardi <span class="m">07 sept.</span></div><div class="m">Salle · Soir</div><div class="m">👥 avec Yanis, Inès</div></div><div class="r"><b>18:30–23:00</b><small>4,5 h</small></div></div>
+          <div class="ag" style="--c:#C4562F"><div class="rail"></div><div><div class="d">Mercredi <span class="m">08 sept.</span></div><div class="m">Salle · Soir</div></div><div class="r"><b>18:30–23:00</b><small>4,5 h</small></div></div>
+        </div>
+        <div class="tabbar"><div class="tb on"><i>🗓️</i>Planning</div><div class="tb"><i>👥</i>Équipe</div><div class="tb"><i>📊</i>Suivi</div><div class="tb"><i>🛡️</i>Conformité</div></div>
+      </div></div>
+    </div></div></body></html>
