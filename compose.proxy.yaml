@@ -1,0 +1,22 @@
+# =============================================================================
+# Oplaa — derrière le proxy partagé (amui-proxy)
+# Aucun port publié : le proxy Caddy joint l'app via l'alias « oplaa-app »
+# sur le réseau Docker « web ».
+#   oplaa.pro      → oplaa-app:80   (vitrine)
+#   app.oplaa.pro  → oplaa-app:8080 (app web)
+#
+#   docker compose -f compose.proxy.yaml up -d --build
+# =============================================================================
+
+services:
+  oplaa:
+    build: .
+    restart: unless-stopped
+    networks:
+      web:
+        aliases:
+          - oplaa-app
+
+networks:
+  web:
+    external: true

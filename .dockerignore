@@ -1,0 +1,12 @@
+.git
+.DS_Store
+**/.DS_Store
+node_modules
+ios
+appstore
+assets
+_archive
+supabase
+site
+*.zip
+*.md

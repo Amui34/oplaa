@@ -1,0 +1,14 @@
+# =============================================================================
+# Oplaa — lancement en local (sans proxy)
+#   docker compose up -d --build
+#   → vitrine : http://localhost:8090
+#   → app web : http://localhost:8091
+# =============================================================================
+
+services:
+  oplaa:
+    build: .
+    restart: unless-stopped
+    ports:
+      - "8090:80"
+      - "8091:8080"

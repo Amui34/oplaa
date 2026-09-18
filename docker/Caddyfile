@@ -1,0 +1,25 @@
+{
+	# Pas de HTTPS ici : le proxy partagé s'en charge.
+	auto_https off
+	admin off
+}
+
+# Site vitrine (oplaa.pro)
+:80 {
+	root * /srv/site
+	encode zstd gzip
+	file_server
+	@pages path / *.html
+	try_files {path} {path}.html
+	header @pages Cache-Control "no-cache"
+}
+
+# Application web (app.oplaa.pro)
+:8080 {
+	root * /srv/app
+	encode zstd gzip
+	file_server
+	@pages path / *.html
+	try_files {path} /index.html
+	header @pages Cache-Control "no-cache"
+}
