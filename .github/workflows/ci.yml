@@ -1,0 +1,48 @@
+name: CI
+
+# Tests automatiques à chaque push sur main et sur chaque pull request.
+# Note : les tests d'INTÉGRATION (tests/integration) ne tournent PAS ici car ils
+# créent des comptes réels dans Supabase — à lancer en local avec `npm run test:int`.
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  test:
+    name: Tests (unitaires + fonctionnels)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Installer les dépendances
+        run: npm ci
+
+      - name: Compiler Tailwind
+        run: npm run build:css
+
+      - name: Tests unitaires (Vitest)
+        run: npm run test:unit
+
+      - name: Installer Chromium (Playwright)
+        run: npx playwright install --with-deps chromium
+
+      - name: Tests fonctionnels (E2E, Playwright)
+        run: npm run test:e2e
+
+      - name: Rapport Playwright (si échec)
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-report
+          path: playwright-report/
+          retention-days: 7
