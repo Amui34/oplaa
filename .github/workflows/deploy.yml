@@ -1,0 +1,49 @@
+name: Deploy
+
+# Déploiement automatique sur le serveur (proxy partagé) à chaque push sur main.
+# Déclenchement manuel aussi possible (workflow_dispatch).
+# Mêmes conventions de secrets qu'amuï studio :
+#   DEPLOY_SSH_HOST · DEPLOY_SSH_USER · DEPLOY_SSH_KEY · DEPLOY_SSH_PORT (def. 22)
+#   DEPLOY_PATH        = dossier du clone d'Oplaa sur le serveur
+#   DEPLOY_COMPOSE_FILE = compose.proxy.yaml (défaut)
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+concurrency:
+  group: deploy-oplaa
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    name: Deploy to server
+    runs-on: ubuntu-latest
+    steps:
+      - name: Deploy over SSH
+        uses: appleboy/ssh-action@v1.2.0
+        with:
+          host: ${{ secrets.DEPLOY_SSH_HOST }}
+          username: ${{ secrets.DEPLOY_SSH_USER }}
+          key: ${{ secrets.DEPLOY_SSH_KEY }}
+          port: ${{ secrets.DEPLOY_SSH_PORT || '22' }}
+          command_timeout: 20m
+          script: |
+            set -euo pipefail
+            cd "${{ secrets.DEPLOY_PATH }}"
+            COMPOSE_FILE="${{ secrets.DEPLOY_COMPOSE_FILE || 'compose.proxy.yaml' }}"
+
+            echo "→ Récupération de la dernière version (origin/main)"
+            git fetch --all --prune
+            git reset --hard origin/main
+
+            echo "→ Réseau partagé du proxy (no-op s'il existe déjà)"
+            docker network create web 2>/dev/null || true
+
+            echo "→ Build & (re)démarrage du conteneur Oplaa ($COMPOSE_FILE)"
+            docker compose -f "$COMPOSE_FILE" up -d --build
+
+            echo "→ Nettoyage des images inutilisées"
+            docker image prune -f
+
+            echo "✓ Déploiement Oplaa terminé"
