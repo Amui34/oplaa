@@ -6,7 +6,11 @@
   "scripts": {
     "build:css": "tailwindcss -c tailwind.config.js -i www/tw-input.css -o www/tailwind.css --minify",
     "assets": "capacitor-assets generate --iconBackgroundColor '#C4562F' --splashBackgroundColor '#FBF6F1'",
-    "sync:ios": "cap copy ios"
+    "sync:ios": "cap copy ios",
+    "test": "TZ=UTC vitest run",
+    "test:unit": "TZ=UTC vitest run tests/unit",
+    "test:int": "TZ=UTC vitest run tests/integration",
+    "test:e2e": "playwright test"
   },
   "keywords": ["planning", "restaurant", "équipe", "shift", "capacitor", "ios"],
   "author": "Noa Madar",
@@ -20,7 +24,9 @@
   },
   "devDependencies": {
     "@capacitor/assets": "^3.0.5",
+    "@playwright/test": "^1.48.0",
     "sharp": "^0.35.4",
-    "tailwindcss": "^3.4.19"
+    "tailwindcss": "^3.4.19",
+    "vitest": "^2.1.9"
   }
 }
