@@ -21,6 +21,8 @@
 <meta name="apple-mobile-web-app-capable" content="yes" />
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
 <meta name="apple-mobile-web-app-title" content="Oplaa" />
+<meta name="referrer" content="no-referrer" />
+<meta name="robots" content="noindex, nofollow" />
 <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 128 128'%3E%3Crect width='128' height='128' rx='28' fill='%23C4562F'/%3E%3Ccircle cx='64' cy='64' r='33' fill='none' stroke='%23FBF6F1' stroke-width='8'/%3E%3Ccircle cx='64' cy='64' r='29' fill='%23FBF6F1'/%3E%3Cpath d='M64 64 L44.14 85.14 A29 29 0 0 1 64 35 Z' fill='%23C4562F'/%3E%3C/svg%3E" />
 <link rel="apple-touch-icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 180 180'%3E%3Crect width='180' height='180' fill='%23C4562F'/%3E%3Ccircle cx='90' cy='90' r='46' fill='none' stroke='%23FBF6F1' stroke-width='11'/%3E%3Ccircle cx='90' cy='90' r='40.5' fill='%23FBF6F1'/%3E%3Cpath d='M90 90 L62.7 119 A40.5 40.5 0 0 1 90 49.5 Z' fill='%23C4562F'/%3E%3C/svg%3E" />
 <link rel="manifest" href="data:application/json,%7B%22name%22%3A%22Oplaa%22%2C%22short_name%22%3A%22Oplaa%22%2C%22display%22%3A%22standalone%22%2C%22background_color%22%3A%22%23FBF6F1%22%2C%22theme_color%22%3A%22%23C4562F%22%2C%22icons%22%3A%5B%7B%22src%22%3A%22data%3Aimage%2Fsvg%2Bxml%2C%253Csvg%2520xmlns%253D%2527http%253A%252F%252Fwww.w3.org%252F2000%252Fsvg%2527%2520width%253D%2527192%2527%2520height%253D%2527192%2527%253E%253Crect%2520width%253D%2527192%2527%2520height%253D%2527192%2527%2520rx%253D%252742%2527%2520fill%253D%2527%25230f766e%2527%252F%253E%253Ctext%2520x%253D%252750%2525%2527%2520y%253D%252754%2525%2527%2520font-size%253D%2527104%2527%2520text-anchor%253D%2527middle%2527%2520dominant-baseline%253D%2527middle%2527%253E%25F0%259F%258D%25BD%25EF%25B8%258F%253C%252Ftext%253E%253C%252Fsvg%253E%22%2C%22sizes%22%3A%22192x192%22%2C%22type%22%3A%22image%2Fsvg%2Bxml%22%7D%5D%7D" />
@@ -104,6 +106,19 @@
   .oplaa-splash-clock { width:51px; height:51px; border-radius:50%; background:conic-gradient(#FBF6F1 0deg, rgba(251,246,241,0) 0deg); }
   .oplaa-splash-wedge { position:absolute; width:112px; height:112px; pointer-events:none; }
   .oplaa-splash-ring { position:absolute; width:58px; height:58px; border-radius:50%; border:7px solid #FBF6F1; box-sizing:border-box; }
+  /* --- Confidentialité / RGPD : filigrane + anti-copie des données sensibles --- */
+  #rgpdMark{ position:fixed; inset:-25%; z-index:9998; pointer-events:none; display:none; opacity:.055; overflow:hidden; transform:rotate(-22deg); }
+  body.rgpd-on #rgpdMark{ display:block; }
+  #rgpdMark span{ display:inline-block; padding:16px 30px; white-space:nowrap; font-size:12px; font-weight:700; color:#3a2a20; }
+  :root:not([data-theme="light"]) #rgpdMark span{ color:#F6ECE2; }
+  .cost-col, .no-copy, #rgpdMark{ -webkit-user-select:none; user-select:none; -webkit-touch-callout:none; }
+  body.role-employee #view-employe{ -webkit-user-select:none; user-select:none; }
+  /* RGPD : l'employé ne peut ni exporter, ni importer, ni modifier la configuration */
+  body.role-employee #btnExport, body.role-employee #btnImport, body.role-employee #btnReset,
+  body.role-employee #btnSettings, body.role-employee #btnProfile, body.role-employee #btnRename,
+  body.role-employee #btnEstb, body.role-employee #dupWeek, body.role-employee #btnUndo,
+  body.role-employee #btnHistory, body.role-employee #btnEmailM, body.role-employee #btnPrintM{ display:none !important; }
+  @media print{ #rgpdMark{ display:none !important; } }
 </style>
 </head>
 <body class="bg-slate-50 text-slate-800 min-h-screen">
@@ -119,6 +134,7 @@
 </div>
 
 <!-- ============ ÉCRAN D'ACCUEIL (choix du profil) ============ -->
+<div id="rgpdMark" aria-hidden="true"></div>
 <div id="welcome" class="no-print">
   <svg viewBox="0 0 128 128" class="w-20 h-20 mb-5" role="img" aria-label="Oplaa" style="filter:drop-shadow(0 10px 26px rgba(196,86,47,.22))"><rect width="128" height="128" rx="30" fill="#C4562F"/><circle cx="64" cy="64" r="33" fill="none" stroke="#FBF6F1" stroke-width="8"/><circle cx="64" cy="64" r="29" fill="#FBF6F1"/><path d="M64 64 L44.14 85.14 A29 29 0 0 1 64 35 Z" fill="#C4562F"/></svg>
   <div class="oplaa-word" style="font-size:40px;color:#C4562F">oplaa</div>
@@ -192,6 +208,8 @@
         <div class="px-4 pt-1 pb-0.5 text-[10px] font-bold uppercase tracking-wider text-slate-400">Aide &amp; retours</div>
         <button id="btnHelp" class="w-full text-left px-4 py-2 hover:bg-slate-50">🆘 Aide / FAQ</button>
         <button id="btnFeedback" class="w-full text-left px-4 py-2 hover:bg-slate-50">💡 Proposer une amélioration</button>
+        <button id="btnPrivacy" class="w-full text-left px-4 py-2 hover:bg-slate-50">🔒 Confidentialité &amp; RGPD</button>
+        <div class="px-4 py-1.5 text-[10px] text-slate-400 leading-snug">🛡️ Données protégées : chaque employé ne voit que son planning. Salaires et coordonnées jamais partagés (RGPD).</div>
         <button id="btnContact" class="w-full text-left px-4 py-2 hover:bg-slate-50">✉️ Contacter le créateur</button>
         <div class="px-4 pt-1 pb-1.5 text-[10px] text-slate-300">Oplaa v1.0 · © 2026 Noa Madar</div>
       </div>
@@ -3083,6 +3101,7 @@ function openMailTo(subject, bodyLines){
   window.location.href = `mailto:${CONTACT_EMAIL}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
 }
 document.getElementById('btnHelp').addEventListener('click',()=>{ dataMenu.classList.add('hidden'); window.open(ASSISTANCE_URL,'_blank'); });
+document.getElementById('btnPrivacy').addEventListener('click',()=>{ dataMenu.classList.add('hidden'); window.open('https://effulgent-boba-12345d.netlify.app/confidentialite.html','_blank'); });
 document.getElementById('btnFeedback').addEventListener('click',()=>{
   dataMenu.classList.add('hidden');
   openMailTo(`💡 Amélioration Oplaa (v${APP_VERSION})`, [
@@ -3120,9 +3139,25 @@ function cloudMsg(id, text, ok){
   if(!text) el.classList.add('hidden');
 }
 function updateCloudMenuLabel(){
-  const l=document.getElementById('btnCloudLabel'); if(!l) return;
-  l.textContent = cloudSession ? '☁️ Mon compte ✓' : '☁️ Mon compte (connexion)';
+  const l=document.getElementById('btnCloudLabel'); if(l) l.textContent = cloudSession ? '☁️ Mon compte ✓' : '☁️ Mon compte (connexion)';
+  setRgpdWatermark(cloudSession && cloudSession.user ? cloudSession.user.email : '');
 }
+// RGPD : filigrane traçable (email connecté) sur toute l'app — dissuade le partage de captures
+function setRgpdWatermark(email){
+  const m=document.getElementById('rgpdMark'); if(!m) return;
+  if(!email){ document.body.classList.remove('rgpd-on'); m.innerHTML=''; return; }
+  const tag='Oplaa · '+email+' · confidentiel';
+  m.innerHTML = Array.from({length:200}, ()=>'<span>'+escapeHtml(tag)+'</span>').join('');
+  document.body.classList.add('rgpd-on');
+}
+// RGPD : blocage du copier/couper sur les données sensibles (salaires, coordonnées) et l'espace employé
+document.addEventListener('copy', e=>{
+  const sel=document.getSelection(); if(!sel || !sel.rangeCount) return;
+  let n=sel.anchorNode; n = n && (n.nodeType===1 ? n : n.parentElement);
+  if(n && n.closest && (n.closest('.cost-col') || n.closest('.no-copy') || document.body.classList.contains('role-employee'))){
+    e.preventDefault(); toast('Copie désactivée (données protégées · RGPD).');
+  }
+});
 async function loadMembership(){
   cloudMembership=null;
   if(!sb || !cloudSession) return;
@@ -3187,10 +3222,15 @@ async function pushToCloud(){
     const del=(remShifts||[]).filter(r=>r.local_id && !localIds.has(r.local_id)).map(r=>r.id);
     if(del.length) await sb.from('shifts').delete().in('id', del);
     _localToRemoteEmp = map;
+    logAccess('push');
     return {ok:true};
   }catch(e){ return {error:String(e.message||e)}; }
 }
 let _localToRemoteEmp = {};
+// RGPD : journal des accès (best-effort ; silencieux si la table n'existe pas encore)
+async function logAccess(action){
+  try{ if(sb && cloudSession && cloudMembership) await sb.from('access_log').insert({ establishment_id: cloudMembership.establishment_id, action }); }catch(e){}
+}
 
 // EMPLOYÉ : récupère SON planning depuis le cloud (données non sensibles uniquement)
 async function pullForEmployee(){
@@ -3208,6 +3248,7 @@ async function pullForEmployee(){
   state.notes = (notes||[]).map(n=>({ id:n.id, week:n.week, day:n.day, text:n.text, level:n.level||'info' }));
   if(myId && state.employees.some(x=>x.id===myId)) empViewSel = myId;
   saveQuiet(); renderAll(); if(!document.getElementById('view-employe').classList.contains('hidden')) renderEmploye();
+  logAccess('pull_employee');
 }
 // PATRON : récupère TOUTES ses données depuis le cloud (employés + salaires + planning + absences + notes)
 async function pullForOwner(){
@@ -3227,6 +3268,7 @@ async function pullForOwner(){
     const { data:notes } = await sb.from('notes').select('*').eq('establishment_id', est);
     state.notes = (notes||[]).map(n=>({ id:n.local_id||n.id, week:n.week, day:n.day, text:n.text, level:n.level||'info' }));
     migrate(state); syncGlobals(); setAccent(state.accent); applyLogo(); save(); renderAll();
+    logAccess('pull_owner');
     return {ok:true, count: state.employees.length};
   }catch(err){ return {error:String(err.message||err)}; }
 }
