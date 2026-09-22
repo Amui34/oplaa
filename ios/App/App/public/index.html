@@ -126,6 +126,7 @@
   <div class="w-full max-w-xs flex flex-col gap-3">
     <button id="welcomePatron" class="w-full px-5 py-4 rounded-2xl bg-teal-600 text-white font-bold text-lg hover:bg-teal-700">🏪 Je gère mon établissement</button>
     <button id="welcomeEmploye" class="w-full px-5 py-4 rounded-2xl bg-white border border-slate-300 text-slate-800 font-bold text-lg hover:bg-slate-50">👤 Je suis employé — j'ai un code</button>
+    <button id="welcomeDemo" hidden class="w-full px-5 py-3 rounded-2xl text-slate-500 font-semibold hover:bg-slate-50 border border-dashed border-slate-300">✨ Voir une démo (données d'exemple)</button>
   </div>
   <p class="text-slate-400 text-xs mt-6 max-w-xs">Tu pourras te connecter à ton compte à tout moment depuis le menu Données.</p>
 </div>
@@ -186,7 +187,7 @@
         <div class="px-4 pt-1 pb-0.5 text-[10px] font-bold uppercase tracking-wider text-slate-400">Sauvegarde</div>
         <button id="btnExport" class="w-full text-left px-4 py-2 hover:bg-slate-50">💾 Sauvegarder (JSON)</button>
         <button id="btnImport" class="w-full text-left px-4 py-2 hover:bg-slate-50">📂 Charger une sauvegarde</button>
-        <button id="btnReset" class="w-full text-left px-4 py-2 text-red-600 hover:bg-red-50">♻️ Réinitialiser (données d'exemple)</button>
+        <button id="btnReset" class="w-full text-left px-4 py-2 text-red-600 hover:bg-red-50">🗑️ Vider les données (repartir de zéro)</button>
         <div class="border-t border-slate-100 my-1"></div>
         <div class="px-4 pt-1 pb-0.5 text-[10px] font-bold uppercase tracking-wider text-slate-400">Aide &amp; retours</div>
         <button id="btnHelp" class="w-full text-left px-4 py-2 hover:bg-slate-50">🆘 Aide / FAQ</button>
@@ -611,7 +612,8 @@
         <div class="text-sm text-emerald-700 mt-0.5"><span id="cloudMemEmail"></span></div>
         <div class="text-sm text-emerald-700 mt-1"><span id="cloudMemEst"></span> · <b id="cloudMemRole"></b></div>
       </div>
-      <button type="button" id="cloudSync" class="manager-only w-full px-4 py-3 rounded-xl bg-teal-600 text-white font-semibold hover:bg-teal-700 mb-2">☁️ Synchroniser le planning</button>
+      <button type="button" id="cloudSync" class="manager-only w-full px-4 py-3 rounded-xl bg-teal-600 text-white font-semibold hover:bg-teal-700 mb-2">☁️ Envoyer mon planning au cloud</button>
+      <button type="button" id="cloudPull" class="manager-only w-full px-4 py-2.5 rounded-xl bg-white border border-slate-300 font-semibold hover:bg-slate-50 mb-2">⬇️ Récupérer mes données du cloud</button>
       <p id="cloudSyncMsg" class="text-sm mb-3 hidden"></p>
       <button type="button" id="cloudSignOut" class="w-full px-4 py-2.5 rounded-xl bg-white border border-slate-300 font-semibold hover:bg-slate-50">Se déconnecter</button>
       <button type="button" id="cloudDeleteAcc" class="w-full mt-2 text-sm text-red-600 font-semibold hover:underline">Supprimer mon compte</button>
@@ -1299,7 +1301,7 @@ function demoData(){
 
 /* Construit un état complet à partir d'un profil (avec ou sans données d'exemple) */
 function buildProfile(key, withDemo){
-  if(key==='restaurant') return demoData();
+  if(key==='restaurant' && withDemo) return demoData();
   const P = PROFILE_PRESETS[key] || PROFILE_PRESETS.custom;
   const base = {
     profile:key, teamWord:P.teamWord, restaurant:P.org,
@@ -1341,7 +1343,7 @@ wsTouchMeta();
 function load(){
   let s=null;
   try { const raw=localStorage.getItem(STORAGE_KEY); if(raw) s=JSON.parse(raw); } catch(e){}
-  if(!s){ firstRun=true; s=demoData(); }   // 1re ouverture : on propose le choix de profil
+  if(!s){ firstRun=true; s=freshEstablishment('restaurant',''); }   // 1re ouverture : établissement VIDE (pas de données d'exemple), on propose le choix
   s=migrate(s); saveQuiet(s); return s;    // pas d'historique pendant l'init (state pas encore prêt)
 }
 function migrate(s){
@@ -2685,8 +2687,8 @@ document.getElementById('profileGrid').addEventListener('click',e=>{
   const b=e.target.closest('.profile-card'); if(!b) return;
   const key=b.dataset.profile;
   const already = !firstRun;
-  if(already && !confirm(`Passer au profil « ${PROFILE_PRESETS[key].name} » ?\nLes équipes/créneaux seront remplacés et des données d'exemple chargées (pensez à sauvegarder avant).`)) return;
-  state=buildProfile(key,true); firstRun=false; migrate(state); syncGlobals(); save();
+  if(already && !confirm(`Passer au profil « ${PROFILE_PRESETS[key].name} » ?\nLes équipes/créneaux du métier seront chargés et les données actuelles vidées (pensez à sauvegarder avant).`)) return;
+  state=buildProfile(key,false); firstRun=false; migrate(state); syncGlobals(); save();
   confUnlocked=false; teamFilter='all'; selectedDay=((new Date().getDay()+6)%7);
   setView('planning'); renderAll(); applyMode(); closeProfileModal();
   toast(`Profil « ${PROFILE_PRESETS[key].name} » activé ✓`);
@@ -3067,10 +3069,12 @@ document.getElementById('btnRename').addEventListener('click',()=>{
   if(n&&n.trim()){ state.restaurant=n.trim(); save(); renderGrid(); }
 });
 document.getElementById('btnReset').addEventListener('click',()=>{
-  if(!confirm('Réinitialiser toutes les données avec les exemples ? (pensez à sauvegarder avant)')) return;
-  state=demoData(); migrate(state); syncGlobals(); setAccent(state.accent); applyTheme();
-  confUnlocked=false; teamFilter='all'; setView('planning'); save(); renderAll(); applyMode();
-  toast('Données réinitialisées');
+  if(!confirm('Vider toutes les données de planning (employés, services, congés, notes, feuilles d’heures) ?\nL’établissement et ses réglages sont conservés. Action irréversible.')) return;
+  state.employees=[]; state.shifts=[]; state.absences=[]; state.notes=[];
+  state.timesheets={}; state.mealManual={}; state.planningSent={};
+  confUnlocked=false; teamFilter='all'; empViewSel=null;
+  setView('planning'); save(); renderAll(); applyMode();
+  toast('Données vidées ✓');
 });
 
 /* ============ RETOURS / CONTACT (testeurs → créateur) ============ */
@@ -3147,6 +3151,10 @@ async function refreshCloud(){
   }
   applyRole();
   if(cloudMembership && cloudMembership.role==='employee') await pullForEmployee();
+  else if(cloudMembership && ['owner','manager'].includes(cloudMembership.role) && !state.employees.length && !state.shifts.length){
+    // Appareil / site vierge (ex. 1re connexion sur le web) → on récupère automatiquement les données du cloud
+    await pullForOwner();
+  }
 }
 // Aiguillage par rôle : l'employé est verrouillé sur son espace ; patron/manager = app complète
 function applyRole(){
@@ -3201,6 +3209,35 @@ async function pullForEmployee(){
   if(myId && state.employees.some(x=>x.id===myId)) empViewSel = myId;
   saveQuiet(); renderAll(); if(!document.getElementById('view-employe').classList.contains('hidden')) renderEmploye();
 }
+// PATRON : récupère TOUTES ses données depuis le cloud (employés + salaires + planning + absences + notes)
+async function pullForOwner(){
+  if(!sb || !cloudMembership || !['owner','manager'].includes(cloudMembership.role)) return {error:'Connecte-toi en patron.'};
+  const est = cloudMembership.establishment_id;
+  try{
+    const { data:e } = await sb.from('establishments').select('*').eq('id', est).maybeSingle();
+    if(e){ state.restaurant=e.name||state.restaurant; if(e.teams&&e.teams.length)state.teams=e.teams; if(e.periods&&e.periods.length)state.periods=e.periods; if(e.compliance&&e.compliance.length)state.complianceItems=e.compliance; state.teamWord=e.team_word||state.teamWord; state.accent=e.accent||state.accent; state.logo=e.logo||''; state.empScope=e.emp_scope||'all'; state.profile=e.profile||state.profile; }
+    syncGlobals();
+    const remoteToLocal={};
+    const { data:emps } = await sb.from('employees').select('*').eq('establishment_id', est);
+    state.employees = (emps||[]).map(r=>{ const lid=r.local_id||r.id; remoteToLocal[r.id]=lid; return { id:lid, name:r.name, role:r.role||'', contract:r.contract||'', rate:r.rate||0, phone:r.phone||'', email:r.email||'', archived:!!r.archived, compliance:Object.assign(emptyCompliance(), r.compliance||{}) }; });
+    const { data:shifts } = await sb.from('shifts').select('*').eq('establishment_id', est);
+    state.shifts = (shifts||[]).map(s=>({ id:s.local_id||s.id, week:s.week, day:s.day, team:s.team, period:s.period, start:s.start_t, end:s.end_t, empId: s.employee_id?(remoteToLocal[s.employee_id]||''):'', extraName:s.extra_name||'', realStart:s.real_start||'', realEnd:s.real_end||'', breaks:Array.isArray(s.breaks)?s.breaks:[], note:s.note||'' }));
+    const { data:abs } = await sb.from('absences').select('*').eq('establishment_id', est);
+    state.absences = (abs||[]).map(a=>({ id:a.local_id||a.id, week:a.week, day:a.day, empId:remoteToLocal[a.employee_id]||'', type:a.type })).filter(a=>a.empId);
+    const { data:notes } = await sb.from('notes').select('*').eq('establishment_id', est);
+    state.notes = (notes||[]).map(n=>({ id:n.local_id||n.id, week:n.week, day:n.day, text:n.text, level:n.level||'info' }));
+    migrate(state); syncGlobals(); setAccent(state.accent); applyLogo(); save(); renderAll();
+    return {ok:true, count: state.employees.length};
+  }catch(err){ return {error:String(err.message||err)}; }
+}
+document.getElementById('cloudPull').addEventListener('click', async ()=>{
+  if(!confirm('Récupérer tes données depuis le cloud ?\nLe planning affiché sur cet appareil sera remplacé par celui du cloud.')) return;
+  cloudMsg('cloudSyncMsg','Récupération en cours…', true);
+  const r = await pullForOwner();
+  if(r.error){ cloudMsg('cloudSyncMsg','Erreur : '+r.error, false); return; }
+  cloudMsg('cloudSyncMsg','✅ Données récupérées ('+r.count+' employé·e·s).', true);
+  toast('Données récupérées du cloud ✓');
+});
 document.getElementById('cloudSync').addEventListener('click', async ()=>{
   cloudMsg('cloudSyncMsg','Synchronisation en cours…', true);
   const r = await pushToCloud();
@@ -3287,6 +3324,14 @@ function showWelcome(){ document.getElementById('welcome').classList.add('show')
 function hideWelcome(){ document.getElementById('welcome').classList.remove('show'); }
 document.getElementById('welcomePatron').addEventListener('click', ()=>{ hideWelcome(); openWizard(); });
 document.getElementById('welcomeEmploye').addEventListener('click', ()=>{ hideWelcome(); openCloud(); });
+// « Voir une démo » : uniquement sur le SITE WEB (masqué dans l'app iOS)
+const _isNativeApp = !!(window.Capacitor && (typeof window.Capacitor.isNativePlatform==='function' ? window.Capacitor.isNativePlatform() : window.Capacitor.isNative));
+if(!_isNativeApp){ const d=document.getElementById('welcomeDemo'); if(d) d.hidden=false; }
+document.getElementById('welcomeDemo').addEventListener('click', ()=>{
+  hideWelcome(); state=demoData(); migrate(state); syncGlobals(); firstRun=false;
+  setAccent(state.accent); applyLogo(); setView('planning'); save(); renderAll(); applyMode();
+  toast('Mode démo — données d’exemple');
+});
 if(firstRun) showWelcome();
 
 /* ============================================================================
