@@ -32,3 +32,17 @@ test('confidentialité : le filigrane RGPD est inactif hors connexion', async ({
   // Sans compte connecté, pas de filigrane
   await expect(page.locator('body')).not.toHaveClass(/rgpd-on/);
 });
+
+test('planning : ruban de jours continu (dimanche → lundi suivant, sans coupure)', async ({ page }) => {
+  await page.locator('#welcomeDemo').click();
+  // Le mode Semaine affiche plus de 7 jours d'affilée (ruban continu multi-semaines)
+  const headers = page.locator('#gridHead th');
+  const count = await headers.count();
+  expect(count).toBeGreaterThan(8); // colonne « Équipe » + > 7 jours
+  // La 8e colonne de JOURS (nth(8) : la colonne « Équipe » occupe nth(0)) est un Lundi : la semaine ne s'arrête pas au dimanche
+  await expect(headers.nth(8)).toContainText('Lundi');
+  // Une cellule de cette colonne cible bien la semaine suivante (data-add-week distinct de la 1re)
+  const firstWeek = await page.locator('#gridBody td[data-add-week]').first().getAttribute('data-add-week');
+  const laterWeek = await page.locator('#gridBody td[data-add-week]').nth(7).getAttribute('data-add-week');
+  expect(laterWeek).not.toBe(firstWeek);
+});

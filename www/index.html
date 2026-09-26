@@ -287,7 +287,7 @@
         <tbody id="gridBody"></tbody>
       </table>
     </div>
-    <p id="weekScrollHint" class="no-print sm:hidden hidden text-center text-[11px] text-slate-400 mt-2">↔ Faites glisser pour voir toute la semaine</p>
+    <p id="weekScrollHint" class="no-print sm:hidden hidden text-center text-[11px] text-slate-400 mt-2">↔ Faites glisser : les jours défilent en continu, dimanche → lundi suivant</p>
 
     <!-- ============ NOTES & ÉVÉNEMENTS ============ -->
     <div class="mt-5">
@@ -1121,6 +1121,8 @@ function syncGlobals(){
 let teamFilter = 'all';
 let viewMode = 'semaine';     // 'semaine' | 'jour'
 let selectedDay = ((new Date().getDay()+6)%7); // jour affiché en mode Jour
+let ribbonWeeks = 3;          // nb de semaines affichées d'affilée en mode Semaine (ruban continu, extensible au défilement)
+let newShiftWeek = null;      // semaine cible d'un nouveau créneau créé depuis une colonne du ruban
 let suiviScope = 'semaine';   // 'semaine' | 'mois'
 let confUnlocked = false;     // session : accès conformité déverrouillé ?
 
@@ -1507,25 +1509,45 @@ function weekConflicts(wk){
 }
 
 /* ============ GRILLE PLANNING ============ */
+// Colonnes affichées : 1 jour en mode Jour, sinon un ruban continu de plusieurs semaines (traverse dimanche→lundi sans coupure).
+// On raisonne en index (jour 0..6 = Lundi..Dimanche, convention de l'app), pas en jour calendaire réel → robuste au fuseau
+// et cohérent avec le stockage des créneaux ({week: lundi ISO, day: 0..6}).
+function ribbonCols(){
+  if(viewMode==='jour'){
+    return [{ date: addDays(state.weekStart, selectedDay), week: state.weekStart, day: selectedDay }];
+  }
+  const cols=[], n=7*Math.max(1, ribbonWeeks);
+  for(let i=0;i<n;i++){
+    const wOff=Math.floor(i/7), dIdx=i%7;
+    const week = isoDay(addDays(state.weekStart, wOff*7));   // weekStart est un lundi → +7k reste un lundi
+    cols.push({ date: addDays(state.weekStart, i), week, day: dIdx });
+  }
+  return cols;
+}
 function renderGrid(){
   const head=document.getElementById('gridHead'), body=document.getElementById('gridBody'), start=state.weekStart;
   const grid=document.getElementById('grid');
-  const days = viewMode==='jour' ? [selectedDay] : [0,1,2,3,4,5,6];
+  const cols = ribbonCols();
   grid.className = 'w-full border-collapse ' + (viewMode==='jour' ? 'min-w-full' : 'min-w-[980px]');
   const wsh=document.getElementById('weekScrollHint'); if(wsh) wsh.classList.toggle('hidden', viewMode!=='semaine');
 
-  const { conflictIds, pairs } = weekConflicts(start);
+  // Conflits : on cumule ceux de chaque semaine visible du ruban (pour marquer les cartes) ; la bannière reste sur la semaine ancre
+  const weeksInView = [...new Set(cols.map(c=>c.week))];
+  const conflictIds = new Set();
+  weeksInView.forEach(w=>{ weekConflicts(w).conflictIds.forEach(id=>conflictIds.add(id)); });
+  const { pairs } = weekConflicts(start);
+  const sepCls = (c,idx)=> (viewMode!=='jour' && c.day===0 && idx>0) ? ' border-l-2 border-slate-300' : '';
 
-  // En-tête : une colonne par jour
-  const noteDays = new Set(state.notes.filter(n=>n.week===start && n.day!=null).map(n=>n.day));
+  // En-tête : une colonne par jour (ruban continu)
   let hrow = `<th class="sticky left-0 z-10 bg-slate-50 text-left px-3 py-2 text-xs font-bold text-slate-500 uppercase border-b border-r border-slate-200 min-w-[104px]">${teamWord}</th>`;
-  days.forEach(i=>{
-    const date=addDays(start,i), today=new Date().toDateString()===date.toDateString();
-    const pin = noteDays.has(i) ? ' <span title="Note ce jour-là">📌</span>' : '';
-    const dayAbs = weekAbsences(start).filter(a=>a.day===i).map(a=>{const e=empById(a.empId);const t=absenceType(a.type);return e?{name:e.name.split(' ')[0],emoji:t.emoji,label:t.label,color:t.color}:null;}).filter(Boolean);
+  cols.forEach((c,idx)=>{
+    const date=c.date, today=new Date().toDateString()===date.toDateString();
+    const hasNote = state.notes.some(n=>n.week===c.week && n.day===c.day);
+    const pin = hasNote ? ' <span title="Note ce jour-là">📌</span>' : '';
+    const dayAbs = weekAbsences(c.week).filter(a=>a.day===c.day).map(a=>{const e=empById(a.empId);const t=absenceType(a.type);return e?{name:e.name.split(' ')[0],emoji:t.emoji,label:t.label,color:t.color}:null;}).filter(Boolean);
     const absBadge = dayAbs.length ? `<div class="mt-1 flex flex-wrap gap-0.5 justify-center">${dayAbs.map(a=>`<span class="text-[9px] font-semibold px-1 py-0.5 rounded leading-none" style="background:${a.color}22;color:${a.color}" title="${a.label}">${a.emoji} ${escapeHtml(a.name)}</span>`).join('')}</div>` : '';
-    hrow += `<th class="px-2 py-2 border-b border-l border-slate-200 ${viewMode==='jour'?'':'min-w-[136px]'} ${today?'bg-teal-50':'bg-slate-50'}">
-               <div class="text-xs font-bold ${today?'text-teal-700':'text-slate-700'}">${DAYS[i]}${pin}</div>
+    hrow += `<th class="px-2 py-2 border-b border-l border-slate-200${sepCls(c,idx)} ${viewMode==='jour'?'':'min-w-[136px]'} ${today?'bg-teal-50':'bg-slate-50'}">
+               <div class="text-xs font-bold ${today?'text-teal-700':'text-slate-700'}">${DAYS[c.day]}${pin}</div>
                <div class="text-[11px] ${today?'text-teal-600':'text-slate-400'}">${fmtDate(date)}</div>${absBadge}
              </th>`;
   });
@@ -1549,8 +1571,10 @@ function renderGrid(){
   const sortByStart = a=>a.slice().sort((x,y)=>x.start.localeCompare(y.start));
 
   const visible = TEAMS.filter(t => teamFilter==='all' || t.key===teamFilter);
-  const teamHours = t => days.reduce((a,d)=> a + weekShifts(start).filter(s=>s.team===t.key && s.day===d).reduce((x,s)=>x+shiftHours(s),0), 0);
-  const dayTotal  = d => visible.reduce((a,t)=> a + weekShifts(start).filter(s=>s.team===t.key && s.day===d).reduce((x,s)=>x+shiftHours(s),0), 0);
+  const colShifts = (c,tk)=> state.shifts.filter(s=>s.week===c.week && s.day===c.day && s.team===tk);
+  const teamHours = t => cols.reduce((a,c)=> a + colShifts(c,t.key).reduce((x,s)=>x+shiftHours(s),0), 0);
+  const dayTotal  = c => visible.reduce((a,t)=> a + colShifts(c,t.key).reduce((x,s)=>x+shiftHours(s),0), 0);
+  const dayCost   = c => visible.reduce((a,t)=> a + colShifts(c,t.key).reduce((x,s)=>{const e=empById(s.empId); return x + shiftHours(s)*((e&&e.rate)||0);},0), 0);
   let b='';
   visible.forEach(team=>{
     const th=teamHours(team);
@@ -1559,9 +1583,9 @@ function renderGrid(){
             <div class="font-bold text-sm text-slate-800 flex items-center gap-2"><span class="dot"></span>${team.label}</div>
             ${th>0?`<div class="text-[10px] text-slate-400 mt-0.5 pl-4 tabular-nums">${th.toFixed(1)} h</div>`:''}
           </td>`;
-    days.forEach(day=>{
-      const all = weekShifts(start).filter(s=>s.day===day && s.team===team.key);
-      b += `<td class="px-1.5 py-1.5 border-b border-l border-slate-100 align-top bg-white cursor-pointer hover:bg-slate-50 transition" data-add-day="${day}" data-add-team="${team.key}">`;
+    cols.forEach((c,idx)=>{
+      const all = colShifts(c, team.key);
+      b += `<td class="px-1.5 py-1.5 border-b border-l border-slate-100${sepCls(c,idx)} align-top bg-white cursor-pointer hover:bg-slate-50 transition" data-add-day="${c.day}" data-add-week="${c.week}" data-add-team="${team.key}">`;
       // Groupes dans l'ordre des créneaux du profil (+ tout créneau inconnu à la fin)
       const known=new Set(PERIODS.map(p=>p.key));
       PERIODS.forEach(p=>{
@@ -1576,13 +1600,12 @@ function renderGrid(){
     b += `</tr>`;
   });
   // Ligne de totaux par jour (heures + coût)
-  const dayCost = d => visible.reduce((a,t)=> a + weekShifts(start).filter(s=>s.team===t.key && s.day===d).reduce((x,s)=>{const e=empById(s.empId); return x + shiftHours(s)*((e&&e.rate)||0);},0), 0);
-  const grand = days.reduce((a,d)=>a+dayTotal(d),0);
+  const grand = cols.reduce((a,c)=>a+dayTotal(c),0);
   const showCost = !!state.advanced;                       // coûts réservés à la vue manager
-  const grandCost = days.reduce((a,d)=>a+dayCost(d),0);
+  const grandCost = cols.reduce((a,c)=>a+dayCost(c),0);
   b += `<tr class="bg-slate-50">
           <td class="sticky left-0 z-10 bg-slate-50 px-3 py-2 border-r border-slate-200 text-[11px] font-bold uppercase tracking-wide text-slate-500">Total${grand>0?` · ${grand.toFixed(1)} h`:''}${showCost&&grandCost>0?`<div class="font-normal normal-case text-slate-400">${grandCost.toFixed(0)} €</div>`:''}</td>`;
-  days.forEach(day=>{ const dt=dayTotal(day), dc=dayCost(day); b += `<td class="px-2 py-2 border-l border-slate-100 text-center text-[11px] font-semibold tabular-nums ${dt>0?'text-slate-700':'text-slate-300'}">${dt>0?dt.toFixed(1)+' h':'—'}${showCost&&dc>0?`<div class="font-normal text-slate-400">${dc.toFixed(0)} €</div>`:''}</td>`; });
+  cols.forEach((c,idx)=>{ const dt=dayTotal(c), dc=dayCost(c); b += `<td class="px-2 py-2 border-l border-slate-100${sepCls(c,idx)} text-center text-[11px] font-semibold tabular-nums ${dt>0?'text-slate-700':'text-slate-300'}">${dt>0?dt.toFixed(1)+' h':'—'}${showCost&&dc>0?`<div class="font-normal text-slate-400">${dc.toFixed(0)} €</div>`:''}</td>`; });
   b += `</tr>`;
   body.innerHTML=b;
 
@@ -1946,7 +1969,7 @@ function collectBreaks(){ return [...document.querySelectorAll('#shiftBreaks .br
 document.getElementById('addBreakBtn').addEventListener('click', ()=>{ document.getElementById('shiftBreaks').insertAdjacentHTML('beforeend', breakRowHtml()); updateBreaksSum(); });
 document.getElementById('shiftBreaks').addEventListener('click', e=>{ const d=e.target.closest('.brk-del'); if(d){ d.closest('.brk-row').remove(); updateBreaksSum(); } });
 document.getElementById('shiftBreaks').addEventListener('input', e=>{ if(e.target.classList.contains('brk-min')) updateBreaksSum(); });
-function openShiftModal(shift, presetDay, presetTeam, presetPeriod){
+function openShiftModal(shift, presetDay, presetTeam, presetPeriod, presetWeek){
   if(!ensurePro()) return;
   if(!state.employees.length){ toast('Ajoutez d’abord un employé (onglet Équipe).'); return; }
   fillShiftSelects();
@@ -1975,6 +1998,7 @@ function openShiftModal(shift, presetDay, presetTeam, presetPeriod){
     document.getElementById('dupShiftBtn').classList.remove('hidden');
     document.getElementById('repeatRow').classList.add('hidden');   // pas de répétition en modification
   } else {
+    newShiftWeek = presetWeek || state.weekStart;   // semaine cible (colonne cliquée dans le ruban)
     const per = presetPeriod ?? (PERIODS[0]?.key);
     const pObj = periodOf(per);
     document.getElementById('shiftModalTitle').textContent='Ajouter un service';
@@ -2032,7 +2056,8 @@ document.getElementById('shiftForm').addEventListener('submit', ev=>{
   if(id){ Object.assign(state.shifts.find(x=>x.id===id), data); save(); renderAll(); closeShiftModal(); toast('Service enregistré ✓'); return; }
   let daysList=[...document.querySelectorAll('#repeatDays .rep-day')].filter(b=>b.classList.contains('bg-teal-600')).map(b=>parseInt(b.dataset.rd,10));
   if(!daysList.length) daysList=[data.day];
-  daysList.forEach(d=> state.shifts.push({ id:uid(), week:state.weekStart, ...data, day:d }));
+  const targetWeek = newShiftWeek || state.weekStart;
+  daysList.forEach(d=> state.shifts.push({ id:uid(), week:targetWeek, ...data, day:d }));
   save(); renderAll(); closeShiftModal(); toast(daysList.length>1?`${daysList.length} créneaux ajoutés ✓`:'Service enregistré ✓');
 });
 document.getElementById('deleteShiftBtn').addEventListener('click', ()=>{
@@ -2529,7 +2554,7 @@ function renderTeamFilter(){
   segActivate('.filter-btn','team',teamFilter);
 }
 function setFilter(t){ teamFilter=t; segActivate('.filter-btn','team',t); renderGrid(); }
-function setMode(m){ viewMode=m; state.viewMode=m; saveQuiet(); segActivate('.mode-btn','mode',m); renderGrid(); }
+function setMode(m){ viewMode=m; state.viewMode=m; if(m==='semaine') ribbonWeeks=3; saveQuiet(); segActivate('.mode-btn','mode',m); renderGrid(); }
 function setScope(s){ suiviScope=s; segActivate('.scope-btn','scope',s); renderSuivi(); }
 document.getElementById('teamFilter').addEventListener('click',e=>{ const b=e.target.closest('.filter-btn'); if(b) setFilter(b.dataset.team); });
 document.querySelectorAll('.mode-btn').forEach(b=>b.addEventListener('click',()=>setMode(b.dataset.mode)));
@@ -2539,6 +2564,7 @@ document.getElementById('dayPicker').addEventListener('click',e=>{ const b=e.tar
 // Navigation semaine/jour — sans aucune limite (passé comme futur)
 function goWeek(delta){
   state.weekStart = isoDay(addDays(state.weekStart, delta*7));
+  ribbonWeeks = 3;   // on repart sur un ruban compact après une navigation explicite
   saveQuiet(); renderGrid();
   if(!document.getElementById('view-suivi').classList.contains('hidden')) renderSuivi();
 }
@@ -2551,7 +2577,7 @@ function goDay(delta){
 }
 document.getElementById('prevWeek').addEventListener('click',()=>goWeek(-1));
 document.getElementById('nextWeek').addEventListener('click',()=>goWeek(1));
-document.getElementById('todayBtn').addEventListener('click',()=>{ state.weekStart=isoDay(mondayOf(new Date())); selectedDay=((new Date().getDay()+6)%7); saveQuiet(); renderGrid(); if(!document.getElementById('view-suivi').classList.contains('hidden')) renderSuivi(); });
+document.getElementById('todayBtn').addEventListener('click',()=>{ state.weekStart=isoDay(mondayOf(new Date())); selectedDay=((new Date().getDay()+6)%7); ribbonWeeks=3; saveQuiet(); renderGrid(); if(!document.getElementById('view-suivi').classList.contains('hidden')) renderSuivi(); });
 
 // Balayage tactile gauche/droite sur le planning
 (function(){
@@ -2569,9 +2595,21 @@ document.getElementById('todayBtn').addEventListener('click',()=>{ state.weekSta
     const dx=t.clientX-sx, dy=t.clientY-sy;
     if(Math.abs(dx) < 55 || Math.abs(dx) < Math.abs(dy)*1.4) return;   // pas un vrai swipe horizontal
     if(viewMode==='jour'){ goDay(dx < 0 ? 1 : -1); return; }
-    // Mode Semaine : on ne change de semaine qu'au bord du défilement horizontal des jours
-    if(dx < 0 && atR) goWeek(1);
-    else if(dx > 0 && atL) goWeek(-1);
+    // Mode Semaine : revenir en arrière d'une semaine en balayant vers la droite au tout début
+    if(dx > 0 && atL) goWeek(-1);
+  }, {passive:true});
+  // Extension automatique du ruban vers la droite : en approchant du bord, on ajoute des semaines (défilement continu, sans limite)
+  let extending=false;
+  sc.addEventListener('scroll', ()=>{
+    if(viewMode==='jour' || extending) return;
+    if(sc.scrollLeft + sc.clientWidth < sc.scrollWidth - 400) return;   // pas encore assez près du bord
+    if(ribbonWeeks >= 12) return;                                        // garde-fou mémoire (~3 mois de jours affichés)
+    extending=true;
+    const keep = sc.scrollLeft;
+    ribbonWeeks += 3;
+    renderGrid();
+    sc.scrollLeft = keep;   // colonnes ajoutées à droite → on conserve la position
+    extending=false;
   }, {passive:true});
 })();
 
@@ -2592,7 +2630,7 @@ document.getElementById('gridBody').addEventListener('click', e=>{
   const card=e.target.closest('[data-shift]');
   if(card){ openShiftModal(state.shifts.find(x=>x.id===card.dataset.shift)); return; }
   const td=e.target.closest('[data-add-day]');
-  if(td){ openShiftModal(null, parseInt(td.dataset.addDay,10), td.dataset.addTeam); }
+  if(td){ openShiftModal(null, parseInt(td.dataset.addDay,10), td.dataset.addTeam, null, td.dataset.addWeek); }
 });
 /* Glisser-déposer un créneau (desktop) */
 let dragShiftId=null;
@@ -2601,8 +2639,8 @@ let dragShiftId=null;
   gb.addEventListener('dragover', e=>{ const td=e.target.closest('[data-add-day]'); if(td && dragShiftId){ e.preventDefault(); td.classList.add('ring-2','ring-teal-300','ring-inset'); } });
   gb.addEventListener('dragleave', e=>{ const td=e.target.closest('[data-add-day]'); if(td) td.classList.remove('ring-2','ring-teal-300','ring-inset'); });
   gb.addEventListener('drop', e=>{ const td=e.target.closest('[data-add-day]'); if(!td||!dragShiftId) return; e.preventDefault(); td.classList.remove('ring-2','ring-teal-300','ring-inset');
-    const s=state.shifts.find(x=>x.id===dragShiftId); const nd=parseInt(td.dataset.addDay,10), nt=td.dataset.addTeam;
-    if(s && !(s.day===nd && s.team===nt)){ s.day=nd; s.team=nt; save(); renderAll(); toast('Créneau déplacé ✓'); }
+    const s=state.shifts.find(x=>x.id===dragShiftId); const nd=parseInt(td.dataset.addDay,10), nt=td.dataset.addTeam, nw=td.dataset.addWeek||s.week;
+    if(s && !(s.day===nd && s.team===nt && s.week===nw)){ s.day=nd; s.team=nt; s.week=nw; save(); renderAll(); toast('Créneau déplacé ✓'); }
     dragShiftId=null; });
 })();
 document.getElementById('empBody').addEventListener('click', e=>{
