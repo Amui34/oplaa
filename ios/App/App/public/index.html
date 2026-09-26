@@ -119,6 +119,14 @@
   body.role-employee #btnEstb, body.role-employee #dupWeek, body.role-employee #btnUndo,
   body.role-employee #btnHistory, body.role-employee #btnEmailM, body.role-employee #btnPrintM{ display:none !important; }
   @media print{ #rgpdMark{ display:none !important; } }
+  /* Icônes trait fin : alignement libellé + picto */
+  [hidden]{ display:none !important; }
+  .mi{ align-items:center; gap:.7rem; }
+  .mi:not(.hidden){ display:flex; }
+  .ic{ display:inline-flex; align-items:center; justify-content:center; flex:0 0 auto; color:currentColor; }
+  .ic svg{ display:block; }
+  .ic-btn{ align-items:center; gap:.45rem; }
+  .ic-btn:not(.hidden){ display:inline-flex; }
 </style>
 </head>
 <body class="bg-slate-50 text-slate-800 min-h-screen">
@@ -140,9 +148,9 @@
   <div class="oplaa-word" style="font-size:40px;color:#C4562F">oplaa</div>
   <p class="text-slate-500 mt-2 mb-8 text-base">Le planning d'équipe, simplifié.</p>
   <div class="w-full max-w-xs flex flex-col gap-3">
-    <button id="welcomePatron" class="w-full px-5 py-4 rounded-2xl bg-teal-600 text-white font-bold text-lg hover:bg-teal-700">🏪 Je gère mon établissement</button>
-    <button id="welcomeEmploye" class="w-full px-5 py-4 rounded-2xl bg-white border border-slate-300 text-slate-800 font-bold text-lg hover:bg-slate-50">👤 Je suis employé — j'ai un code</button>
-    <button id="welcomeDemo" hidden class="w-full px-5 py-3 rounded-2xl text-slate-500 font-semibold hover:bg-slate-50 border border-dashed border-slate-300">✨ Voir une démo (données d'exemple)</button>
+    <button id="welcomePatron" class="w-full inline-flex items-center justify-center gap-2 px-5 py-4 rounded-2xl bg-teal-600 text-white font-bold text-lg hover:bg-teal-700"><span class="ic" data-ic="store" data-ic-size="22"></span>Je gère mon établissement</button>
+    <button id="welcomeEmploye" class="w-full inline-flex items-center justify-center gap-2 px-5 py-4 rounded-2xl bg-white border border-slate-300 text-slate-800 font-bold text-lg hover:bg-slate-50"><span class="ic" data-ic="user" data-ic-size="22"></span>Je suis employé — j'ai un code</button>
+    <button id="welcomeDemo" hidden class="w-full inline-flex items-center justify-center gap-2 px-5 py-3 rounded-2xl text-slate-500 font-semibold hover:bg-slate-50 border border-dashed border-slate-300"><span class="ic" data-ic="bulb" data-ic-size="18"></span>Voir une démo (données d'exemple)</button>
   </div>
   <p class="text-slate-400 text-xs mt-6 max-w-xs">Tu pourras te connecter à ton compte à tout moment depuis le menu Données.</p>
 </div>
@@ -167,62 +175,62 @@
       <button data-view="planning"   class="tab-btn px-3 py-1.5 rounded-md transition">Planning</button>
       <button data-view="equipe"     class="tab-btn px-3 py-1.5 rounded-md transition">Équipe</button>
       <button data-view="suivi"      class="tab-btn px-3 py-1.5 rounded-md transition">Suivi</button>
-      <button data-view="conformite" class="tab-btn px-3 py-1.5 rounded-md transition">Conformité 🔒</button>
+      <button data-view="conformite" class="tab-btn px-3 py-1.5 rounded-md transition">Conformité</button>
     </nav>
-    <button id="btnEmail" class="hidden sm:inline-flex px-3 py-2 rounded-lg bg-teal-600 text-white font-semibold hover:bg-teal-700 text-sm">✉️ Envoyer</button>
-    <button id="btnPrint" class="hidden sm:inline-flex px-3 py-2 rounded-lg btn-ink font-semibold text-sm">🖨️ Imprimer</button>
+    <button id="btnEmail" class="hidden sm:inline-flex ic-btn px-3 py-2 rounded-lg bg-teal-600 text-white font-semibold hover:bg-teal-700 text-sm"><span class="ic" data-ic="send" data-ic-size="16"></span>Envoyer</button>
+    <button id="btnPrint" class="hidden sm:inline-flex ic-btn px-3 py-2 rounded-lg btn-ink font-semibold text-sm"><span class="ic" data-ic="print" data-ic-size="16"></span>Imprimer</button>
     <div class="relative shrink-0">
       <button id="btnData" class="px-3 py-2 rounded-lg bg-white border border-slate-300 font-semibold hover:bg-slate-50 text-sm">Données</button>
       <div id="dataMenu" class="hidden absolute right-0 mt-1 w-64 max-h-[75vh] overflow-y-auto bg-white border border-slate-200 rounded-xl shadow-lg py-1.5 z-40 text-slate-700 text-sm">
         <div class="px-4 pt-1 pb-0.5 text-[10px] font-bold uppercase tracking-wider text-slate-400">Établissement</div>
-        <button id="btnEstb" class="w-full text-left px-4 py-2 hover:bg-slate-50">🏢 Mes établissements…</button>
+        <button id="btnEstb" class="mi w-full text-left px-4 py-2 hover:bg-slate-50"><span class="ic" data-ic="building"></span>Mes établissements…</button>
         <div class="border-t border-slate-100 my-1"></div>
         <div class="sm:hidden">
           <div class="px-4 pt-1 pb-0.5 text-[10px] font-bold uppercase tracking-wider text-slate-400">Partager</div>
-          <button id="btnEmailM" class="w-full text-left px-4 py-2 hover:bg-slate-50">✉️ Envoyer le planning</button>
-          <button id="btnPrintM" class="w-full text-left px-4 py-2 hover:bg-slate-50">🖨️ Imprimer / PDF</button>
+          <button id="btnEmailM" class="mi w-full text-left px-4 py-2 hover:bg-slate-50"><span class="ic" data-ic="send"></span>Envoyer le planning</button>
+          <button id="btnPrintM" class="mi w-full text-left px-4 py-2 hover:bg-slate-50"><span class="ic" data-ic="print"></span>Imprimer / PDF</button>
           <div class="border-t border-slate-100 my-1"></div>
         </div>
         <div class="px-4 pt-1 pb-0.5 text-[10px] font-bold uppercase tracking-wider text-slate-400">Compte</div>
-        <button id="btnCloud" class="w-full text-left px-4 py-2 hover:bg-slate-50"><span id="btnCloudLabel">☁️ Mon compte (connexion)</span></button>
+        <button id="btnCloud" class="mi w-full text-left px-4 py-2 hover:bg-slate-50"><span class="ic" data-ic="cloud"></span><span id="btnCloudLabel">Mon compte (connexion)</span></button>
         <div class="border-t border-slate-100 my-1"></div>
         <div class="px-4 pt-1 pb-0.5 text-[10px] font-bold uppercase tracking-wider text-slate-400">Affichage</div>
-        <button id="btnEmployeePreview" class="w-full text-left px-4 py-2 hover:bg-slate-50">👤 Voir l'espace employé</button>
-        <button id="btnTheme" class="w-full text-left px-4 py-2 hover:bg-slate-50"><span id="btnThemeLabel">🌙 Passer en sombre</span></button>
+        <button id="btnEmployeePreview" class="mi w-full text-left px-4 py-2 hover:bg-slate-50"><span class="ic" data-ic="user"></span>Voir l'espace employé</button>
+        <button id="btnTheme" class="mi w-full text-left px-4 py-2 hover:bg-slate-50"><span class="ic" data-ic="moon" id="btnThemeIcon"></span><span id="btnThemeLabel">Passer en sombre</span></button>
         <div class="border-t border-slate-100 my-1"></div>
         <div class="px-4 pt-1 pb-0.5 text-[10px] font-bold uppercase tracking-wider text-slate-400">Édition</div>
-        <button id="btnUndo" class="w-full text-left px-4 py-2 hover:bg-slate-50">↩︎ Annuler la dernière modification</button>
-        <button id="btnHistory" class="w-full text-left px-4 py-2 hover:bg-slate-50">🕘 Historique / versions…</button>
-        <button id="dupWeek" class="w-full text-left px-4 py-2 hover:bg-slate-50">⧉ Dupliquer la semaine précédente</button>
+        <button id="btnUndo" class="mi w-full text-left px-4 py-2 hover:bg-slate-50"><span class="ic" data-ic="undo"></span>Annuler la dernière modification</button>
+        <button id="btnHistory" class="mi w-full text-left px-4 py-2 hover:bg-slate-50"><span class="ic" data-ic="history"></span>Historique / versions…</button>
+        <button id="dupWeek" class="mi w-full text-left px-4 py-2 hover:bg-slate-50"><span class="ic" data-ic="copy"></span>Dupliquer la semaine précédente</button>
         <div class="border-t border-slate-100 my-1"></div>
         <div class="px-4 pt-1 pb-0.5 text-[10px] font-bold uppercase tracking-wider text-slate-400">Configuration</div>
-        <button id="btnSettings" class="w-full text-left px-4 py-2 hover:bg-slate-50">⚙️ Réglages (équipes, créneaux, couleur)</button>
-        <button id="btnProfile" class="w-full text-left px-4 py-2 hover:bg-slate-50">🔀 Changer de profil d'activité</button>
-        <button id="btnRename" class="w-full text-left px-4 py-2 hover:bg-slate-50">✏️ Renommer l'établissement</button>
+        <button id="btnSettings" class="mi w-full text-left px-4 py-2 hover:bg-slate-50"><span class="ic" data-ic="settings"></span>Réglages (équipes, créneaux, couleur)</button>
+        <button id="btnProfile" class="mi w-full text-left px-4 py-2 hover:bg-slate-50"><span class="ic" data-ic="shuffle"></span>Changer de profil d'activité</button>
+        <button id="btnRename" class="mi w-full text-left px-4 py-2 hover:bg-slate-50"><span class="ic" data-ic="pencil"></span>Renommer l'établissement</button>
         <div class="border-t border-slate-100 my-1"></div>
         <div class="px-4 pt-1 pb-0.5 text-[10px] font-bold uppercase tracking-wider text-slate-400">Sauvegarde</div>
-        <button id="btnExport" class="w-full text-left px-4 py-2 hover:bg-slate-50">💾 Sauvegarder (JSON)</button>
-        <button id="btnImport" class="w-full text-left px-4 py-2 hover:bg-slate-50">📂 Charger une sauvegarde</button>
-        <button id="btnReset" class="w-full text-left px-4 py-2 text-red-600 hover:bg-red-50">🗑️ Vider les données (repartir de zéro)</button>
+        <button id="btnExport" class="mi w-full text-left px-4 py-2 hover:bg-slate-50"><span class="ic" data-ic="save"></span>Sauvegarder (JSON)</button>
+        <button id="btnImport" class="mi w-full text-left px-4 py-2 hover:bg-slate-50"><span class="ic" data-ic="folder"></span>Charger une sauvegarde</button>
+        <button id="btnReset" class="mi w-full text-left px-4 py-2 text-red-600 hover:bg-red-50"><span class="ic" data-ic="trash"></span>Vider les données (repartir de zéro)</button>
         <div class="border-t border-slate-100 my-1"></div>
         <div class="px-4 pt-1 pb-0.5 text-[10px] font-bold uppercase tracking-wider text-slate-400">Aide &amp; retours</div>
-        <button id="btnHelp" class="w-full text-left px-4 py-2 hover:bg-slate-50">🆘 Aide / FAQ</button>
-        <button id="btnFeedback" class="w-full text-left px-4 py-2 hover:bg-slate-50">💡 Proposer une amélioration</button>
-        <button id="btnPrivacy" class="w-full text-left px-4 py-2 hover:bg-slate-50">🔒 Confidentialité &amp; RGPD</button>
-        <div class="px-4 py-1.5 text-[10px] text-slate-400 leading-snug">🛡️ Données protégées : chaque employé ne voit que son planning. Salaires et coordonnées jamais partagés (RGPD).</div>
-        <button id="btnContact" class="w-full text-left px-4 py-2 hover:bg-slate-50">✉️ Contacter le créateur</button>
+        <button id="btnHelp" class="mi w-full text-left px-4 py-2 hover:bg-slate-50"><span class="ic" data-ic="help"></span>Aide / FAQ</button>
+        <button id="btnFeedback" class="mi w-full text-left px-4 py-2 hover:bg-slate-50"><span class="ic" data-ic="bulb"></span>Proposer une amélioration</button>
+        <button id="btnPrivacy" class="mi w-full text-left px-4 py-2 hover:bg-slate-50"><span class="ic" data-ic="lock"></span>Confidentialité &amp; RGPD</button>
+        <div class="mi px-4 py-1.5 text-[10px] text-slate-400 leading-snug"><span class="ic" data-ic="shield" data-ic-size="14" style="align-self:flex-start;margin-top:1px"></span><span>Données protégées : chaque employé ne voit que son planning. Salaires et coordonnées jamais partagés (RGPD).</span></div>
+        <button id="btnContact" class="mi w-full text-left px-4 py-2 hover:bg-slate-50"><span class="ic" data-ic="mail"></span>Contacter le créateur</button>
         <div class="px-4 pt-1 pb-1.5 text-[10px] text-slate-300">Oplaa v1.0 · © 2026 Noa Madar</div>
       </div>
       <input type="file" id="importFile" accept="application/json" class="hidden" />
     </div>
     <div id="addWrap" class="relative shrink-0">
-      <button id="addMenuBtn" class="px-3 py-2 rounded-lg bg-teal-600 text-white font-semibold hover:bg-teal-700 text-sm">＋ Ajouter</button>
+      <button id="addMenuBtn" class="ic-btn px-3 py-2 rounded-lg bg-teal-600 text-white font-semibold hover:bg-teal-700 text-sm"><span class="ic" data-ic="plus" data-ic-size="16"></span>Ajouter</button>
       <div id="addMenu" class="hidden absolute right-0 mt-1 w-56 bg-white border border-slate-200 rounded-xl shadow-lg py-1 z-40 text-sm text-slate-700">
         <button id="addShiftBtn" class="w-full text-left px-4 py-2 hover:bg-slate-50 font-semibold">➕ Un service</button>
-        <button id="btnAbsences" class="manager-only w-full text-left px-4 py-2 hover:bg-slate-50 font-semibold">🌴 Un congé / une absence</button>
+        <button id="btnAbsences" class="mi manager-only w-full text-left px-4 py-2 hover:bg-slate-50 font-semibold"><span class="ic" data-ic="holiday"></span>Un congé / une absence</button>
       </div>
     </div>
-    <button id="addEmpHeaderBtn" class="hidden shrink-0 px-3 py-2 rounded-lg bg-teal-600 text-white font-semibold hover:bg-teal-700 text-sm">＋ Ajouter</button>
+    <button id="addEmpHeaderBtn" class="hidden shrink-0 ic-btn px-3 py-2 rounded-lg bg-teal-600 text-white font-semibold hover:bg-teal-700 text-sm"><span class="ic" data-ic="plus" data-ic-size="16"></span>Ajouter</button>
   </div>
 
 </header>
@@ -285,7 +293,7 @@
     <div class="mt-5">
       <div class="flex items-center gap-3 mb-2">
         <h3 class="text-sm font-extrabold text-slate-800 uppercase tracking-wide flex items-center gap-2">📌 Notes &amp; événements</h3>
-        <button id="addNoteBtn" class="no-print ml-auto px-3 py-1.5 rounded-lg bg-white border border-slate-300 font-semibold hover:bg-slate-50 text-sm">＋ Ajouter une note</button>
+        <button id="addNoteBtn" class="no-print ml-auto ic-btn px-3 py-1.5 rounded-lg bg-white border border-slate-300 font-semibold hover:bg-slate-50 text-sm"><span class="ic" data-ic="plus" data-ic-size="15"></span>Ajouter une note</button>
       </div>
       <div id="notesList" class="grid gap-2"></div>
       <p id="notesEmpty" class="hidden text-sm text-slate-400 py-3">Aucune note pour cette semaine. Ajoutez un événement pour prévenir l'équipe (livraison, service de groupe, fermeture…).</p>
@@ -517,7 +525,7 @@
       <details class="border border-slate-200 rounded-lg px-3 py-2 bg-slate-50">
         <summary class="text-sm font-semibold text-slate-600 cursor-pointer">Pauses <span class="font-normal text-slate-400">(déduites des heures)</span> <span id="shiftBreaksSum" class="font-normal text-slate-400"></span></summary>
         <div id="shiftBreaks" class="mt-3 space-y-2"></div>
-        <button type="button" id="addBreakBtn" class="mt-2 text-sm text-teal-600 font-semibold hover:underline">＋ Ajouter une pause</button>
+        <button type="button" id="addBreakBtn" class="mt-2 ic-btn text-sm text-teal-600 font-semibold hover:underline"><span class="ic" data-ic="plus" data-ic-size="14"></span>Ajouter une pause</button>
         <p class="text-xs text-slate-400 mt-2">Ex : déjeuner 30 min, cigarette 10 min… Le temps de pause est retiré des heures travaillées.</p>
       </details>
       <div>
@@ -631,7 +639,7 @@
         <div class="text-sm text-emerald-700 mt-1"><span id="cloudMemEst"></span> · <b id="cloudMemRole"></b></div>
       </div>
       <button type="button" id="cloudSync" class="manager-only w-full px-4 py-3 rounded-xl bg-teal-600 text-white font-semibold hover:bg-teal-700 mb-2">☁️ Envoyer mon planning au cloud</button>
-      <button type="button" id="cloudPull" class="manager-only w-full px-4 py-2.5 rounded-xl bg-white border border-slate-300 font-semibold hover:bg-slate-50 mb-2">⬇️ Récupérer mes données du cloud</button>
+      <button type="button" id="cloudPull" class="manager-only w-full inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-white border border-slate-300 font-semibold hover:bg-slate-50 mb-2"><span class="ic" data-ic="cloudDown" data-ic-size="18"></span>Récupérer mes données du cloud</button>
       <p id="cloudSyncMsg" class="text-sm mb-3 hidden"></p>
       <button type="button" id="cloudSignOut" class="w-full px-4 py-2.5 rounded-xl bg-white border border-slate-300 font-semibold hover:bg-slate-50">Se déconnecter</button>
       <button type="button" id="cloudDeleteAcc" class="w-full mt-2 text-sm text-red-600 font-semibold hover:underline">Supprimer mon compte</button>
@@ -715,7 +723,7 @@
 <div id="absModal" class="no-print fixed inset-0 bg-black/40 z-50 hidden items-center justify-center p-4">
   <div class="bg-white rounded-2xl shadow-xl w-full max-w-2xl p-5 max-h-[90vh] overflow-y-auto">
     <div class="flex items-center justify-between mb-1">
-      <h3 class="text-lg font-bold">🌴 Congés &amp; absences</h3>
+      <h3 class="text-lg font-bold inline-flex items-center gap-2"><span class="ic" data-ic="holiday" data-ic-size="20"></span>Congés &amp; absences</h3>
       <button class="closeAbs text-slate-400 hover:text-slate-600 text-2xl leading-none">&times;</button>
     </div>
     <p id="absWeekLabel" class="text-sm text-slate-500 mb-3"></p>
@@ -777,7 +785,7 @@
     </div>
     <p class="text-xs text-slate-400 mb-3">Basculez d'un établissement à l'autre — chacun garde son métier, ses équipes, ses employés et ses règles.</p>
     <div id="estbList" class="space-y-2"></div>
-    <button type="button" id="estbAddBtn" class="mt-3 w-full px-4 py-2.5 rounded-xl border border-dashed border-slate-300 text-slate-600 font-semibold hover:bg-slate-50">＋ Ajouter un établissement</button>
+    <button type="button" id="estbAddBtn" class="mt-3 w-full inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl border border-dashed border-slate-300 text-slate-600 font-semibold hover:bg-slate-50"><span class="ic" data-ic="plus" data-ic-size="16"></span>Ajouter un établissement</button>
     <div id="estbAddForm" class="mt-3 rounded-xl border border-slate-200 p-3 space-y-2" hidden>
       <div>
         <label class="text-xs font-semibold text-slate-600">Nom</label>
@@ -936,7 +944,7 @@
       </div>
       <div>
         <div class="flex items-center gap-2 mb-2"><span class="text-xs font-bold uppercase tracking-wide text-slate-400 mr-auto">Équipes</span>
-          <button type="button" id="addTeamRow" class="text-sm text-teal-600 font-semibold hover:underline">＋ Ajouter</button></div>
+          <button type="button" id="addTeamRow" class="ic-btn text-sm text-teal-600 font-semibold hover:underline"><span class="ic" data-ic="plus" data-ic-size="14"></span>Ajouter</button></div>
         <div id="setTeams" class="space-y-2"></div>
       </div>
       <div>
@@ -1217,7 +1225,8 @@ function readLogoFile(file, cb){
 function applyTheme(){
   const dark = state.theme==='dark';
   document.documentElement.setAttribute('data-theme', dark?'dark':'light');
-  const b=document.getElementById('btnThemeLabel'); if(b) b.textContent = dark?'☀️ Passer en clair':'🌙 Passer en sombre';
+  const b=document.getElementById('btnThemeLabel'); if(b) b.textContent = dark?'Passer en clair':'Passer en sombre';
+  const bi=document.getElementById('btnThemeIcon'); if(bi && window.setIcon) window.setIcon(bi, dark?'sun':'moon');
 }
 function emptyCompliance(){ const c={}; COMPLIANCE_ITEMS.forEach(it=> c[it.key] = it.type==='bool' ? {done:false} : {date:''}); return c; }
 // Statut d'un élément : {label, cls} ; couleurs vert/ambre/rouge/gris
@@ -1557,7 +1566,7 @@ function renderGrid(){
       const known=new Set(PERIODS.map(p=>p.key));
       PERIODS.forEach(p=>{
         const list=sortByStart(all.filter(s=>s.period===p.key));
-        if(list.length){ b += grpLabel((p.accent?'☀️ ':'')+p.label, p.accent?'text-teal-500':''); list.forEach(s=>b+=cardHtml(s)); }
+        if(list.length){ b += grpLabel(p.label, p.accent?'text-teal-500':''); list.forEach(s=>b+=cardHtml(s)); }
       });
       const others=sortByStart(all.filter(s=>!known.has(s.period)));
       if(others.length){ b += grpLabel('Autre'); others.forEach(s=>b+=cardHtml(s)); }
@@ -2690,14 +2699,16 @@ function openProfileModal(isFirst){
   document.getElementById('profileModalTitle').textContent = isFirst ? "Pour quel type d'activité ?" : 'Changer de profil d’activité';
   document.getElementById('profileWarn').style.display = isFirst ? 'none' : '';
   document.querySelector('.closeProfile').style.display = isFirst ? 'none' : '';
+  const PROFILE_ICON={restaurant:'utensils',commerce:'bag',cafe:'coffee',hotel:'bell',sante:'stethoscope',custom:'settings'};
   document.getElementById('profileGrid').innerHTML = Object.keys(PROFILE_PRESETS).map(k=>{
     const P=PROFILE_PRESETS[k], on=state.profile===k;
     return `<button data-profile="${k}" class="profile-card text-left rounded-xl border ${on?'border-teal-500 ring-2 ring-teal-200':'border-slate-200'} bg-white hover:border-teal-400 p-3 transition">
-      <div class="text-2xl mb-1">${P.icon}</div>
+      <div class="ic text-slate-700 mb-1" data-ic="${PROFILE_ICON[k]||'store'}" data-ic-size="26"></div>
       <div class="font-bold text-slate-800 text-sm">${P.name}</div>
       <div class="text-[11px] text-slate-400 mt-0.5">${P.teams.map(t=>t.label).join(' · ')}</div>
     </button>`;
   }).join('');
+  if(window.OplaaIcons) OplaaIcons.paint(document.getElementById('profileGrid'));
   profileModal.classList.remove('hidden'); profileModal.classList.add('flex');
 }
 function closeProfileModal(){ profileModal.classList.add('hidden'); profileModal.classList.remove('flex'); }
@@ -3139,7 +3150,7 @@ function cloudMsg(id, text, ok){
   if(!text) el.classList.add('hidden');
 }
 function updateCloudMenuLabel(){
-  const l=document.getElementById('btnCloudLabel'); if(l) l.textContent = cloudSession ? '☁️ Mon compte ✓' : '☁️ Mon compte (connexion)';
+  const l=document.getElementById('btnCloudLabel'); if(l) l.textContent = cloudSession ? 'Mon compte — connecté' : 'Mon compte (connexion)';
   setRgpdWatermark(cloudSession && cloudSession.user ? cloudSession.user.email : '');
 }
 // RGPD : filigrane traçable (email connecté) sur toute l'app — dissuade le partage de captures
@@ -3478,6 +3489,60 @@ proInit();
   }
   raf=requestAnimationFrame(tick);
   setTimeout(hide, 2600);   // filet de sécurité si rAF est gelé (onglet en arrière-plan)
+})();
+</script>
+<script>
+/* ===== Icônes « trait fin » (jeu maison, style aligné sur la barre du bas) ===== */
+(function(){
+  const IC = {
+    building:'<rect x="4" y="3" width="10" height="18" rx="1.4"/><path d="M14 8h4a1.5 1.5 0 0 1 1.5 1.5V21"/><path d="M4 21h16"/><path d="M7.3 7h3.4M7.3 11h3.4M7.3 15h3.4"/>',
+    send:'<path d="M21 3 11 13"/><path d="M21 3 14.5 21l-3.5-8-8-3.5L21 3Z"/>',
+    print:'<path d="M7 9V3.5h10V9"/><rect x="4" y="9" width="16" height="8" rx="1.6"/><path d="M7 15h10v5.5H7z"/><path d="M16.5 12.2h.01"/>',
+    cloud:'<path d="M7 18.5a4.3 4.3 0 0 1-.8-8.53A5.2 5.2 0 0 1 16.4 9.3a3.6 3.6 0 0 1 .3 9.2H7Z"/>',
+    user:'<circle cx="12" cy="8" r="3.4"/><path d="M5.2 20a6.8 6.8 0 0 1 13.6 0"/>',
+    moon:'<path d="M20 14.4A8 8 0 1 1 9.6 4 6.5 6.5 0 0 0 20 14.4Z"/>',
+    sun:'<circle cx="12" cy="12" r="3.7"/><path d="M12 2.5v2.4M12 19.1v2.4M4.6 4.6l1.7 1.7M17.7 17.7l1.7 1.7M2.5 12h2.4M19.1 12h2.4M4.6 19.4l1.7-1.7M17.7 6.3l1.7-1.7"/>',
+    undo:'<path d="M9 8 5 12l4 4"/><path d="M5 12h9a5 5 0 1 1 0 10H8"/>',
+    history:'<circle cx="12" cy="12" r="8.4"/><path d="M12 7.4V12l3.2 2"/>',
+    copy:'<rect x="8" y="8" width="12" height="12" rx="2"/><path d="M16 8V6a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h2"/>',
+    settings:'<circle cx="12" cy="12" r="3"/><path d="M12 2.6v2.3M12 19.1v2.3M4.7 12H2.4M21.6 12h-2.3M5.7 5.7l1.6 1.6M16.7 16.7l1.6 1.6M18.3 5.7l-1.6 1.6M7.3 16.7l-1.6 1.6"/>',
+    shuffle:'<path d="M16 4l4 3-4 3"/><path d="M16 14l4 3-4 3"/><path d="M4 7h3.5c3.5 0 5 10 9 10H20"/><path d="M4 17h3.5c1.6 0 2.8-1.7 4-3.8"/>',
+    pencil:'<path d="M4 20h4L19 9a2 2 0 0 0-3-3L5 17v3Z"/><path d="M14.5 6.5l3 3"/>',
+    save:'<path d="M12 4v10"/><path d="M8 10l4 4 4-4"/><path d="M5 19h14"/>',
+    folder:'<path d="M4 7a2 2 0 0 1 2-2h3l2 2h7a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V7Z"/>',
+    trash:'<path d="M4 7h16"/><path d="M9 7V5a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/><path d="M6 7l1 12a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2l1-12"/><path d="M10 11v6M14 11v6"/>',
+    help:'<circle cx="12" cy="12" r="8.4"/><path d="M9.6 9.4a2.5 2.5 0 0 1 4.8.9c0 1.7-2.4 2.1-2.4 3.6"/><path d="M12 17.4h.01"/>',
+    bulb:'<path d="M9 18h6"/><path d="M10 21h4"/><path d="M8 14a5 5 0 1 1 8 0c-.7.9-1 1.4-1 2.5H9c0-1.1-.3-1.6-1-2.5Z"/>',
+    lock:'<rect x="5" y="10.5" width="14" height="10" rx="2"/><path d="M8 10.5V8a4 4 0 0 1 8 0v2.5"/><path d="M12 14.6v2.4"/>',
+    shield:'<path d="M12 3l7 3v5c0 4.6-3.1 7.6-7 9-3.9-1.4-7-4.4-7-9V6Z"/><path d="M9 12l2 2 4-4"/>',
+    mail:'<rect x="3" y="5.5" width="18" height="13" rx="2"/><path d="M4 7l8 6 8-6"/>',
+    plus:'<path d="M12 5v14M5 12h14"/>',
+    store:'<path d="M4.2 9 5.5 4.5h13L19.8 9"/><path d="M5 9v10.5a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1V9"/><path d="M4.2 9a2.4 2.4 0 0 0 4.8 0 2.4 2.4 0 0 0 4.8 0 2.4 2.4 0 0 0 4.8 0"/><path d="M9.5 20.5V15h5v5.5"/>',
+    holiday:'<path d="M12 21v-9.5"/><path d="M4.5 11.5a7.5 7.5 0 0 1 15 0Z"/><path d="M12 4V3"/>',
+    cloudDown:'<path d="M7 15.5a4 4 0 0 1-.6-7.95A5 5 0 0 1 16.3 7.5a3.4 3.4 0 0 1 .5 8.05"/><path d="M12 11v7M9.3 15.3 12 18l2.7-2.7"/>',
+    utensils:'<path d="M7 3v7M9.5 3v7M7 3v0M11 3c0 3-1.5 4-1.5 4M8.2 10v11"/><path d="M16.5 3c-1.6 0-2.8 2-2.8 4.5S15 12 16.5 12v9"/>',
+    bag:'<path d="M6 8h12l-1 12a1 1 0 0 1-1 1H8a1 1 0 0 1-1-1L6 8Z"/><path d="M9 8V6.5a3 3 0 0 1 6 0V8"/>',
+    coffee:'<path d="M5 9h11v4a5 5 0 0 1-5 5H10a5 5 0 0 1-5-5V9Z"/><path d="M16 10h1.8a2.2 2.2 0 0 1 0 4.4H16"/><path d="M8 3.5v2M11.5 3v2.5"/>',
+    bell:'<path d="M6 16V11a6 6 0 0 1 12 0v5l1.5 2.5H4.5L6 16Z"/><path d="M10 19a2 2 0 0 0 4 0"/>',
+    stethoscope:'<path d="M6 3v5a4 4 0 0 0 8 0V3"/><path d="M6 3H4.5M14 3h1.5"/><path d="M10 12v3a5 5 0 0 0 5 5 4 4 0 0 0 4-4v-2.2"/><circle cx="19" cy="12.5" r="2"/>'
+  };
+  function svg(name, size){
+    const p = IC[name]; if(!p) return '';
+    return '<svg viewBox="0 0 24 24" width="'+size+'" height="'+size+'" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">'+p+'</svg>';
+  }
+  function paint(root){
+    (root||document).querySelectorAll('.ic[data-ic]').forEach(function(el){
+      const name = el.getAttribute('data-ic');
+      const size = el.getAttribute('data-ic-size') || 18;
+      if(el.getAttribute('data-ic-done') === name) return;
+      el.innerHTML = svg(name, size);
+      el.setAttribute('data-ic-done', name);
+    });
+  }
+  window.OplaaIcons = { paint: paint, svg: svg };
+  window.setIcon = function(el, name){ if(!el) return; el.setAttribute('data-ic', name); paint(el.parentNode || document); };
+  paint();
+  document.addEventListener('DOMContentLoaded', function(){ paint(); });
 })();
 </script>
 </body>
