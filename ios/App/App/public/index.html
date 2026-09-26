@@ -3452,9 +3452,9 @@ function showWelcome(){ document.getElementById('welcome').classList.add('show')
 function hideWelcome(){ document.getElementById('welcome').classList.remove('show'); }
 document.getElementById('welcomePatron').addEventListener('click', ()=>{ hideWelcome(); openWizard(); });
 document.getElementById('welcomeEmploye').addEventListener('click', ()=>{ hideWelcome(); openCloud(); });
-// « Voir une démo » : uniquement sur le SITE WEB (masqué dans l'app iOS)
+// « Voir une démo » : visible partout (web ET app iOS) — permet notamment à la vérification Apple de tester l'app sans compte
 const _isNativeApp = !!(window.Capacitor && (typeof window.Capacitor.isNativePlatform==='function' ? window.Capacitor.isNativePlatform() : window.Capacitor.isNative));
-if(!_isNativeApp){ const d=document.getElementById('welcomeDemo'); if(d) d.hidden=false; }
+{ const d=document.getElementById('welcomeDemo'); if(d) d.hidden=false; }
 document.getElementById('welcomeDemo').addEventListener('click', ()=>{
   hideWelcome(); state=demoData(); migrate(state); syncGlobals(); firstRun=false;
   setAccent(state.accent); applyLogo(); setView('planning'); save(); renderAll(); applyMode();
