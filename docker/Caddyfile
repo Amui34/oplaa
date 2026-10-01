@@ -4,17 +4,32 @@
 	admin off
 }
 
-# Site vitrine (oplaa.pro)
+# oplaa.pro → l'application directement
+# (les pages légales/support restent servies depuis la vitrine)
 :80 {
-	root * /srv/site
 	encode zstd gzip
-	file_server
-	@pages path / *.html
-	try_files {path} {path}.html
-	header @pages Cache-Control "no-cache"
+
+	# Assistance & Confidentialité : servies depuis la vitrine (/srv/site)
+	@legal path /assistance.html /confidentialite.html /assistance /confidentialite
+	handle @legal {
+		root * /srv/site
+		@lhtml path *.html /assistance /confidentialite
+		header @lhtml Cache-Control "no-cache"
+		try_files {path} {path}.html
+		file_server
+	}
+
+	# Tout le reste → l'application web (/srv/app)
+	handle {
+		root * /srv/app
+		@ahtml path / *.html
+		header @ahtml Cache-Control "no-cache"
+		try_files {path} /index.html
+		file_server
+	}
 }
 
-# Application web (app.oplaa.pro)
+# app.oplaa.pro → l'application (conservé, identique)
 :8080 {
 	root * /srv/app
 	encode zstd gzip
