@@ -101,6 +101,7 @@
   /* Aiguillage employé : ne voit que son espace (verrouillé) */
   body.role-employee #bottomNav, body.role-employee .tab-btn, body.role-employee #addWrap,
   body.role-employee #btnEmail, body.role-employee #btnPrint, body.role-employee #empView,
+  body.role-employee #btnBackOwner, body.role-employee #btnEmployeePreview,
   body.role-employee .manager-only { display:none !important; }
   .oplaa-splash-mark { position:relative; width:112px; height:112px; border-radius:26px; background:#C4562F; display:flex; align-items:center; justify-content:center; box-shadow:0 10px 26px rgba(196,86,47,.25); }
   .oplaa-splash-clock { width:51px; height:51px; border-radius:50%; background:conic-gradient(#FBF6F1 0deg, rgba(251,246,241,0) 0deg); }
@@ -155,6 +156,13 @@
   <p class="text-slate-400 text-xs mt-6 max-w-xs">Tu pourras te connecter à ton compte à tout moment depuis le menu Données.</p>
 </div>
 
+<!-- ============ BANDEAU MODE DÉMO ============ -->
+<div id="demoBanner" class="no-print hidden items-center gap-3 px-4 py-2 bg-amber-100 text-amber-900 text-sm border-b border-amber-200">
+  <span class="ic shrink-0" data-ic="bulb" data-ic-size="16"></span>
+  <span class="flex-1 min-w-0"><b>Mode démo</b> — données d'exemple. Rien n'est enregistré sur un vrai compte.</span>
+  <button id="demoQuit" class="shrink-0 px-3 py-1.5 rounded-lg bg-amber-500 text-white font-semibold hover:bg-amber-600">Quitter la démo</button>
+</div>
+
 <!-- ============ EN-TÊTE ============ -->
 <header class="no-print bg-white border-b border-slate-200 sticky top-0 z-30" style="padding-top:env(safe-area-inset-top)">
   <div class="max-w-6xl mx-auto px-4 py-2 sm:py-3 flex items-center gap-3">
@@ -179,6 +187,7 @@
     </nav>
     <button id="btnEmail" class="hidden sm:inline-flex ic-btn px-3 py-2 rounded-lg bg-teal-600 text-white font-semibold hover:bg-teal-700 text-sm"><span class="ic" data-ic="send" data-ic-size="16"></span>Envoyer</button>
     <button id="btnPrint" class="hidden sm:inline-flex ic-btn px-3 py-2 rounded-lg btn-ink font-semibold text-sm"><span class="ic" data-ic="print" data-ic-size="16"></span>Imprimer</button>
+    <span id="syncStatus" class="hidden sm:inline text-[11px] font-semibold text-teal-600"></span>
     <div class="relative shrink-0">
       <button id="btnData" class="px-3 py-2 rounded-lg bg-white border border-slate-300 font-semibold hover:bg-slate-50 text-sm">Données</button>
       <div id="dataMenu" class="hidden absolute right-0 mt-1 w-64 max-h-[75vh] overflow-y-auto bg-white border border-slate-200 rounded-xl shadow-lg py-1.5 z-40 text-slate-700 text-sm">
@@ -193,6 +202,7 @@
         </div>
         <div class="px-4 pt-1 pb-0.5 text-[10px] font-bold uppercase tracking-wider text-slate-400">Compte</div>
         <button id="btnCloud" class="mi w-full text-left px-4 py-2 hover:bg-slate-50"><span class="ic" data-ic="cloud"></span><span id="btnCloudLabel">Mon compte (connexion)</span></button>
+        <button id="btnHome" class="mi w-full text-left px-4 py-2 hover:bg-slate-50"><span class="ic" data-ic="undo"></span>Changer de compte / Accueil</button>
         <div class="border-t border-slate-100 my-1"></div>
         <div class="px-4 pt-1 pb-0.5 text-[10px] font-bold uppercase tracking-wider text-slate-400">Affichage</div>
         <button id="btnEmployeePreview" class="mi w-full text-left px-4 py-2 hover:bg-slate-50"><span class="ic" data-ic="user"></span>Voir l'espace employé</button>
@@ -415,11 +425,17 @@
   <!-- ============ VUE ESPACE EMPLOYÉ (aperçu) ============ -->
   <section id="view-employe" class="hidden">
     <div class="no-print flex flex-wrap items-center gap-3 mb-4">
-      <h2 class="text-lg font-extrabold text-slate-900 mr-auto">Espace employé <span class="text-sm font-normal text-slate-400">— aperçu</span></h2>
+      <button id="btnBackOwner" class="ic-btn px-3 py-2 rounded-lg border border-slate-300 font-semibold text-sm hover:bg-slate-50"><span class="ic" data-ic="undo" data-ic-size="15"></span>Espace patron</button>
+      <h2 class="text-lg font-extrabold text-slate-900 mr-auto" id="empTitle">Espace employé <span class="text-sm font-normal text-slate-400">— aperçu</span></h2>
+      <div class="flex items-center gap-2">
+        <button id="empPrevWeek" class="w-9 h-9 rounded-lg bg-white border border-slate-300 hover:bg-slate-50 font-bold">‹</button>
+        <div id="empWeekLabel" class="text-xs font-bold text-slate-700 min-w-[110px] text-center"></div>
+        <button id="empNextWeek" class="w-9 h-9 rounded-lg bg-white border border-slate-300 hover:bg-slate-50 font-bold">›</button>
+      </div>
       <label class="text-xs text-slate-500">Employé&nbsp;
         <select id="empView" class="border border-slate-300 rounded-lg px-3 py-2 text-sm"></select>
       </label>
-      <button id="btnEmpPrint" class="px-3 py-2 rounded-lg btn-ink font-semibold text-sm">🖨️ Imprimer</button>
+      <button id="btnEmpPrint" class="ic-btn px-3 py-2 rounded-lg btn-ink font-semibold text-sm"><span class="ic" data-ic="print" data-ic-size="15"></span>Imprimer</button>
     </div>
     <div id="empTabs" class="no-print inline-flex bg-slate-100 rounded-lg p-1 text-sm font-semibold mb-5">
       <button data-etab="mine" class="etab px-4 py-1.5 rounded-md">📅 Mon planning</button>
@@ -638,7 +654,8 @@
         <div class="text-sm text-emerald-700 mt-0.5"><span id="cloudMemEmail"></span></div>
         <div class="text-sm text-emerald-700 mt-1"><span id="cloudMemEst"></span> · <b id="cloudMemRole"></b></div>
       </div>
-      <button type="button" id="cloudSync" class="manager-only w-full inline-flex items-center justify-center gap-2 px-4 py-3 rounded-xl bg-teal-600 text-white font-semibold hover:bg-teal-700 mb-2"><span class="ic" data-ic="cloud" data-ic-size="18"></span>Envoyer mon planning au cloud</button>
+      <div class="manager-only rounded-xl bg-teal-50 border border-teal-200 text-teal-800 text-xs px-3 py-2 mb-2 flex items-center gap-2"><span class="ic shrink-0" data-ic="cloud" data-ic-size="15"></span><span>Synchronisation <b>automatique</b> : tes employés voient le planning à jour dès que tu le modifies.</span></div>
+      <button type="button" id="cloudSync" class="manager-only w-full inline-flex items-center justify-center gap-2 px-4 py-3 rounded-xl bg-teal-600 text-white font-semibold hover:bg-teal-700 mb-2"><span class="ic" data-ic="cloud" data-ic-size="18"></span>Synchroniser maintenant</button>
       <button type="button" id="cloudPull" class="manager-only w-full inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-white border border-slate-300 font-semibold hover:bg-slate-50 mb-2"><span class="ic" data-ic="cloudDown" data-ic-size="18"></span>Récupérer mes données du cloud</button>
       <p id="cloudSyncMsg" class="text-sm mb-3 hidden"></p>
       <button type="button" id="cloudSignOut" class="w-full px-4 py-2.5 rounded-xl bg-white border border-slate-300 font-semibold hover:bg-slate-50">Se déconnecter</button>
@@ -863,7 +880,8 @@
 
 <!-- ============ ASSISTANT DE DÉMARRAGE ============ -->
 <div id="wizardModal" class="no-print fixed inset-0 bg-black/55 z-50 hidden items-center justify-center p-4">
-  <div class="bg-white rounded-2xl shadow-xl w-full max-w-2xl p-6 max-h-[92vh] overflow-y-auto">
+  <div class="bg-white rounded-2xl shadow-xl w-full max-w-2xl p-6 max-h-[92vh] overflow-y-auto relative">
+    <button type="button" class="closeWizard absolute top-3 right-3 w-8 h-8 rounded-full text-slate-400 hover:bg-slate-100 text-lg leading-none" aria-label="Fermer">✕</button>
     <div id="wizStepper" class="flex items-center gap-1.5 mb-5"></div>
     <h3 id="wizTitle" class="text-xl font-extrabold text-slate-900"></h3>
     <p id="wizSub" class="text-sm text-slate-500 mt-1 mb-5"></p>
@@ -1325,7 +1343,7 @@ function demoData(){
   return { profile:'restaurant', teamWord:P.teamWord,
     teams:JSON.parse(JSON.stringify(P.teams)), periods:JSON.parse(JSON.stringify(P.periods)),
     complianceItems:JSON.parse(JSON.stringify(P.compliance)),
-    restaurant:'Le Bistrot du Coin', weekStart: cur, employees:emps, shifts, notes, pinHash: pinHash('1234') };
+    restaurant:'Le Bistrot du Coin', weekStart: cur, employees:emps, shifts, notes, pinHash: pinHash('1234'), demo:true };
 }
 
 /* Construit un état complet à partir d'un profil (avec ou sans données d'exemple) */
@@ -1417,7 +1435,7 @@ function migrate(s){
   return s;
 }
 function saveQuiet(s=state){ try { localStorage.setItem(STORAGE_KEY, JSON.stringify(s)); } catch(e){} }
-function save(s=state){ saveQuiet(s); recordVersion(s); wsTouchMeta(); }   // sauvegarde + historique auto
+function save(s=state){ saveQuiet(s); recordVersion(s); wsTouchMeta(); if(typeof scheduleAutoPush==='function') scheduleAutoPush(); }   // sauvegarde + historique + sync cloud auto
 
 /* ---- Multi-établissements : bascule, création, suppression ---- */
 function profileName(k){ return (PROFILE_PRESETS[k]||{}).name || 'Personnalisé'; }
@@ -2053,6 +2071,16 @@ document.getElementById('shiftForm').addEventListener('submit', ev=>{
     note:document.getElementById('shiftNote').value.trim(),
     breaks:collectBreaks(),
   };
+  // Validation des horaires (évite les « NaN h » dans la grille, le suivi et les feuilles d'heures)
+  if(!/^\d{2}:\d{2}$/.test(data.start) || !/^\d{2}:\d{2}$/.test(data.end)){
+    toast('Indique une heure de début et de fin.'); document.getElementById('shiftStart').focus(); return;
+  }
+  if(hoursBetween(data.start, data.end) <= 0){
+    toast('L’heure de fin doit être après le début.'); document.getElementById('shiftEnd').focus(); return;
+  }
+  if((data.realStart && !data.realEnd) || (!data.realStart && data.realEnd)){
+    toast('Heure réelle : renseigne le début ET la fin (ou laisse les deux vides).'); return;
+  }
   if(id){ Object.assign(state.shifts.find(x=>x.id===id), data); save(); renderAll(); closeShiftModal(); toast('Service enregistré ✓'); return; }
   let daysList=[...document.querySelectorAll('#repeatDays .rep-day')].filter(b=>b.classList.contains('bg-teal-600')).map(b=>parseInt(b.dataset.rd,10));
   if(!daysList.length) daysList=[data.day];
@@ -2408,6 +2436,8 @@ document.getElementById('sheetPrint').addEventListener('click',()=>{
 let empViewSel = null;
 function renderEmploye(){
   const sel=document.getElementById('empView'); const act=activeEmployees();
+  { const wl=document.getElementById('empWeekLabel'); if(wl) wl.textContent = fmtDate(new Date(state.weekStart))+' — '+fmtDate(addDays(state.weekStart,6)); }
+  { const t=document.getElementById('empTitle'); if(t) t.innerHTML = empLocked ? 'Mon planning' : 'Espace employé <span class="text-sm font-normal text-slate-400">— aperçu</span>'; }
   if(!act.length){ sel.innerHTML=''; document.getElementById('empGreeting').innerHTML=''; document.getElementById('empAgenda').innerHTML='<p class="text-sm text-slate-400">Aucun employé.</p>'; document.getElementById('empEventsList').innerHTML=''; document.getElementById('empWeekHours').textContent=''; document.getElementById('empSign').innerHTML=''; return; }
   sel.innerHTML = act.map(e=>`<option value="${e.id}">${escapeHtml(e.name)}</option>`).join('');
   if(!empViewSel || !act.some(e=>e.id===empViewSel)) empViewSel=act[0].id;
@@ -2509,6 +2539,12 @@ document.getElementById('empSign').addEventListener('click', function(e){
 document.getElementById('btnEmployeePreview').addEventListener('click', ()=>{ dataMenu.classList.add('hidden'); setView('employe'); });
 document.getElementById('btnAskOff').addEventListener('click', ()=>{ const d=prompt('Quel(s) jour(s) de repos souhaites-tu demander ?'); if(d&&d.trim()) toast('Demande envoyée au responsable ✓ (démo — active avec les comptes)'); });
 document.getElementById('btnEmpPrint').addEventListener('click', ()=>{ const e=empById(empViewSel); document.getElementById('printResto').textContent = e?`Planning — ${e.name}`:'Planning'; window.print(); });
+// Aperçu employé (patron) : revenir à l'espace patron
+document.getElementById('btnBackOwner').addEventListener('click', ()=>{ setView('planning'); });
+// Navigation de semaine dans l'espace employé
+function empGoWeek(delta){ state.weekStart = isoDay(addDays(state.weekStart, delta*7)); saveQuiet(); renderEmploye(); renderGrid(); }
+document.getElementById('empPrevWeek').addEventListener('click', ()=>empGoWeek(-1));
+document.getElementById('empNextWeek').addEventListener('click', ()=>empGoWeek(1));
 
 function setView(v){
   document.getElementById('view-planning').classList.toggle('hidden', v!=='planning');
@@ -2758,7 +2794,12 @@ document.getElementById('addEmpHeaderBtn').addEventListener('click',()=>openEmpM
 document.querySelectorAll('.closeModal').forEach(b=>b.addEventListener('click',closeShiftModal));
 document.querySelectorAll('.closeEmp').forEach(b=>b.addEventListener('click',closeEmpModal));
 [shiftModal,empModal].forEach(m=>m.addEventListener('click',e=>{ if(e.target===m){ closeShiftModal(); closeEmpModal(); }}));
-document.addEventListener('keydown',e=>{ if(e.key==='Escape'){ closeShiftModal(); closeEmpModal(); closeNoteModal(); closeConfModal(); closeSettings(); closeHistory(); closeEstb(); if(!firstRun) closeProfileModal(); }});
+document.addEventListener('keydown',e=>{ if(e.key==='Escape'){
+  if(!wizardModal.classList.contains('hidden')) cancelWizard();
+  closeShiftModal(); closeEmpModal(); closeNoteModal(); closeConfModal(); closeSettings(); closeHistory(); closeEstb();
+  closeCloud(); closeAbsModal(); closeSheet(); closeSendEmp(); closePaywall();
+  if(!firstRun) closeProfileModal();
+}});
 
 /* ============ MENU DONNÉES ============ */
 const dataMenu=document.getElementById('dataMenu');
@@ -2814,6 +2855,10 @@ function openWizard(){
   renderWizard();
 }
 function closeWizard(){ wizardModal.classList.add('hidden'); wizardModal.classList.remove('flex'); }
+// Sortie de l'assistant → revenir à l'écran d'accueil (au 1er lancement) au lieu de rester coincé
+function cancelWizard(){ closeWizard(); if(firstRun) showWelcome(); }
+document.querySelectorAll('.closeWizard').forEach(b=>b.addEventListener('click', cancelWizard));
+wizardModal.addEventListener('click', e=>{ if(e.target===wizardModal) cancelWizard(); });   // clic sur le fond
 function resetWizCounts(){
   const P=PROFILE_PRESETS[wiz.profile]; wiz.counts={};
   P.teams.forEach(t=>wiz.counts[t.key]=defaultCountFor(wiz.profile,t.key));
@@ -2879,7 +2924,7 @@ function renderWizard(){
     <p class="text-xs text-slate-400 mt-3">Tu pourras tout ajuster ensuite (équipes, créneaux, employés) via <b>Données → Réglages</b>.</p>`;
   }
 
-  document.getElementById('wizBack').style.visibility = wiz.step===1 ? 'hidden' : 'visible';
+  { const wb=document.getElementById('wizBack'); wb.style.visibility='visible'; wb.textContent = wiz.step===1 ? '← Accueil' : '← Retour'; }
   document.getElementById('wizNext').textContent = wiz.step===4 ? '🚀 Créer mon planning' : 'Continuer →';
 }
 
@@ -2899,7 +2944,7 @@ document.getElementById('wizBody').addEventListener('input',e=>{
   const k=inp.dataset.nm, i=parseInt(inp.dataset.i,10);
   (wiz.names[k]=wiz.names[k]||[])[i]=inp.value;
 });
-document.getElementById('wizBack').addEventListener('click',()=>{ if(wiz.step>1){ wiz.step--; renderWizard(); }});
+document.getElementById('wizBack').addEventListener('click',()=>{ if(wiz.step>1){ wiz.step--; renderWizard(); } else { cancelWizard(); } });
 document.getElementById('wizNext').addEventListener('click',()=>{
   if(wiz.step===2 && wizTotal()===0){ toast('Ajoute au moins une personne.'); return; }
   if(wiz.step<4){ wiz.step++; renderWizard(); return; }
@@ -3274,6 +3319,7 @@ async function refreshCloud(){
     // Appareil / site vierge (ex. 1re connexion sur le web) → on récupère automatiquement les données du cloud
     await pullForOwner();
   }
+  setSyncStatus(canAutoPush() ? 'ok' : null);   // indicateur d'en-tête : « Synchronisé ✓ » pour le patron connecté
 }
 // Aiguillage par rôle : l'employé est verrouillé sur son espace ; patron/manager = app complète
 function applyRole(){
@@ -3351,7 +3397,9 @@ async function pullForOwner(){
     state.absences = (abs||[]).map(a=>({ id:a.local_id||a.id, week:a.week, day:a.day, empId:remoteToLocal[a.employee_id]||'', type:a.type })).filter(a=>a.empId);
     const { data:notes } = await sb.from('notes').select('*').eq('establishment_id', est);
     state.notes = (notes||[]).map(n=>({ id:n.local_id||n.id, week:n.week, day:n.day, text:n.text, level:n.level||'info' }));
-    migrate(state); syncGlobals(); setAccent(state.accent); applyLogo(); save(); renderAll();
+    migrate(state); syncGlobals(); setAccent(state.accent); applyLogo();
+    _applyingRemote=true; save(); _applyingRemote=false;   // on vient de tirer du cloud → pas de re-push
+    renderAll();
     logAccess('pull_owner');
     return {ok:true, count: state.employees.length};
   }catch(err){ return {error:String(err.message||err)}; }
@@ -3365,14 +3413,70 @@ document.getElementById('cloudPull').addEventListener('click', async ()=>{
   toast('Données récupérées du cloud ✓');
 });
 document.getElementById('cloudSync').addEventListener('click', async ()=>{
-  cloudMsg('cloudSyncMsg','Synchronisation en cours…', true);
+  if(state && state.demo){ cloudMsg('cloudSyncMsg','Indisponible en mode démo.', false); return; }
+  cloudMsg('cloudSyncMsg','Synchronisation en cours…', true); setSyncStatus('syncing');
   const r = await pushToCloud();
-  if(r.error){ cloudMsg('cloudSyncMsg','Erreur : '+r.error, false); return; }
-  cloudMsg('cloudSyncMsg','✅ Planning synchronisé — tes employés le voient à jour.', true);
+  if(r.error){ cloudMsg('cloudSyncMsg','Erreur : '+r.error, false); setSyncStatus('error'); return; }
+  cloudMsg('cloudSyncMsg','✅ Planning synchronisé — tes employés le voient à jour.', true); setSyncStatus('ok');
   toast('Planning synchronisé ✓');
 });
+/* ============ SYNCHRONISATION CLOUD AUTOMATIQUE (patron) ============ */
+let _applyingRemote=false;                 // true pendant qu'on applique des données venues du cloud (évite l'écho pull→push)
+let _autoPushTimer=null, _autoPushBusy=false, _autoPushPending=false;
+function canAutoPush(){
+  return !!(sb && cloudSession && cloudMembership
+    && ['owner','manager'].includes(cloudMembership.role)
+    && !(state && state.demo));
+}
+function setSyncStatus(st){
+  const el=document.getElementById('syncStatus'); if(!el) return;
+  const map={ pending:['Modifié…','text-slate-400'], syncing:['Synchronisation…','text-slate-400'],
+              ok:['Synchronisé ✓','text-teal-600'], error:['Non synchronisé','text-red-500'] };
+  const m=map[st]; if(!m){ el.classList.add('hidden'); return; }
+  el.textContent=m[0]; el.className='hidden sm:inline text-[11px] font-semibold '+m[1];
+  el.classList.toggle('hidden', !canAutoPush());
+}
+function scheduleAutoPush(){
+  if(_applyingRemote || !canAutoPush()) return;
+  if(_autoPushTimer) clearTimeout(_autoPushTimer);
+  setSyncStatus('pending');
+  _autoPushTimer=setTimeout(runAutoPush, 1500);   // on regroupe les modifications rapprochées
+}
+async function runAutoPush(){
+  if(!canAutoPush()) return;
+  if(_autoPushBusy){ _autoPushPending=true; return; }
+  _autoPushBusy=true; setSyncStatus('syncing');
+  let r; try{ r=await pushToCloud(); }catch(e){ r={error:String(e)}; }
+  _autoPushBusy=false;
+  setSyncStatus(r && r.error ? 'error' : 'ok');
+  if(_autoPushPending){ _autoPushPending=false; scheduleAutoPush(); }
+}
+
+/* ============ SORTIE DÉMO / RETOUR À L'ACCUEIL ============ */
+function applyDemoBanner(){
+  const b=document.getElementById('demoBanner'); if(b) b.style.display=(state && state.demo)?'flex':'none';
+}
+async function backToWelcome(){
+  try{ if(sb && cloudSession) await sb.auth.signOut(); }catch(e){}
+  cloudSession=null; cloudMembership=null;
+  document.body.classList.remove('role-employee'); empLocked=false; confUnlocked=false;
+  try{ localStorage.removeItem(STORAGE_KEY); }catch(e){}
+  state=load(); syncGlobals();                       // repart sur un établissement vierge → firstRun=true
+  updateCloudMenuLabel(); applyDemoBanner();
+  const dm=document.getElementById('dataMenu'); if(dm) dm.classList.add('hidden');
+  teamFilter='all'; empViewSel=null;
+  setView('planning'); setAccent(state.accent); applyTheme(); applyLogo(); renderAll(); applyMode();
+  showWelcome();
+}
+document.getElementById('demoQuit').addEventListener('click', backToWelcome);
+const _btnHome=document.getElementById('btnHome'); if(_btnHome) _btnHome.addEventListener('click', ()=>{
+  const dm=document.getElementById('dataMenu'); if(dm) dm.classList.add('hidden');
+  if(state && state.demo){ backToWelcome(); return; }
+  if(confirm('Changer de compte / revenir à l’écran d’accueil ?\nTu seras déconnecté de cet appareil.')) backToWelcome();
+});
+
 function openCloud(){ cloudModal.classList.remove('hidden'); cloudModal.classList.add('flex'); refreshCloud(); }
-function closeCloud(){ cloudModal.classList.add('hidden'); cloudModal.classList.remove('flex'); }
+function closeCloud(){ cloudModal.classList.add('hidden'); cloudModal.classList.remove('flex'); if(firstRun && !cloudSession) showWelcome(); }   // onboarding employé fermé sans connexion → retour accueil
 document.getElementById('btnCloud').addEventListener('click', ()=>{ dataMenu.classList.add('hidden'); openCloud(); });
 document.querySelectorAll('.closeCloud').forEach(b=>b.addEventListener('click',closeCloud));
 cloudModal.addEventListener('click',e=>{ if(e.target===cloudModal) closeCloud(); });
@@ -3457,10 +3561,12 @@ const _isNativeApp = !!(window.Capacitor && (typeof window.Capacitor.isNativePla
 { const d=document.getElementById('welcomeDemo'); if(d) d.hidden=false; }
 document.getElementById('welcomeDemo').addEventListener('click', ()=>{
   hideWelcome(); state=demoData(); migrate(state); syncGlobals(); firstRun=false;
-  setAccent(state.accent); applyLogo(); setView('planning'); save(); renderAll(); applyMode();
+  setAccent(state.accent); applyLogo(); setView('planning'); saveQuiet(); renderAll(); applyMode();
+  applyDemoBanner();
   toast('Mode démo — données d’exemple');
 });
 if(firstRun) showWelcome();
+applyDemoBanner();
 
 /* ============ REPRISE D'APP : recalage semaine + rafraîchissement cloud auto ============ */
 let _lastResume = 0;

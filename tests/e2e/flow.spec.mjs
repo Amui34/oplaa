@@ -33,6 +33,18 @@ test('confidentialité : le filigrane RGPD est inactif hors connexion', async ({
   await expect(page.locator('body')).not.toHaveClass(/rgpd-on/);
 });
 
+test('démo : on peut quitter la démo et revenir à l’écran d’accueil', async ({ page }) => {
+  await page.locator('#welcomeDemo').click();
+  // Le bandeau démo + le bouton Quitter apparaissent
+  await expect(page.locator('#demoBanner')).toBeVisible();
+  await expect(page.locator('#demoQuit')).toBeVisible();
+  // Quitter la démo → l’écran d’accueil revient (et le bandeau disparaît)
+  await page.locator('#demoQuit').click();
+  await expect(page.locator('#welcome')).toBeVisible();
+  await expect(page.locator('#demoBanner')).toBeHidden();
+  await expect(page.locator('#welcomePatron')).toBeVisible();
+});
+
 test('planning : ruban de jours continu (dimanche → lundi suivant, sans coupure)', async ({ page }) => {
   await page.locator('#welcomeDemo').click();
   // Le mode Semaine affiche plus de 7 jours d'affilée (ruban continu multi-semaines)
