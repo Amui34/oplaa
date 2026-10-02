@@ -236,7 +236,7 @@
     <div id="addWrap" class="relative shrink-0">
       <button id="addMenuBtn" class="ic-btn px-3 py-2 rounded-lg bg-teal-600 text-white font-semibold hover:bg-teal-700 text-sm"><span class="ic" data-ic="plus" data-ic-size="16"></span>Ajouter</button>
       <div id="addMenu" class="hidden absolute right-0 mt-1 w-56 bg-white border border-slate-200 rounded-xl shadow-lg py-1 z-40 text-sm text-slate-700">
-        <button id="addShiftBtn" class="w-full text-left px-4 py-2 hover:bg-slate-50 font-semibold">➕ Un service</button>
+        <button id="addShiftBtn" class="mi w-full text-left px-4 py-2 hover:bg-slate-50 font-semibold"><span class="ic" data-ic="plus" data-ic-size="16"></span>Un service</button>
         <button id="btnAbsences" class="mi manager-only w-full text-left px-4 py-2 hover:bg-slate-50 font-semibold"><span class="ic" data-ic="holiday"></span>Un congé / une absence</button>
       </div>
     </div>
@@ -302,7 +302,7 @@
     <!-- ============ NOTES & ÉVÉNEMENTS ============ -->
     <div class="mt-5">
       <div class="flex items-center gap-3 mb-2">
-        <h3 class="text-sm font-extrabold text-slate-800 uppercase tracking-wide flex items-center gap-2">📌 Notes &amp; événements</h3>
+        <h3 class="text-sm font-extrabold text-slate-800 uppercase tracking-wide flex items-center gap-2"><span class="ic" data-ic="pin" data-ic-size="15"></span>Notes &amp; événements</h3>
         <button id="addNoteBtn" class="no-print ml-auto ic-btn px-3 py-1.5 rounded-lg bg-white border border-slate-300 font-semibold hover:bg-slate-50 text-sm"><span class="ic" data-ic="plus" data-ic-size="15"></span>Ajouter une note</button>
       </div>
       <div id="notesList" class="grid gap-2"></div>
@@ -438,8 +438,8 @@
       <button id="btnEmpPrint" class="ic-btn px-3 py-2 rounded-lg btn-ink font-semibold text-sm"><span class="ic" data-ic="print" data-ic-size="15"></span>Imprimer</button>
     </div>
     <div id="empTabs" class="no-print inline-flex bg-slate-100 rounded-lg p-1 text-sm font-semibold mb-5">
-      <button data-etab="mine" class="etab px-4 py-1.5 rounded-md">📅 Mon planning</button>
-      <button data-etab="team" class="etab px-4 py-1.5 rounded-md">👥 L'équipe</button>
+      <button data-etab="mine" class="etab ic-btn px-4 py-1.5 rounded-md"><span class="ic" data-ic="calendar" data-ic-size="15"></span>Mon planning</button>
+      <button data-etab="team" class="etab ic-btn px-4 py-1.5 rounded-md"><span class="ic" data-ic="users" data-ic-size="15"></span>L'équipe</button>
     </div>
     <!-- Affichage 1 : mon planning -->
     <div id="empTab-mine" class="max-w-xl">
@@ -452,7 +452,7 @@
       <div id="empAgenda" class="grid gap-2 mb-7"></div>
       <h3 class="text-sm font-extrabold text-slate-800 uppercase tracking-wide mb-2">📌 Événements à venir</h3>
       <div id="empEventsList" class="grid gap-2 mb-7"></div>
-      <button id="btnAskOff" class="no-print w-full px-5 py-3 rounded-xl bg-teal-600 text-white font-semibold hover:bg-teal-700">🌴 Demander un jour de repos</button>
+      <button id="btnAskOff" hidden class="no-print w-full px-5 py-3 rounded-xl bg-teal-600 text-white font-semibold hover:bg-teal-700">Demander un jour de repos</button>
       <p class="no-print text-[11px] text-slate-400 mt-3">Aperçu de ce que verront tes employés (lecture seule). Avec les comptes, chacun verra automatiquement le sien, et la demande de repos te sera envoyée.</p>
     </div>
     <!-- Affichage 2 : le planning de l'équipe (lecture seule, prénoms uniquement) -->
@@ -1688,6 +1688,7 @@ function escapeHtml(s){ return String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':
 function fmtDateFR(iso){ return iso ? new Date(iso).toLocaleDateString('fr-FR') : '—'; }
 
 function renderConf(){
+  if(state && state.demo) confUnlocked=true;   // en démo, la Conformité est ouverte (pas de code à deviner)
   const lock=document.getElementById('confLock'), content=document.getElementById('confContent');
   if(!confUnlocked){ lock.classList.remove('hidden'); content.classList.add('hidden');
     const hasPin = !!state.pinHash;
@@ -2089,6 +2090,7 @@ document.getElementById('shiftForm').addEventListener('submit', ev=>{
   save(); renderAll(); closeShiftModal(); toast(daysList.length>1?`${daysList.length} créneaux ajoutés ✓`:'Service enregistré ✓');
 });
 document.getElementById('deleteShiftBtn').addEventListener('click', ()=>{
+  if(!confirm('Supprimer ce service ?')) return;
   const id=document.getElementById('shiftId').value;
   state.shifts=state.shifts.filter(s=>s.id!==id);
   save(); renderAll(); closeShiftModal(); toast('Service supprimé');
@@ -2216,6 +2218,7 @@ document.getElementById('noteForm').addEventListener('submit', ev=>{
   save(); renderGrid(); closeNoteModal(); toast('Note enregistrée ✓');
 });
 document.getElementById('deleteNoteBtn').addEventListener('click', ()=>{
+  if(!confirm('Supprimer cette note ?')) return;
   const id=document.getElementById('noteId').value;
   state.notes=state.notes.filter(n=>n.id!==id);
   save(); renderGrid(); closeNoteModal(); toast('Note supprimée');
@@ -3296,7 +3299,9 @@ async function loadMembership(){
 async function refreshCloud(){
   if(!sb){ showCloudState('cloudAuth'); cloudMsg('cloudAuthMsg','Cloud indisponible (hors-ligne).', false); return; }
   showCloudState('cloudLoading');
-  const { data:{ session } } = await sb.auth.getSession();
+  let session=null;
+  try{ ({ data:{ session } } = await sb.auth.getSession()); }
+  catch(e){ showCloudState('cloudAuth'); cloudMsg('cloudAuthMsg','Connexion impossible (réseau). Réessaie.', false); return; }
   cloudSession = session;
   updateCloudMenuLabel();
   if(!session){ showCloudState('cloudAuth'); return; }
@@ -3724,6 +3729,9 @@ proInit();
     mail:'<rect x="3" y="5.5" width="18" height="13" rx="2"/><path d="M4 7l8 6 8-6"/>',
     plus:'<path d="M12 5v14M5 12h14"/>',
     store:'<path d="M4.2 9 5.5 4.5h13L19.8 9"/><path d="M5 9v10.5a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1V9"/><path d="M4.2 9a2.4 2.4 0 0 0 4.8 0 2.4 2.4 0 0 0 4.8 0 2.4 2.4 0 0 0 4.8 0"/><path d="M9.5 20.5V15h5v5.5"/>',
+    calendar:'<rect x="3.5" y="5" width="17" height="15.5" rx="2.5"/><path d="M3.5 9.5h17"/><path d="M8 3v4M16 3v4"/>',
+    users:'<circle cx="9" cy="8" r="3.2"/><path d="M3.2 20a5.8 5.8 0 0 1 11.6 0"/><path d="M16 5.3a3 3 0 0 1 0 5.4"/><path d="M15.6 14.4A5.8 5.8 0 0 1 20.8 20"/>',
+    pin:'<path d="M9 3.5h6l-1 6 2.5 1.8V13H7.5v-1.7L10 9.5l-1-6Z"/><path d="M12 13v7.5"/>',
     holiday:'<path d="M12 21v-9.5"/><path d="M4.5 11.5a7.5 7.5 0 0 1 15 0Z"/><path d="M12 4V3"/>',
     cloudDown:'<path d="M7 15.5a4 4 0 0 1-.6-7.95A5 5 0 0 1 16.3 7.5a3.4 3.4 0 0 1 .5 8.05"/><path d="M12 11v7M9.3 15.3 12 18l2.7-2.7"/>',
     utensils:'<path d="M7 3v7M9.5 3v7M7 3v0M11 3c0 3-1.5 4-1.5 4M8.2 10v11"/><path d="M16.5 3c-1.6 0-2.8 2-2.8 4.5S15 12 16.5 12v9"/>',
