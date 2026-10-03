@@ -1100,7 +1100,7 @@ const COMPLIANCE_HOTEL = [
 
 /* --- Profils prédéfinis : chacun module équipes, créneaux, mots et conformité --- */
 const PROFILE_PRESETS = {
-  restaurant: { name:'Restaurant', icon:'🍽️', teamWord:'Équipe', org:'Le Bistrot du Coin',
+  restaurant: { name:'Restaurant', icon:'🍽️', teamWord:'Équipe', org:'Mon restaurant',
     teams:[{key:'salle',label:'Salle',color:'#C4562F'},{key:'cuisine',label:'Cuisine',color:'#D8974A'},{key:'bar',label:'Bar',color:'#8C5A6A'}],
     periods:[{key:'midi',label:'Midi',start:'11:00',end:'15:00'},{key:'soir',label:'Soir',start:'18:00',end:'23:00'},{key:'journee',label:'Journée continue',start:'11:00',end:'23:00',accent:true}],
     compliance:COMPLIANCE_RESTO },
@@ -2852,7 +2852,7 @@ const defaultCountFor=(pk,tk)=>(DEFAULT_COUNTS[pk]&&DEFAULT_COUNTS[pk][tk])||2;
 let wiz=null;
 
 function openWizard(){
-  wiz={ step:1, profile:'restaurant', counts:{}, names:{} };
+  wiz={ step:1, profile:'restaurant', counts:{}, names:{}, name:'' };
   resetWizCounts();
   wizardModal.classList.remove('hidden'); wizardModal.classList.add('flex');
   renderWizard();
@@ -2891,12 +2891,16 @@ function renderWizard(){
 
   const body=document.getElementById('wizBody');
   if(wiz.step===1){
+    const PROFILE_ICON={restaurant:'utensils',commerce:'bag',cafe:'coffee',hotel:'bell',sante:'stethoscope',custom:'settings'};
     body.innerHTML=`<div class="grid grid-cols-2 sm:grid-cols-3 gap-3">`+Object.keys(PROFILE_PRESETS).map(k=>{
       const P=PROFILE_PRESETS[k], on=wiz.profile===k;
       return `<button data-wp="${k}" class="wiz-prof text-left rounded-xl border ${on?'border-teal-500 ring-2 ring-teal-200':'border-slate-200'} bg-white hover:border-teal-400 p-3 transition">
-        <div class="text-2xl mb-1">${P.icon}</div><div class="font-bold text-slate-800 text-sm">${P.name}</div>
+        <div class="ic text-slate-700 mb-1" data-ic="${PROFILE_ICON[k]||'store'}" data-ic-size="24"></div><div class="font-bold text-slate-800 text-sm">${P.name}</div>
         <div class="text-[11px] text-slate-400 mt-0.5">${P.teams.map(t=>t.label).join(' · ')}</div></button>`;
-    }).join('')+`</div>`;
+    }).join('')+`</div>
+      <label class="block mt-4"><span class="text-sm font-semibold text-slate-700">Nom de ton établissement</span>
+        <input id="wizName" type="text" value="${(wiz.name||'').replace(/"/g,'&quot;')}" placeholder="Ex. ${PROFILE_PRESETS[wiz.profile].org}" class="mt-1.5 w-full border border-slate-300 rounded-lg px-3 py-2.5 text-sm" />
+      </label>`;
   } else if(wiz.step===2){
     body.innerHTML=`<div class="space-y-2">`+wizTeams().map(t=>`
       <div class="flex items-center gap-3 rounded-xl border border-slate-200 p-3">
@@ -2921,14 +2925,15 @@ function renderWizard(){
   } else {
     const P=PROFILE_PRESETS[wiz.profile];
     body.innerHTML=`<div class="rounded-xl border border-slate-200 bg-slate-50 p-4">
-      <div class="flex items-center gap-3 mb-3"><span class="text-3xl">${P.icon}</span><div><div class="font-extrabold text-slate-900">${P.name}</div><div class="text-sm text-slate-500">${wizTotal()} personne(s) · ${P.periods.map(p=>p.label).join(' · ')}</div></div></div>
+      <div class="flex items-center gap-3 mb-3"><span class="ic text-slate-700" data-ic="${({restaurant:'utensils',commerce:'bag',cafe:'coffee',hotel:'bell',sante:'stethoscope',custom:'settings'})[wiz.profile]||'store'}" data-ic-size="28"></span><div><div class="font-extrabold text-slate-900">${P.name}</div><div class="text-sm text-slate-500">${wizTotal()} personne(s) · ${P.periods.map(p=>p.label).join(' · ')}</div></div></div>
       <div class="flex flex-wrap gap-2">${wizTeams().map(t=>`<span class="inline-flex items-center gap-1.5 text-sm bg-white border border-slate-200 rounded-full px-3 py-1"><span class="w-2.5 h-2.5 rounded-full" style="background:${t.color}"></span>${t.label} · <b>${wiz.counts[t.key]||0}</b></span>`).join('')}</div>
     </div>
     <p class="text-xs text-slate-400 mt-3">Tu pourras tout ajuster ensuite (équipes, créneaux, employés) via <b>Données → Réglages</b>.</p>`;
   }
 
   { const wb=document.getElementById('wizBack'); wb.style.visibility='visible'; wb.textContent = wiz.step===1 ? '← Accueil' : '← Retour'; }
-  document.getElementById('wizNext').textContent = wiz.step===4 ? '🚀 Créer mon planning' : 'Continuer →';
+  document.getElementById('wizNext').textContent = wiz.step===4 ? 'Créer mon planning' : 'Continuer →';
+  if(window.OplaaIcons) OplaaIcons.paint(body);
 }
 
 document.getElementById('wizBody').addEventListener('click',e=>{
@@ -2953,10 +2958,11 @@ document.getElementById('wizNext').addEventListener('click',()=>{
   if(wiz.step<4){ wiz.step++; renderWizard(); return; }
   finishWizard();
 });
+document.getElementById('wizBody').addEventListener('input', e=>{ if(e.target.id==='wizName') wiz.name=e.target.value; });
 
 function finishWizard(){
   const P=PROFILE_PRESETS[wiz.profile];
-  const st={ profile:wiz.profile, teamWord:P.teamWord, restaurant:P.org,
+  const st={ profile:wiz.profile, teamWord:P.teamWord, restaurant:((wiz.name&&wiz.name.trim())||P.org),
     teams:cloneJSON(P.teams), periods:cloneJSON(P.periods), complianceItems:cloneJSON(P.compliance),
     weekStart:isoDay(mondayOf(new Date())), employees:[], shifts:[], notes:[], pinHash:'' };
   wizTeams().forEach(t=>{
