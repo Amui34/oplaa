@@ -1192,9 +1192,12 @@ let confUnlocked = false;     // session : accès conformité déverrouillé ?
 
 /* ============ UTILITAIRES ============ */
 function uid(){ return Date.now().toString(36) + Math.random().toString(36).slice(2,7); }
-function mondayOf(d){ const x=new Date(d); const j=(x.getDay()+6)%7; x.setHours(0,0,0,0); x.setDate(x.getDate()-j); return x; }
-function isoDay(d){ return d.toISOString().slice(0,10); }
-function addDays(s,n){ const d=new Date(s); d.setDate(d.getDate()+n); return d; }
+// Parse une date-only « YYYY-MM-DD » en MINUIT LOCAL (jamais UTC) pour éviter tout décalage de jour.
+function parseLocalDate(s){ if(s instanceof Date) return new Date(s); if(typeof s==='string'){ const m=s.match(/^(\d{4})-(\d{2})-(\d{2})/); if(m) return new Date(+m[1], +m[2]-1, +m[3]); } return new Date(s); }
+function mondayOf(d){ const x=(d instanceof Date)?new Date(d):parseLocalDate(d); const j=(x.getDay()+6)%7; x.setHours(0,0,0,0); x.setDate(x.getDate()-j); return x; }
+// IMPORTANT : on formate la date LOCALE (et non UTC via toISOString, qui décalait le lundi au dimanche en France).
+function isoDay(d){ const x=(d instanceof Date)?d:parseLocalDate(d); const y=x.getFullYear(), m=String(x.getMonth()+1).padStart(2,'0'), day=String(x.getDate()).padStart(2,'0'); return `${y}-${m}-${day}`; }
+function addDays(s,n){ const d=parseLocalDate(s); d.setDate(d.getDate()+n); return d; }
 function fmtDate(d){ return d.toLocaleDateString('fr-FR',{day:'2-digit',month:'short'}); }
 function fmtLong(d){ return d.toLocaleDateString('fr-FR',{day:'numeric',month:'long',year:'numeric'}); }
 function toMin(t){ const[a,b]=t.split(':').map(Number); return a*60+b; }
@@ -1227,11 +1230,11 @@ function mealsForDayShifts(list){ const M=ruleMeal(); if(!M.enabled||!list.lengt
 function mealVouchers(empId, wk){ const M=ruleMeal(); if(!M.enabled) return 0; if(M.mode==='manual'){ return parseInt((state.mealManual||{})[wk+'|'+empId]||0,10)||0; } let n=0; for(let d=0; d<7; d++){ const ds=state.shifts.filter(s=>s.week===wk && s.empId===empId && s.day===d); if(!ds.length) continue; if(state.absences.some(a=>a.week===wk && a.empId===empId && a.day===d)) continue; n+=mealsForDayShifts(ds); } return n; }
 function weekBreakWarn(empId, wk){ if(!ruleBreak().enabled) return 0; return state.shifts.filter(s=>s.week===wk && s.empId===empId && breakShort(s)).length; }
 // Cumuls mensuels (mois calendaire du lundi de référence)
-function empShiftsMonth(empId, refWk){ const R=new Date(refWk); return state.shifts.filter(s=>{ if(s.empId!==empId) return false; const d=addDays(s.week,s.day); return d.getMonth()===R.getMonth() && d.getFullYear()===R.getFullYear(); }); }
+function empShiftsMonth(empId, refWk){ const R=parseLocalDate(refWk); return state.shifts.filter(s=>{ if(s.empId!==empId) return false; const d=addDays(s.week,s.day); return d.getMonth()===R.getMonth() && d.getFullYear()===R.getFullYear(); }); }
 function monthPlanned(empId, refWk){ return empShiftsMonth(empId,refWk).reduce((a,s)=>a+shiftHours(s),0); }
 function monthReal(empId, refWk){ return empShiftsMonth(empId,refWk).reduce((a,s)=>a+realHours(s),0); }
 function monthBreakWarn(empId, refWk){ if(!ruleBreak().enabled) return 0; return empShiftsMonth(empId,refWk).filter(breakShort).length; }
-function monthMeals(empId, refWk){ const M=ruleMeal(); if(!M.enabled) return 0; const R=new Date(refWk);
+function monthMeals(empId, refWk){ const M=ruleMeal(); if(!M.enabled) return 0; const R=parseLocalDate(refWk);
   if(M.mode==='manual'){ let n=0; Object.keys(state.mealManual||{}).forEach(k=>{ const p=k.split('|'); if(p[1]!==empId) return; const d=new Date(p[0]); if(d.getMonth()===R.getMonth()&&d.getFullYear()===R.getFullYear()) n+=parseInt(state.mealManual[k]||0,10)||0; }); return n; }
   const byWD={}; empShiftsMonth(empId,refWk).forEach(s=>{ const key=s.week+'|'+s.day; (byWD[key]=byWD[key]||[]).push(s); });
   let n=0; Object.keys(byWD).forEach(key=>{ const p=key.split('|'), wk=p[0], day=+p[1]; if(state.absences.some(a=>a.week===wk&&a.empId===empId&&a.day===day)) return; n+=mealsForDayShifts(byWD[key]); }); return n; }
@@ -1478,6 +1481,17 @@ function migrate(s){
   // Les anciens shifts (sans semaine) sont rattachés à la semaine enregistrée = "semaine-type" existante
   s.shifts = (s.shifts||[]).map(sh=>({ ...sh, week: sh.week || s.weekStart, realStart: sh.realStart||'', realEnd: sh.realEnd||'', breaks: Array.isArray(sh.breaks)?sh.breaks:[] }));
   s.notes = (s.notes||[]).map(n=>({ level:'info', ...n }));
+  // --- Correctif fuseau horaire : d'anciennes données ont pu être enregistrées avec une semaine
+  // calée au DIMANCHE (bug isoDay via toISOString/UTC). On recale toutes les clés de semaine au LUNDI.
+  // Idempotent : une clé déjà « lundi » n'est pas touchée. ---
+  const _fixWk=(wk)=>{ if(!wk||typeof wk!=='string') return wk; const d=parseLocalDate(wk); if(isNaN(d)) return wk; const dow=d.getDay(); if(dow===1) return wk; if(dow===0) return isoDay(addDays(d,1)); return isoDay(mondayOf(d)); };
+  s.weekStart=_fixWk(s.weekStart);
+  s.shifts.forEach(sh=>{ if(sh&&sh.week) sh.week=_fixWk(sh.week); });
+  if(Array.isArray(s.absences)) s.absences.forEach(a=>{ if(a&&a.week) a.week=_fixWk(a.week); });
+  s.notes.forEach(n=>{ if(n&&n.week) n.week=_fixWk(n.week); });
+  if(s.mealManual&&typeof s.mealManual==='object'){ const mm={}; Object.keys(s.mealManual).forEach(k=>{ const p=k.split('|'); mm[_fixWk(p[0])+'|'+(p.slice(1).join('|')||'')]=s.mealManual[k]; }); s.mealManual=mm; }
+  if(s.timesheets&&typeof s.timesheets==='object'){ const ts={}; Object.keys(s.timesheets).forEach(k=>{ ts[_fixWk(k)]=s.timesheets[k]; }); s.timesheets=ts; }
+  if(s.planningSent&&typeof s.planningSent==='object'){ Object.values(s.planningSent).forEach(p=>{ if(p&&p.week) p.week=_fixWk(p.week); }); }
   return s;
 }
 function saveQuiet(s=state){ try { localStorage.setItem(STORAGE_KEY, JSON.stringify(s)); } catch(e){} }
@@ -1692,7 +1706,7 @@ function renderGrid(){
   } else { dp.classList.add('hidden'); dp.classList.remove('flex'); }
 
   // Libellés
-  const ws=new Date(start), we=addDays(start,6);
+  const ws=parseLocalDate(start), we=addDays(start,6);
   document.getElementById('weekLabel').textContent = `${fmtDate(ws)} — ${fmtDate(we)}`;
   document.getElementById('printWeek').textContent = 'Semaine du '+fmtLong(ws)+' au '+fmtLong(we);
   document.getElementById('printResto').textContent = state.restaurant+' — Planning';
@@ -1772,7 +1786,7 @@ function renderConf(){
 
   renderPlanningConformity();
 
-  const ws=new Date(state.weekStart), we=addDays(state.weekStart,6);
+  const ws=parseLocalDate(state.weekStart), we=addDays(state.weekStart,6);
   document.getElementById('confPrintSub').textContent = `${state.restaurant} — établi le ${fmtLong(new Date())} (planning : semaine du ${fmtDate(ws)} au ${fmtDate(we)})`;
   document.getElementById('printResto').textContent = state.restaurant;
 }
@@ -1944,7 +1958,7 @@ document.getElementById('archivedList').addEventListener('click', e=>{
 /* ============ SUIVI ============ */
 function weeksOfScope(){
   if(suiviScope==='semaine') return [state.weekStart];
-  const ref=new Date(state.weekStart), m=ref.getMonth(), y=ref.getFullYear();
+  const ref=parseLocalDate(state.weekStart), m=ref.getMonth(), y=ref.getFullYear();
   const weeks=new Set(state.shifts.map(s=>s.week)); weeks.add(state.weekStart);
   const list=[...weeks].filter(w=>{ const d=new Date(w); return d.getMonth()===m && d.getFullYear()===y; });
   return list.length?list:[state.weekStart];
@@ -1954,10 +1968,10 @@ function renderSuivi(){
   const nbW=weeks.length;
   document.getElementById('suiviTitle').textContent = suiviScope==='mois' ? 'Suivi du mois' : 'Suivi de la semaine';
   if(suiviScope==='mois'){
-    const ref=new Date(state.weekStart);
+    const ref=parseLocalDate(state.weekStart);
     document.getElementById('suiviPeriod').textContent = `${ref.toLocaleDateString('fr-FR',{month:'long',year:'numeric'})} — ${nbW} semaine(s) planifiée(s)`;
   } else {
-    const ws=new Date(state.weekStart), we=addDays(state.weekStart,6);
+    const ws=parseLocalDate(state.weekStart), we=addDays(state.weekStart,6);
     document.getElementById('suiviPeriod').textContent = `Du ${fmtLong(ws)} au ${fmtLong(we)}`;
   }
 
@@ -2282,7 +2296,7 @@ const absModal = document.getElementById('absModal');
 function openAbsModal(){
   if(!ensurePro()) return;
   if(!state.employees.length){ toast('Ajoutez d’abord un employé (onglet Équipe).'); return; }
-  document.getElementById('absWeekLabel').textContent = `Semaine du ${fmtDate(new Date(state.weekStart))} au ${fmtDate(addDays(state.weekStart,6))}`;
+  document.getElementById('absWeekLabel').textContent = `Semaine du ${fmtDate(parseLocalDate(state.weekStart))} au ${fmtDate(addDays(state.weekStart,6))}`;
   renderAbsPicker(); renderAbsTable();
   absModal.classList.remove('hidden'); absModal.classList.add('flex');
 }
@@ -2338,8 +2352,8 @@ function renderSheet(){
   const showMeal = mealEnabled();
   const LB=ruleBreak();
   document.getElementById('sheetWeekLabel').textContent = month
-    ? `Mois de ${new Date(wk).toLocaleDateString('fr-FR',{month:'long',year:'numeric'})} — ${escapeHtml(state.restaurant)}`
-    : `Semaine du ${fmtDate(new Date(wk))} au ${fmtDate(addDays(wk,6))} — ${escapeHtml(state.restaurant)}`;
+    ? `Mois de ${parseLocalDate(wk).toLocaleDateString('fr-FR',{month:'long',year:'numeric'})} — ${escapeHtml(state.restaurant)}`
+    : `Semaine du ${fmtDate(parseLocalDate(wk))} au ${fmtDate(addDays(wk,6))} — ${escapeHtml(state.restaurant)}`;
   const bw=document.getElementById('sheetScopeWeek'), bm=document.getElementById('sheetScopeMonth');
   if(bw&&bm){ [['bg-teal-600',!month],['text-white',!month]].forEach(([c,on])=>bw.classList.toggle(c,on)); [['bg-teal-600',month],['text-white',month]].forEach(([c,on])=>bm.classList.toggle(c,on)); }
   const th=document.getElementById('sheetTicketsHead'); if(th) th.classList.toggle('hidden', !showMeal);
@@ -2485,7 +2499,7 @@ document.getElementById('sheetPrint').addEventListener('click',()=>{
 let empViewSel = null;
 function renderEmploye(){
   const sel=document.getElementById('empView'); const act=activeEmployees();
-  { const wl=document.getElementById('empWeekLabel'); if(wl) wl.textContent = fmtDate(new Date(state.weekStart))+' — '+fmtDate(addDays(state.weekStart,6)); }
+  { const wl=document.getElementById('empWeekLabel'); if(wl) wl.textContent = fmtDate(parseLocalDate(state.weekStart))+' — '+fmtDate(addDays(state.weekStart,6)); }
   { const t=document.getElementById('empTitle'); if(t) t.innerHTML = empLocked ? 'Mon planning' : 'Espace employé <span class="text-sm font-normal text-slate-400">— aperçu</span>'; }
   if(!act.length){ sel.innerHTML=''; document.getElementById('empGreeting').innerHTML=''; document.getElementById('empAgenda').innerHTML='<p class="text-sm text-slate-400">Aucun employé.</p>'; document.getElementById('empEventsList').innerHTML=''; document.getElementById('empWeekHours').textContent=''; document.getElementById('empSign').innerHTML=''; return; }
   sel.innerHTML = act.map(e=>`<option value="${e.id}">${escapeHtml(e.name)}</option>`).join('');
@@ -2494,7 +2508,7 @@ function renderEmploye(){
   const emp=empById(empViewSel);
   document.getElementById('empGreeting').innerHTML = `<div class="rounded-2xl p-4 text-white" style="background:linear-gradient(135deg,var(--o-600),var(--o-800))">
     <div class="text-lg font-extrabold">Bonjour ${escapeHtml(emp.name.split(' ')[0])} 👋</div>
-    <div class="text-sm opacity-90">Ta semaine du ${fmtDate(new Date(state.weekStart))} au ${fmtDate(addDays(state.weekStart,6))} chez ${escapeHtml(state.restaurant)}.</div></div>`;
+    <div class="text-sm opacity-90">Ta semaine du ${fmtDate(parseLocalDate(state.weekStart))} au ${fmtDate(addDays(state.weekStart,6))} chez ${escapeHtml(state.restaurant)}.</div></div>`;
   // Bannière de signature des heures (si la semaine est validée par le manager)
   const ts=state.timesheets[state.weekStart];
   const signBox=document.getElementById('empSign');
@@ -2554,8 +2568,8 @@ function renderEmpTeam(){
   const wk=state.weekStart, days=[0,1,2,3,4,5,6];
   const teams = state.empScope==='team' ? TEAMS.filter(t=>t.key===emp.role) : TEAMS;
   document.getElementById('empTeamScopeNote').innerHTML = state.empScope==='team'
-    ? `Tu vois <b>ton équipe (${escapeHtml(teamOf(emp.role).label)})</b> pour la semaine du ${fmtDate(new Date(wk))} au ${fmtDate(addDays(wk,6))}.`
-    : `Tu vois <b>tout l'établissement</b> pour la semaine du ${fmtDate(new Date(wk))} au ${fmtDate(addDays(wk,6))}.`;
+    ? `Tu vois <b>ton équipe (${escapeHtml(teamOf(emp.role).label)})</b> pour la semaine du ${fmtDate(parseLocalDate(wk))} au ${fmtDate(addDays(wk,6))}.`
+    : `Tu vois <b>tout l'établissement</b> pour la semaine du ${fmtDate(parseLocalDate(wk))} au ${fmtDate(addDays(wk,6))}.`;
   let head=`<tr><th class="sticky left-0 z-10 bg-slate-50 text-left px-3 py-2 text-xs font-bold text-slate-500 uppercase border-b border-r border-slate-200 min-w-[92px]">${teamWord}</th>`;
   days.forEach(i=>{ const date=addDays(wk,i), today=new Date().toDateString()===date.toDateString();
     head+=`<th class="px-2 py-2 border-b border-l border-slate-200 min-w-[104px] ${today?'bg-teal-50':'bg-slate-50'}"><div class="text-xs font-bold ${today?'text-teal-700':'text-slate-700'}">${DAYS_SHORT[i]}</div><div class="text-[11px] ${today?'text-teal-600':'text-slate-400'}">${fmtDate(date)}</div></th>`; });
@@ -2758,7 +2772,7 @@ function planningCommStatus(empId){
 }
 function empPlanningText(emp, kind, code){
   const wk=state.weekStart, prenom=emp.name.split(' ')[0];
-  const period=`semaine du ${fmtDate(new Date(wk))} au ${fmtDate(addDays(wk,6))}`;
+  const period=`semaine du ${fmtDate(parseLocalDate(wk))} au ${fmtDate(addDays(wk,6))}`;
   if(kind==='invite'){
     return `Bonjour ${prenom},\nTu es invité(e) à rejoindre « ${state.restaurant} » sur l'app Oplaa pour voir ton planning.\n\n1) Ouvre l'app Oplaa\n2) Menu → Mon compte → Créer un compte\n3) Entre ce code d'invitation : ${code}\n\nÀ bientôt !`;
   }
@@ -2822,7 +2836,7 @@ sendEmpModal.addEventListener('click',e=>{ if(e.target===sendEmpModal) closeSend
 document.getElementById('sendByEmail').addEventListener('click', async ()=>{
   const emp=empById(sendEmpId); if(!emp||!emp.email) return;
   const kind=sendKind(); const body=await buildSendBody(emp, kind); if(body===null) return;
-  const subject = kind==='invite' ? `Invitation Oplaa — ${state.restaurant}` : `Ton planning ${state.restaurant} — semaine du ${fmtDate(new Date(state.weekStart))}`;
+  const subject = kind==='invite' ? `Invitation Oplaa — ${state.restaurant}` : `Ton planning ${state.restaurant} — semaine du ${fmtDate(parseLocalDate(state.weekStart))}`;
   if(kind==='planning'||kind==='maj') markPlanningSent(emp.id);
   window.location.href=`mailto:${encodeURIComponent(emp.email)}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
   closeSendEmp();
@@ -3269,7 +3283,7 @@ document.getElementById('btnTheme').addEventListener('click',()=>{ dataMenu.clas
 document.getElementById('btnPrint').addEventListener('click',()=>window.print());
 
 document.getElementById('btnEmail').addEventListener('click',()=>{
-  const start=state.weekStart, ws=new Date(start), we=addDays(start,6);
+  const start=state.weekStart, ws=parseLocalDate(start), we=addDays(start,6);
   const recips=[...new Set(activeEmployees().map(e=>(e.email||'').trim()).filter(Boolean))];
   const L=[]; L.push(`Bonjour à toute l'équipe,`,'',`Voici le planning de la semaine du ${fmtLong(ws)} au ${fmtLong(we)} :`,'');
   let total=0;

@@ -88,6 +88,21 @@ test('équipes : on peut renommer / ajouter un segment d’équipe', async ({ pa
   expect(after).toContain('Terrasse');
 });
 
+test.describe('fuseau horaire Europe/Paris (UTC+1/+2)', () => {
+  test.use({ timezoneId: 'Europe/Paris' });
+  test('calendrier : les jours correspondent aux dates (le « Lundi » est un vrai lundi)', async ({ page }) => {
+    await page.locator('#welcomeDemo').click();
+    await page.waitForTimeout(200);
+    // weekStart doit être un LUNDI (dow===1), même en fuseau en avance sur UTC
+    const dow = await page.evaluate(() => parseLocalDate(state.weekStart).getDay());
+    expect(dow).toBe(1);
+    // La 1re colonne de jour est bien « Lundi » et sa date est réellement un lundi
+    await expect(page.locator('#gridHead th').nth(1)).toContainText('Lundi');
+    const col0IsMonday = await page.evaluate(() => addDays(state.weekStart, 0).getDay() === 1);
+    expect(col0IsMonday).toBe(true);
+  });
+});
+
 test('planning : ruban de jours continu (dimanche → lundi suivant, sans coupure)', async ({ page }) => {
   await page.locator('#welcomeDemo').click();
   // Le mode Semaine affiche plus de 7 jours d'affilée (ruban continu multi-semaines)

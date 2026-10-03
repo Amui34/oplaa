@@ -8,7 +8,7 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const html = fs.readFileSync(path.resolve(__dirname, '../www/index.html'), 'utf8');
 
 export const CORE_FUNCTIONS = [
-  'mondayOf','isoDay','addDays','toMin','addMin','hoursBetween',
+  'parseLocalDate','mondayOf','isoDay','addDays','toMin','addMin','hoursBetween',
   'breakMinutes','shiftHours','realHours','shiftSpan','coversLunch',
   'easterDate','frHolidays','isHoliday',
 ];
