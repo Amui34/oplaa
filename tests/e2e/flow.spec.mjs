@@ -103,6 +103,24 @@ test.describe('fuseau horaire Europe/Paris (UTC+1/+2)', () => {
   });
 });
 
+test('congés : un congé réduit les heures et est compté par type', async ({ page }) => {
+  await page.locator('#welcomeDemo').click();
+  await page.waitForTimeout(200);
+  const res = await page.evaluate(() => {
+    const e = state.employees[0];
+    const before = empHours(e.id, [state.weekStart]).prevu;
+    state.absences.push({ id: uid(), week: state.weekStart, empId: e.id, day: 0, type: 'conge' });
+    const after = empHours(e.id, [state.weekStart]).prevu;
+    const bd = absenceBreakdown(e.id, [state.weekStart]);
+    const solde = congesSolde(e);
+    return { before, after, congeCount: bd.by.conge || 0, total: bd.total, soldeLeft: solde.left, soldeAllow: solde.allow };
+  });
+  expect(res.after).toBeLessThan(res.before);   // le congé retire les heures du jour
+  expect(res.congeCount).toBe(1);
+  expect(res.total).toBe(1);
+  expect(res.soldeLeft).toBe(res.soldeAllow - 1); // 1 congé décompté du solde
+});
+
 test('planning : ruban de jours continu (dimanche → lundi suivant, sans coupure)', async ({ page }) => {
   await page.locator('#welcomeDemo').click();
   // Le mode Semaine affiche plus de 7 jours d'affilée (ruban continu multi-semaines)

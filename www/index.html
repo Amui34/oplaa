@@ -284,6 +284,9 @@
       <div id="teamFilter" class="flex flex-wrap bg-slate-100 rounded-lg p-1 text-sm font-semibold"></div>
     </div>
 
+    <!-- Résumé de la semaine : heures, effectif, coût estimé -->
+    <div id="planningStats" class="no-print flex flex-wrap gap-2 text-sm mb-3"></div>
+
     <!-- Sélecteur de jour (mode Jour) -->
     <div id="dayPicker" class="no-print hidden flex-wrap gap-1.5 mb-3"></div>
 
@@ -358,13 +361,15 @@
       <button id="btnSheet" class="px-3 py-2 rounded-lg bg-teal-600 text-white font-semibold hover:bg-teal-700 text-sm">📋 Feuille d'heures à valider</button>
       <button id="btnSuiviCSV" class="px-3 py-2 rounded-lg bg-white border border-slate-300 font-semibold hover:bg-slate-50 text-sm">⬇︎ Export CSV</button>
     </div>
-    <p class="no-print text-sm text-slate-500 mb-4" id="suiviPeriod"></p>
+    <p class="no-print text-sm text-slate-500 mb-2" id="suiviPeriod"></p>
+    <div id="suiviSummary" class="no-print flex flex-wrap gap-2 text-sm mb-4"></div>
     <div class="print-container bg-white rounded-2xl border border-slate-200 overflow-x-auto thin-scroll">
       <table class="w-full text-sm min-w-[320px] sm:min-w-[720px]">
         <thead class="bg-slate-50 text-slate-500 text-xs uppercase tracking-wide">
           <tr>
             <th class="text-left px-4 py-3 font-semibold">Employé</th>
             <th class="text-center px-3 py-3 font-semibold hidden sm:table-cell">Jours trav.</th>
+            <th class="text-center px-3 py-3 font-semibold hidden sm:table-cell">Congés/Abs.</th>
             <th class="text-center px-3 py-3 font-semibold hidden sm:table-cell">Jours off</th>
             <th class="text-right px-3 py-3 font-semibold">Prévu</th>
             <th class="text-right px-3 py-3 font-semibold">Réel</th>
@@ -406,6 +411,9 @@
         <button id="confLockBtn" class="px-3 py-2 rounded-lg bg-white border border-slate-300 font-semibold hover:bg-slate-50 text-sm">🔒 Verrouiller</button>
         <button id="confPinBtn" class="px-3 py-2 rounded-lg bg-white border border-slate-300 font-semibold hover:bg-slate-50 text-sm">Changer le code</button>
       </div>
+
+      <!-- Alertes d'échéances (documents expirés / bientôt expirés) -->
+      <div id="confAlerts" class="mb-4"></div>
 
       <!-- Bloc 1 + 2 : certifications & documents par salarié -->
       <h3 class="text-sm font-extrabold text-slate-800 uppercase tracking-wide mb-2">Certifications &amp; documents du personnel</h3>
@@ -603,6 +611,11 @@
           <label class="text-sm font-semibold text-slate-600">Taux €/h</label>
           <input type="number" id="empRate" min="0" step="0.5" placeholder="12" class="mt-1 w-full border border-slate-300 rounded-lg px-3 py-2" />
         </div>
+      </div>
+      <div>
+        <label class="text-sm font-semibold text-slate-600">Droit à congés (jours / an)</label>
+        <input type="number" id="empConges" min="0" step="1" placeholder="25" class="mt-1 w-full sm:w-44 border border-slate-300 rounded-lg px-3 py-2" />
+        <span class="text-[11px] text-slate-400 block mt-0.5">Sert à calculer le solde de congés restant (25 j/an par défaut).</span>
       </div>
       <div class="flex items-center gap-2 pt-2 flex-wrap">
         <button type="button" id="archiveEmpBtn" class="mr-auto text-sm text-slate-500 font-semibold hover:underline hidden">🗂️ Archiver</button>
@@ -1118,6 +1131,33 @@ const ABSENCE_TYPES = [
 const absenceType = k => ABSENCE_TYPES.find(t=>t.key===k) || ABSENCE_TYPES[0];
 const weekAbsences = wk => state.absences.filter(a=>a.week===wk);
 const absenceOf = (empId,day) => state.absences.find(a=>a.week===state.weekStart && a.empId===empId && a.day===day);
+// Un employé est-il absent (congé/maladie/repos/indispo) ce jour-là ?
+const isAbsentDay = (empId, wk, day) => state.absences.some(a=>a.week===wk && a.empId===empId && a.day===day);
+// Comptage des jours d'absence d'un employé sur un ensemble de semaines, par type (un jour = 1, même si plusieurs absences).
+function absenceBreakdown(empId, weeks){
+  const by={}, seen=new Set(); let total=0;
+  state.absences.forEach(a=>{ if(a.empId!==empId || !weeks.includes(a.week)) return; const k=a.week+'|'+a.day; if(seen.has(k)) return; seen.add(k); by[a.type]=(by[a.type]||0)+1; total++; });
+  return { total, by };
+}
+// Heures prévues/réelles d'un employé sur des semaines, EN EXCLUANT les jours où il est en congé/absence.
+function empHours(empId, weeks){
+  let prevu=0, reel=0;
+  state.shifts.forEach(s=>{ if(s.empId!==empId || !weeks.includes(s.week) || isAbsentDay(empId,s.week,s.day)) return; prevu+=shiftHours(s); reel+=realHours(s); });
+  return { prevu, reel };
+}
+// Solde de congés de l'année civile en cours (droit annuel − congés pris).
+function congesSolde(emp){
+  const allow=(emp.congesAllowance!=null)?emp.congesAllowance:25;
+  const yr=new Date().getFullYear(), seen=new Set(); let taken=0;
+  state.absences.forEach(a=>{ if(a.empId!==emp.id || a.type!=='conge') return; const d=addDays(a.week,a.day); if(d.getFullYear()!==yr) return; const k=a.week+'|'+a.day; if(seen.has(k)) return; seen.add(k); taken++; });
+  return { allow, taken, left: allow-taken, yr };
+}
+// Prochaine échéance de document (conformité, type date) : la plus proche, en retard en premier.
+function nextDocDeadline(emp){
+  const items=(state.complianceItems||[]).filter(it=>it.type==='date'); let best=null;
+  items.forEach(it=>{ const v=emp.compliance&&emp.compliance[it.key]; const ds=v&&v.date; if(!ds) return; const d=parseLocalDate(ds); if(isNaN(d)) return; if(!best||d<best.date) best={label:it.label, date:d}; });
+  return best;
+}
 
 /* --- Jeux de conformité (par famille de métier) --- */
 const COMPLIANCE_COMMON = [
@@ -1455,7 +1495,8 @@ function migrate(s){
   // Globales dispo immédiatement (emptyCompliance en dépend juste après)
   TEAMS=s.teams; PERIODS=s.periods; COMPLIANCE_ITEMS=s.complianceItems; teamWord=s.teamWord;
   s.employees = (s.employees||[]).map(e=>{
-    const emp={ rate:0, phone:'', email:'', archived:false, ...e };
+    const emp={ rate:0, phone:'', email:'', archived:false, congesAllowance:25, ...e };
+    if(emp.congesAllowance==null) emp.congesAllowance=25;
     emp.compliance = Object.assign(emptyCompliance(), emp.compliance||{});
     return emp;
   });
@@ -1713,6 +1754,19 @@ function renderGrid(){
   document.getElementById('restoName').textContent = state.restaurant + (wsIndex().length>1?' ▾':'');
   applyLogo();
 
+  // Résumé de la semaine : heures planifiées, effectif, coût estimé, effectif par créneau
+  const wkShifts = state.shifts.filter(s=>s.week===start && !isAbsentDay(s.empId,start,s.day));
+  let wkHours=0, wkCost=0; const staff=new Set();
+  wkShifts.forEach(s=>{ const h=shiftHours(s); wkHours+=h; if(s.empId) staff.add(s.empId); const emp=empById(s.empId); if(emp&&emp.rate) wkCost+=h*emp.rate; });
+  const perPeriod = PERIODS.map(p=>{ const n=wkShifts.filter(s=>s.period===p.key).length; return n?`${escapeHtml(p.label)} : ${n}`:null; }).filter(Boolean).join(' · ');
+  const ps=document.getElementById('planningStats');
+  if(ps){ ps.innerHTML = wkShifts.length ? `
+    <span class="inline-flex items-center gap-1.5 rounded-lg bg-slate-100 text-slate-700 px-3 py-1.5 font-semibold">🕒 ${wkHours.toFixed(1)} h planifiées</span>
+    <span class="inline-flex items-center gap-1.5 rounded-lg bg-slate-100 text-slate-700 px-3 py-1.5 font-semibold">👥 ${staff.size} en poste</span>
+    ${wkCost?`<span class="cost-col inline-flex items-center gap-1.5 rounded-lg bg-amber-50 text-amber-700 px-3 py-1.5 font-semibold">💶 ~${wkCost.toFixed(0)} € (masse salariale)</span>`:''}
+    ${perPeriod?`<span class="inline-flex items-center gap-1.5 rounded-lg bg-slate-100 text-slate-600 px-3 py-1.5">📋 ${perPeriod}</span>`:''}
+  ` : ''; }
+
   renderNotes();
 }
 
@@ -1745,7 +1799,7 @@ function renderNotes(){
 function escapeHtml(s){ return String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c])); }
 
 /* ============ CONFORMITÉ (réservé patron) ============ */
-function fmtDateFR(iso){ return iso ? new Date(iso).toLocaleDateString('fr-FR') : '—'; }
+function fmtDateFR(iso){ return iso ? parseLocalDate(iso).toLocaleDateString('fr-FR') : '—'; }
 
 function renderConf(){
   if(state && state.demo) confUnlocked=true;   // en démo, la Conformité est ouverte (pas de code à deviner)
@@ -1771,18 +1825,37 @@ function renderConf(){
   document.getElementById('confBody').innerHTML = activeEmployees().map(e=>{
     const pc=planningCommStatus(e.id);
     const commCell = `<td class="px-2 py-2 text-center"><span class="text-[11px] font-semibold px-2 py-0.5 rounded-full ${pc.cls}">${pc.label}</span>${pc.sub?`<div class="text-[10px] text-slate-400 mt-0.5">${pc.sub}</div>`:''}</td>`;
-    const cells = COMPLIANCE_ITEMS.map(it=>{
-      const st=itemStatus(it, e.compliance?.[it.key]);
+    const stats = COMPLIANCE_ITEMS.map(it=>({it, st:itemStatus(it, e.compliance?.[it.key])}));
+    const cells = stats.map(({it,st})=>{
       const sub = (it.type==='date' && st.date) ? `<div class="text-[10px] text-slate-400 mt-0.5">${fmtDateFR(st.date)}</div>` : '';
       return `<td class="px-2 py-2 text-center"><span class="text-[11px] font-semibold px-2 py-0.5 rounded-full ${st.cls}">${st.label}</span>${sub}</td>`;
     }).join('');
+    const okN = stats.filter(s=>/emerald|slate/.test(s.st.cls)).length;
+    const pct = stats.length ? Math.round(okN/stats.length*100) : 100;
+    const pctCls = pct>=100?'text-emerald-600':(pct>=60?'text-amber-600':'text-red-600');
     return `<tr class="border-t border-slate-100 hover:bg-slate-50">
-      <td class="px-4 py-2 font-semibold text-slate-800 sticky left-0 bg-white">${escapeHtml(e.name)}<div class="text-[11px] font-normal text-slate-400">${teamOf(e.role).label} · ${escapeHtml(e.contract)}</div></td>
+      <td class="px-4 py-2 font-semibold text-slate-800 sticky left-0 bg-white">${escapeHtml(e.name)}<div class="text-[11px] font-normal text-slate-400">${teamOf(e.role).label} · ${escapeHtml(e.contract)}</div><div class="text-[11px] font-semibold ${pctCls}">Dossier ${pct}%</div></td>
       ${commCell}
       ${cells}
       <td class="px-3 py-2 text-right no-print"><button class="editConf text-teal-600 font-semibold hover:underline text-sm" data-id="${e.id}">Éditer</button></td>
     </tr>`;
   }).join('');
+
+  // Alertes d'échéances : documents expirés (rouge) ou bientôt expirés / manquants (ambre)
+  const alerts=[];
+  activeEmployees().forEach(e=>{ COMPLIANCE_ITEMS.forEach(it=>{ const st=itemStatus(it, e.compliance?.[it.key]); if(/red|amber/.test(st.cls)) alerts.push({name:e.name, label:it.label, st}); }); });
+  const abox=document.getElementById('confAlerts');
+  if(abox){
+    if(!alerts.length){ abox.innerHTML=`<div class="flex items-center gap-2 rounded-xl border border-emerald-200 bg-emerald-50 text-emerald-700 px-4 py-3 text-sm"><span>✅</span> Tous les documents du personnel sont à jour.</div>`; }
+    else {
+      const red=alerts.filter(a=>/red/.test(a.st.cls)), amber=alerts.filter(a=>/amber/.test(a.st.cls)); const ordered=[...red,...amber];
+      abox.innerHTML=`<div class="rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm">
+        <div class="font-bold text-slate-800 mb-1">⚠️ ${alerts.length} document${alerts.length>1?'s':''} à surveiller${red.length?` (dont ${red.length} expiré${red.length>1?'s':''}/manquant${red.length>1?'s':''})`:''}</div>
+        <ul class="space-y-0.5">${ordered.slice(0,12).map(a=>`<li class="${/red/.test(a.st.cls)?'text-red-700':'text-amber-700'}">• <b>${escapeHtml(a.name)}</b> — ${escapeHtml(a.label)} : ${a.st.label}</li>`).join('')}</ul>
+        ${ordered.length>12?`<div class="text-[11px] text-slate-400 mt-1">… et ${ordered.length-12} autre${ordered.length-12>1?'s':''}.</div>`:''}
+      </div>`;
+    }
+  }
 
   renderPlanningConformity();
 
@@ -1898,11 +1971,16 @@ function renderTeam(){
   body.innerHTML = list.length ? list.map(e=>{
     const t=teamOf(e.role); const ch=contractHours(e); const ph=planned[e.id]||0;
     const over = ch!=null && ph>ch+0.05;
+    const cs=congesSolde(e); const nd=nextDocDeadline(e);
+    const congeLine=`<div class="text-[11px] ${cs.left<=0?'text-red-500 font-semibold':'text-emerald-600'}">🌴 Congés ${cs.yr} : ${cs.left}/${cs.allow} j restants</div>`;
+    let docLine='';
+    if(nd){ const days=Math.round((nd.date-new Date())/86400000); const cls=days<0?'text-red-600 font-semibold':(days<=RECALL_DAYS?'text-amber-600':'text-slate-400'); const tag=days<0?' ⚠️ en retard':(days<=RECALL_DAYS?` · dans ${days} j`:''); docLine=`<div class="text-[11px] ${cls}">📄 ${escapeHtml(nd.label)} : ${fmtDate(nd.date)}${tag}</div>`; }
     const contractCell = `${escapeHtml(e.contract)}` + (ch!=null? `<div class="text-[11px] ${over?'text-red-600 font-semibold':'text-slate-400'}">${ph.toFixed(1)} h planifiées${over?` ⚠ +${(ph-ch).toFixed(1)}`:''}</div>` : (ph>0?`<div class="text-[11px] text-slate-400">${ph.toFixed(1)} h planifiées</div>`:''));
     return `<tr class="border-t border-slate-100 hover:bg-slate-50">
       <td class="px-4 py-3 font-semibold text-slate-800">${escapeHtml(e.name)}
         ${e.email?`<div class="text-xs font-normal text-slate-400">✉️ ${escapeHtml(e.email)}</div>`:`<div class="text-xs font-normal text-amber-500 no-print">✉️ pas d’email</div>`}
         ${e.phone?`<div class="text-xs font-normal text-slate-400">📞 <a href="tel:${encodeURIComponent(e.phone.replace(/\s/g,''))}" class="hover:underline">${escapeHtml(e.phone)}</a></div>`:''}
+        ${congeLine}${docLine}
       </td>
       <td class="px-4 py-3" style="--c:${t.color}"><span class="inline-flex items-center gap-1.5"><span class="dot"></span>${t.label}</span></td>
       <td class="px-4 py-3 text-slate-600 align-top">${contractCell}</td>
@@ -1981,20 +2059,25 @@ function renderSuivi(){
     return `<span class="font-semibold ${v>0?pos:neg}">${(v>0?'+':'')+v.toFixed(1)+' '+unit}</span>`;
   };
 
-  let tP=0,tR=0,tC=0;
+  let tP=0,tR=0,tC=0,tAbs=0,tOT=0;
   document.getElementById('suiviBody').innerHTML = activeEmployees().map(e=>{
-    const sh=scoped.filter(s=>s.empId===e.id);
-    const worked=new Set(sh.map(s=>s.week+'|'+s.day)).size;
-    const off=7*nbW - worked;
-    const prevu=sh.reduce((a,s)=>a+shiftHours(s),0);
-    const reel =sh.reduce((a,s)=>a+realHours(s),0);
+    // Heures hors jours de congé/absence
+    const H=empHours(e.id, weeks), prevu=H.prevu, reel=H.reel;
+    // Partition des jours : travaillés / absences / repos
+    const workedDays=new Set(scoped.filter(s=>s.empId===e.id && !isAbsentDay(e.id,s.week,s.day)).map(s=>s.week+'|'+s.day)).size;
+    const absInfo=absenceBreakdown(e.id, weeks), absDays=absInfo.total;
+    const off=Math.max(0, 7*nbW - workedDays - absDays);
     const cost = e.rate ? reel*e.rate : 0;
-    tP+=prevu; tR+=reel; tC+=cost;
     const ch=contractHours(e); const vsC = ch==null ? null : prevu - ch*nbW;
+    const ot = ch==null ? 0 : Math.max(0, prevu - ch*nbW);   // heures supplémentaires (au-delà du contrat)
+    tP+=prevu; tR+=reel; tC+=cost; tAbs+=absDays; tOT+=ot;
     const t=teamOf(e.role);
+    const absCell = absDays ? ABSENCE_TYPES.filter(ty=>absInfo.by[ty.key]).map(ty=>`${ty.emoji}${absInfo.by[ty.key]}`).join(' ') : '<span class="text-slate-300">—</span>';
+    const absTitle = absDays ? ABSENCE_TYPES.filter(ty=>absInfo.by[ty.key]).map(ty=>`${absInfo.by[ty.key]} ${ty.label.toLowerCase()}`).join(', ') : 'Aucune absence';
     return `<tr class="border-t border-slate-100 hover:bg-slate-50">
       <td class="px-4 py-3 font-semibold text-slate-800" style="--c:${t.color}"><span class="inline-flex items-center gap-1.5"><span class="dot"></span>${escapeHtml(e.name)}</span></td>
-      <td class="px-3 py-3 text-center text-slate-700 hidden sm:table-cell">${worked}</td>
+      <td class="px-3 py-3 text-center text-slate-700 hidden sm:table-cell">${workedDays}</td>
+      <td class="px-3 py-3 text-center text-sm hidden sm:table-cell" title="${absTitle}">${absCell}</td>
       <td class="px-3 py-3 text-center hidden sm:table-cell"><span class="font-semibold ${off<=0?'text-red-500':'text-slate-700'}">${off}</span></td>
       <td class="px-3 py-3 text-right text-slate-600">${prevu.toFixed(1)} h</td>
       <td class="px-3 py-3 text-right text-slate-800 font-medium">${reel.toFixed(1)} h</td>
@@ -2005,13 +2088,21 @@ function renderSuivi(){
   }).join('');
 
   document.getElementById('suiviFoot').innerHTML = activeEmployees().length ? `<tr>
-      <td class="px-4 py-3">Total</td><td class="hidden sm:table-cell"></td><td class="hidden sm:table-cell"></td>
+      <td class="px-4 py-3">Total</td><td class="hidden sm:table-cell"></td>
+      <td class="px-3 py-3 text-center hidden sm:table-cell">${tAbs||'<span class="text-slate-400">—</span>'}</td>
+      <td class="hidden sm:table-cell"></td>
       <td class="px-3 py-3 text-right">${tP.toFixed(1)} h</td>
       <td class="px-3 py-3 text-right">${tR.toFixed(1)} h</td>
       <td class="px-3 py-3 text-right">${chip(tR-tP)}</td>
       <td class="hidden sm:table-cell"></td>
       <td class="cost-col px-4 py-3 text-right">${tC?tC.toFixed(0)+' €':'—'}</td>
     </tr>` : '';
+  // Résumé : heures supplémentaires + congés cumulés sur la période
+  const sum=document.getElementById('suiviSummary');
+  if(sum){ sum.innerHTML = activeEmployees().length
+    ? `<span class="inline-flex items-center gap-1.5 rounded-lg bg-amber-50 text-amber-700 px-3 py-1.5 font-semibold">🕒 Heures sup. cumulées : ${tOT.toFixed(1)} h</span>
+       <span class="inline-flex items-center gap-1.5 rounded-lg bg-emerald-50 text-emerald-700 px-3 py-1.5 font-semibold">🌴 Congés/absences : ${tAbs} jour${tAbs>1?'s':''}</span>`
+    : ''; }
 }
 
 /* ============ MODALE SHIFT ============ */
@@ -2191,11 +2282,13 @@ function openEmpModal(emp){
     document.getElementById('empRole').value=emp.role;
     document.getElementById('empContract').value=emp.contract;
     document.getElementById('empRate').value=emp.rate||'';
+    document.getElementById('empConges').value=(emp.congesAllowance!=null?emp.congesAllowance:25);
     del.classList.remove('hidden'); arch.classList.remove('hidden');
   } else {
     document.getElementById('empModalTitle').textContent='Ajouter un employé';
     document.getElementById('empId').value='';
     ['empName','empEmail','empPhone','empRate'].forEach(id=>document.getElementById(id).value='');
+    document.getElementById('empConges').value='25';
     document.getElementById('empRole').value='salle';
     document.getElementById('empContract').value='35h';
     del.classList.add('hidden'); arch.classList.add('hidden');
@@ -2214,6 +2307,7 @@ document.getElementById('empForm').addEventListener('submit', ev=>{
     role:document.getElementById('empRole').value,
     contract:document.getElementById('empContract').value,
     rate:parseFloat(document.getElementById('empRate').value)||0,
+    congesAllowance:(function(){ const cv=document.getElementById('empConges').value.trim(); return cv===''?25:Math.max(0,parseInt(cv,10)||0); })(),
   };
   if(!data.name) return;
   if(id){ Object.assign(state.employees.find(x=>x.id===id), data); }
