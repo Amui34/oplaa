@@ -45,6 +45,15 @@ test('démo : on peut quitter la démo et revenir à l’écran d’accueil', as
   await expect(page.locator('#welcomePatron')).toBeVisible();
 });
 
+test('affichage : aucune dérive horizontale de la page (iPad 768px)', async ({ page }) => {
+  await page.setViewportSize({ width: 768, height: 1024 });
+  await page.locator('#welcomeDemo').click();
+  await page.waitForTimeout(300);
+  const m = await page.evaluate(() => ({ inner: window.innerWidth, scrollW: document.documentElement.scrollWidth }));
+  // La page ne doit jamais dépasser la largeur de l'écran (le planning scrolle dans sa propre zone)
+  expect(m.scrollW).toBeLessThanOrEqual(m.inner + 1);
+});
+
 test('planning : ruban de jours continu (dimanche → lundi suivant, sans coupure)', async ({ page }) => {
   await page.locator('#welcomeDemo').click();
   // Le mode Semaine affiche plus de 7 jours d'affilée (ruban continu multi-semaines)
