@@ -121,6 +121,20 @@ test('congés : un congé réduit les heures et est compté par type', async ({ 
   expect(res.soldeLeft).toBe(res.soldeAllow - 1); // 1 congé décompté du solde
 });
 
+test('employé : heures libres (semaine/mois) + salaire mensuel calculé', async ({ page }) => {
+  await page.locator('#welcomeDemo').click();
+  await page.waitForTimeout(200);
+  const r = await page.evaluate(() => {
+    // 120 h/mois à 15 €/h → ~1800 €/mois brut, ~27,69 h/semaine
+    const e = { contractType: 'Temps partiel', hours: 120, hoursUnit: 'mois', rate: 15 };
+    return { weekly: contractHours(e), monthly: Math.round(monthlyGross(e)), label: contractLabel(e) };
+  });
+  expect(r.monthly).toBe(1800);
+  expect(r.weekly).toBeCloseTo(27.69, 1);
+  expect(r.label).toContain('120 h/mois');
+  expect(r.label).toContain('Temps partiel');
+});
+
 test('planning : ruban de jours continu (dimanche → lundi suivant, sans coupure)', async ({ page }) => {
   await page.locator('#welcomeDemo').click();
   // Le mode Semaine affiche plus de 7 jours d'affilée (ruban continu multi-semaines)

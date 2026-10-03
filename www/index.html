@@ -595,23 +595,37 @@
           <input type="tel" id="empPhone" placeholder="06 12 34 56 78" class="mt-1 w-full border border-slate-300 rounded-lg px-3 py-2" />
         </div>
       </div>
-      <div class="grid grid-cols-3 gap-3">
+      <div class="grid grid-cols-2 gap-3">
         <div>
           <label class="text-sm font-semibold text-slate-600">Équipe</label>
           <select id="empRole" class="mt-1 w-full border border-slate-300 rounded-lg px-3 py-2"></select>
         </div>
         <div>
-          <label class="text-sm font-semibold text-slate-600">Contrat</label>
-          <select id="empContract" class="mt-1 w-full border border-slate-300 rounded-lg px-3 py-2">
-            <option>39h</option><option>35h</option><option>30h</option><option>25h</option>
-            <option>20h</option><option>Extra</option><option>Stage</option><option>Apprentissage</option>
+          <label class="text-sm font-semibold text-slate-600">Type de contrat</label>
+          <select id="empType" class="mt-1 w-full border border-slate-300 rounded-lg px-3 py-2">
+            <option>CDI</option><option>CDD</option><option>Temps partiel</option>
+            <option>Extra</option><option>Apprentissage</option><option>Stage</option>
+            <option>Intérim</option><option>Autre</option>
+          </select>
+        </div>
+      </div>
+      <div class="grid grid-cols-[1fr_auto] sm:grid-cols-3 gap-3 items-end">
+        <div>
+          <label class="text-sm font-semibold text-slate-600">Heures</label>
+          <input type="number" id="empHours" min="0" step="0.5" inputmode="decimal" placeholder="35" class="mt-1 w-full border border-slate-300 rounded-lg px-3 py-2" />
+        </div>
+        <div>
+          <label class="text-sm font-semibold text-slate-600">par</label>
+          <select id="empHoursUnit" class="mt-1 w-full border border-slate-300 rounded-lg px-3 py-2">
+            <option value="semaine">semaine</option><option value="mois">mois</option>
           </select>
         </div>
         <div>
-          <label class="text-sm font-semibold text-slate-600">Taux €/h</label>
-          <input type="number" id="empRate" min="0" step="0.5" placeholder="12" class="mt-1 w-full border border-slate-300 rounded-lg px-3 py-2" />
+          <label class="text-sm font-semibold text-slate-600">Taux €/h (brut)</label>
+          <input type="number" id="empRate" min="0" step="0.5" inputmode="decimal" placeholder="12" class="mt-1 w-full border border-slate-300 rounded-lg px-3 py-2" />
         </div>
       </div>
+      <div id="empPayEstimate" class="rounded-lg bg-slate-50 border border-slate-200 px-3 py-2 text-sm text-slate-600"></div>
       <div>
         <label class="text-sm font-semibold text-slate-600">Droit à congés (jours / an)</label>
         <input type="number" id="empConges" min="0" step="1" placeholder="25" class="mt-1 w-full sm:w-44 border border-slate-300 rounded-lg px-3 py-2" />
@@ -1298,7 +1312,25 @@ function extraFromShifts(shifts, empId, absKeyOf){ let night=0, sun=0; const byD
 function weekExtra(empId, wk){ return extraFromShifts(state.shifts.filter(s=>s.week===wk&&s.empId===empId), empId, s=>s.day); }
 function monthExtra(empId, refWk){ return extraFromShifts(empShiftsMonth(empId,refWk), empId, s=>s.week+'|'+s.day); }
 function hasReal(s){ return !!(s.realStart && s.realEnd); }
-function contractHours(e){ const n=parseFloat(String(e.contract).replace(',','.')); return isNaN(n)?null:n; }
+const WEEKS_PER_MONTH = 52/12;   // ≈ 4,333 — conversion standard semaine ↔ mois
+// Heures contractuelles ramenées à la SEMAINE (base des comparaisons planning).
+function contractHours(e){
+  if(e && e.hours!=null && e.hours!=='' && !isNaN(parseFloat(e.hours))){
+    const v=parseFloat(e.hours); return e.hoursUnit==='mois' ? v/WEEKS_PER_MONTH : v;
+  }
+  const n=parseFloat(String(e&&e.contract).replace(',','.')); return isNaN(n)?null:n;   // ancien format (hebdo)
+}
+function fmtNum(n){ return (Math.round(n*100)/100).toString().replace('.',','); }
+// Libellé lisible du contrat : « CDI · 35 h/sem » ou « Extra »
+function contractLabel(e){
+  const parts=[];
+  if(e.contractType) parts.push(e.contractType);
+  if(e.hours!=null && e.hours!=='' && !isNaN(parseFloat(e.hours))) parts.push(fmtNum(parseFloat(e.hours))+' h/'+(e.hoursUnit==='mois'?'mois':'sem'));
+  return parts.join(' · ') || (e.contract||'—');
+}
+// Heures ramenées au MOIS et salaire brut mensuel estimé (= heures/mois × taux).
+function monthlyHours(e){ const wh=contractHours(e); return wh==null?null:wh*WEEKS_PER_MONTH; }
+function monthlyGross(e){ const mh=monthlyHours(e); return (mh!=null && e.rate)? mh*e.rate : null; }
 function pinHash(s){ let h=5381; for(let i=0;i<s.length;i++) h=((h<<5)+h+s.charCodeAt(i))>>>0; return h.toString(36); }
 /* --- Couleur principale (accent) modifiable par l'admin --- */
 function _hexToRgb(h){ h=(h||'').replace('#',''); if(h.length===3) h=h.split('').map(c=>c+c).join(''); return [parseInt(h.slice(0,2),16),parseInt(h.slice(2,4),16),parseInt(h.slice(4,6),16)]; }
@@ -1497,6 +1529,17 @@ function migrate(s){
   s.employees = (s.employees||[]).map(e=>{
     const emp={ rate:0, phone:'', email:'', archived:false, congesAllowance:25, ...e };
     if(emp.congesAllowance==null) emp.congesAllowance=25;
+    // Contrat : passage de l'ancien champ texte (« 35h », « Extra »…) aux champs structurés.
+    if(emp.hours===undefined){
+      const m=String(emp.contract||'').match(/(\d+(?:[.,]\d+)?)/);
+      emp.hours = m ? parseFloat(m[1].replace(',','.')) : null;
+      emp.hoursUnit = /mois/i.test(String(emp.contract||'')) ? 'mois' : 'semaine';
+    }
+    if(emp.hoursUnit!=='mois' && emp.hoursUnit!=='semaine') emp.hoursUnit='semaine';
+    if(!emp.contractType){
+      const c=String(emp.contract||'').toLowerCase();
+      emp.contractType = /extra/.test(c)?'Extra' : /stage/.test(c)?'Stage' : /apprent/.test(c)?'Apprentissage' : /cdd/.test(c)?'CDD' : /partiel/.test(c)?'Temps partiel' : /int[eé]rim/.test(c)?'Intérim' : (emp.hours!=null?'CDI':'Autre');
+    }
     emp.compliance = Object.assign(emptyCompliance(), emp.compliance||{});
     return emp;
   });
@@ -1834,7 +1877,7 @@ function renderConf(){
     const pct = stats.length ? Math.round(okN/stats.length*100) : 100;
     const pctCls = pct>=100?'text-emerald-600':(pct>=60?'text-amber-600':'text-red-600');
     return `<tr class="border-t border-slate-100 hover:bg-slate-50">
-      <td class="px-4 py-2 font-semibold text-slate-800 sticky left-0 bg-white">${escapeHtml(e.name)}<div class="text-[11px] font-normal text-slate-400">${teamOf(e.role).label} · ${escapeHtml(e.contract)}</div><div class="text-[11px] font-semibold ${pctCls}">Dossier ${pct}%</div></td>
+      <td class="px-4 py-2 font-semibold text-slate-800 sticky left-0 bg-white">${escapeHtml(e.name)}<div class="text-[11px] font-normal text-slate-400">${teamOf(e.role).label} · ${escapeHtml(contractLabel(e))}</div><div class="text-[11px] font-semibold ${pctCls}">Dossier ${pct}%</div></td>
       ${commCell}
       ${cells}
       <td class="px-3 py-2 text-right no-print"><button class="editConf text-teal-600 font-semibold hover:underline text-sm" data-id="${e.id}">Éditer</button></td>
@@ -1975,7 +2018,9 @@ function renderTeam(){
     const congeLine=`<div class="text-[11px] ${cs.left<=0?'text-red-500 font-semibold':'text-emerald-600'}">🌴 Congés ${cs.yr} : ${cs.left}/${cs.allow} j restants</div>`;
     let docLine='';
     if(nd){ const days=Math.round((nd.date-new Date())/86400000); const cls=days<0?'text-red-600 font-semibold':(days<=RECALL_DAYS?'text-amber-600':'text-slate-400'); const tag=days<0?' ⚠️ en retard':(days<=RECALL_DAYS?` · dans ${days} j`:''); docLine=`<div class="text-[11px] ${cls}">📄 ${escapeHtml(nd.label)} : ${fmtDate(nd.date)}${tag}</div>`; }
-    const contractCell = `${escapeHtml(e.contract)}` + (ch!=null? `<div class="text-[11px] ${over?'text-red-600 font-semibold':'text-slate-400'}">${ph.toFixed(1)} h planifiées${over?` ⚠ +${(ph-ch).toFixed(1)}`:''}</div>` : (ph>0?`<div class="text-[11px] text-slate-400">${ph.toFixed(1)} h planifiées</div>`:''));
+    const mg=monthlyGross(e); const mh=monthlyHours(e);
+    const salLine = mg!=null ? `<div class="cost-col text-[11px] text-slate-500">💶 ≈ ${Math.round(mg).toLocaleString('fr-FR')} €/mois${mh!=null?` · ${fmtNum(mh)} h/mois`:''}</div>` : '';
+    const contractCell = `${escapeHtml(contractLabel(e))}` + (ch!=null? `<div class="text-[11px] ${over?'text-red-600 font-semibold':'text-slate-400'}">${ph.toFixed(1)} h planifiées${over?` ⚠ +${(ph-ch).toFixed(1)}`:''}</div>` : (ph>0?`<div class="text-[11px] text-slate-400">${ph.toFixed(1)} h planifiées</div>`:'')) + salLine;
     return `<tr class="border-t border-slate-100 hover:bg-slate-50">
       <td class="px-4 py-3 font-semibold text-slate-800">${escapeHtml(e.name)}
         ${e.email?`<div class="text-xs font-normal text-slate-400">✉️ ${escapeHtml(e.email)}</div>`:`<div class="text-xs font-normal text-amber-500 no-print">✉️ pas d’email</div>`}
@@ -2280,35 +2325,60 @@ function openEmpModal(emp){
     document.getElementById('empEmail').value=emp.email||'';
     document.getElementById('empPhone').value=emp.phone||'';
     document.getElementById('empRole').value=emp.role;
-    document.getElementById('empContract').value=emp.contract;
+    document.getElementById('empType').value=emp.contractType||'CDI';
+    document.getElementById('empHours').value=(emp.hours!=null&&emp.hours!=='')?emp.hours:'';
+    document.getElementById('empHoursUnit').value=(emp.hoursUnit==='mois')?'mois':'semaine';
     document.getElementById('empRate').value=emp.rate||'';
     document.getElementById('empConges').value=(emp.congesAllowance!=null?emp.congesAllowance:25);
     del.classList.remove('hidden'); arch.classList.remove('hidden');
   } else {
     document.getElementById('empModalTitle').textContent='Ajouter un employé';
     document.getElementById('empId').value='';
-    ['empName','empEmail','empPhone','empRate'].forEach(id=>document.getElementById(id).value='');
+    ['empName','empEmail','empPhone','empRate','empHours'].forEach(id=>document.getElementById(id).value='');
     document.getElementById('empConges').value='25';
     document.getElementById('empRole').value='salle';
-    document.getElementById('empContract').value='35h';
+    document.getElementById('empType').value='CDI';
+    document.getElementById('empHoursUnit').value='semaine';
     del.classList.add('hidden'); arch.classList.add('hidden');
   }
+  updatePayEstimate();
   empModal.classList.remove('hidden'); empModal.classList.add('flex');
 }
 function closeEmpModal(){ empModal.classList.add('hidden'); empModal.classList.remove('flex'); }
 
+// Estimation live : heures semaine↔mois + salaire mensuel brut (= heures/mois × taux)
+function updatePayEstimate(){
+  const box=document.getElementById('empPayEstimate'); if(!box) return;
+  const hv=parseFloat(String(document.getElementById('empHours').value).replace(',','.'));
+  const unit=document.getElementById('empHoursUnit').value==='mois'?'mois':'semaine';
+  const rate=parseFloat(String(document.getElementById('empRate').value).replace(',','.'));
+  if(isNaN(hv)||hv<=0){ box.innerHTML='<span class="text-slate-400">Indique les heures pour voir le total mensuel estimé.</span>'; return; }
+  const weekly = unit==='mois' ? hv/WEEKS_PER_MONTH : hv;
+  const monthly = weekly*WEEKS_PER_MONTH;
+  const other = unit==='mois' ? `${fmtNum(weekly)} h/semaine` : `${fmtNum(monthly)} h/mois`;
+  const sal = (!isNaN(rate)&&rate>0) ? ` · <span class="cost-col font-semibold text-slate-800">≈ ${Math.round(monthly*rate).toLocaleString('fr-FR')} €/mois brut</span>` : ' · <span class="text-slate-400">ajoute le taux pour le salaire</span>';
+  box.innerHTML = `📅 ≈ <b>${other}</b>${sal}`;
+}
+['empHours','empHoursUnit','empRate'].forEach(id=>{ const el=document.getElementById(id); if(el){ el.addEventListener('input', updatePayEstimate); el.addEventListener('change', updatePayEstimate); } });
+
 document.getElementById('empForm').addEventListener('submit', ev=>{
   ev.preventDefault();
   const id=document.getElementById('empId').value;
+  const hoursRaw=String(document.getElementById('empHours').value).trim();
+  const hours = hoursRaw==='' ? null : Math.max(0, parseFloat(hoursRaw.replace(',','.'))||0);
+  const hoursUnit = document.getElementById('empHoursUnit').value==='mois' ? 'mois' : 'semaine';
+  const contractType = document.getElementById('empType').value || 'Autre';
   const data={
     name:document.getElementById('empName').value.trim(),
     email:document.getElementById('empEmail').value.trim(),
     phone:document.getElementById('empPhone').value.trim(),
     role:document.getElementById('empRole').value,
-    contract:document.getElementById('empContract').value,
-    rate:parseFloat(document.getElementById('empRate').value)||0,
+    contractType, hours, hoursUnit,
+    rate:parseFloat(String(document.getElementById('empRate').value).replace(',','.'))||0,
     congesAllowance:(function(){ const cv=document.getElementById('empConges').value.trim(); return cv===''?25:Math.max(0,parseInt(cv,10)||0); })(),
   };
+  // Libellé texte conservé pour la rétrocompatibilité d'affichage/cloud
+  data.contract = [contractType, (hours!=null?fmtNum(hours)+' h/'+(hoursUnit==='mois'?'mois':'sem'):null)].filter(Boolean).join(' · ') || contractType;
   if(!data.name) return;
   if(id){ Object.assign(state.employees.find(x=>x.id===id), data); }
   else { state.employees.push({ id:uid(), ...data }); }
