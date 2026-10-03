@@ -2,7 +2,9 @@
 import { test, expect } from '@playwright/test';
 
 test.beforeEach(async ({ page }) => {
-  await page.addInitScript(() => { try { localStorage.clear(); } catch (e) {} });
+  // On neutralise le guide de 1re utilisation par défaut (sinon il s'ouvre par-dessus la démo
+  // et masque les contrôles). Les tests dédiés au guide le réactivent explicitement.
+  await page.addInitScript(() => { try { localStorage.clear(); localStorage.setItem('oplaa_onboarded', '1'); } catch (e) {} });
   await page.goto('/');
 });
 
@@ -52,6 +54,38 @@ test('affichage : aucune dérive horizontale de la page (iPad 768px)', async ({ 
   const m = await page.evaluate(() => ({ inner: window.innerWidth, scrollW: document.documentElement.scrollWidth }));
   // La page ne doit jamais dépasser la largeur de l'écran (le planning scrolle dans sa propre zone)
   expect(m.scrollW).toBeLessThanOrEqual(m.inner + 1);
+});
+
+test('guide : s’affiche au premier lancement et se parcourt jusqu’au bout', async ({ page }) => {
+  // Réactive le guide (le beforeEach l'avait neutralisé) puis recharge
+  await page.addInitScript(() => { try { localStorage.removeItem('oplaa_onboarded'); } catch (e) {} });
+  await page.reload();
+  await page.locator('#welcomeDemo').click();
+  // Le guide apparaît (petit délai d'animation)
+  await expect(page.locator('#onboardModal')).toBeVisible();
+  await expect(page.locator('#obTitle')).toContainText('Bienvenue');
+  // On parcourt les 5 étapes jusqu'à « Commencer »
+  for (let i = 0; i < 4; i++) await page.locator('#obNext').click();
+  await expect(page.locator('#obNext')).toHaveText('Commencer');
+  await page.locator('#obNext').click();
+  await expect(page.locator('#onboardModal')).toBeHidden();
+});
+
+test('équipes : on peut renommer / ajouter un segment d’équipe', async ({ page }) => {
+  await page.locator('#welcomeDemo').click();
+  await page.locator('#btnData').click();
+  await page.locator('#btnTeams').click();
+  await expect(page.locator('#teamsModal')).toBeVisible();
+  const before = await page.evaluate(() => state.teams.length);
+  // Ajoute une équipe et la nomme
+  await page.locator('#addTeamRow2').click();
+  const lastLabel = page.locator('#teamsList .set-team .s-label').last();
+  await lastLabel.fill('Terrasse');
+  await page.locator('#teamsForm button[type="submit"]').click();
+  await expect(page.locator('#teamsModal')).toBeHidden();
+  const after = await page.evaluate(() => state.teams.map(t => t.label));
+  expect(after.length).toBe(before + 1);
+  expect(after).toContain('Terrasse');
 });
 
 test('planning : ruban de jours continu (dimanche → lundi suivant, sans coupure)', async ({ page }) => {

@@ -218,7 +218,8 @@
         <button id="dupWeek" class="mi w-full text-left px-4 py-2 hover:bg-slate-50"><span class="ic" data-ic="copy"></span>Dupliquer la semaine précédente</button>
         <div class="border-t border-slate-100 my-1"></div>
         <div class="px-4 pt-1 pb-0.5 text-[10px] font-bold uppercase tracking-wider text-slate-400">Configuration</div>
-        <button id="btnSettings" class="mi w-full text-left px-4 py-2 hover:bg-slate-50"><span class="ic" data-ic="settings"></span>Réglages (équipes, créneaux, couleur)</button>
+        <button id="btnTeams" class="mi w-full text-left px-4 py-2 hover:bg-slate-50"><span class="ic" data-ic="users"></span>Mes équipes (renommer, ajouter…)</button>
+        <button id="btnSettings" class="mi w-full text-left px-4 py-2 hover:bg-slate-50"><span class="ic" data-ic="settings"></span>Réglages (créneaux, règles, couleur)</button>
         <button id="btnProfile" class="mi w-full text-left px-4 py-2 hover:bg-slate-50"><span class="ic" data-ic="shuffle"></span>Changer de profil d'activité</button>
         <button id="btnRename" class="mi w-full text-left px-4 py-2 hover:bg-slate-50"><span class="ic" data-ic="pencil"></span>Renommer l'établissement</button>
         <div class="border-t border-slate-100 my-1"></div>
@@ -228,6 +229,7 @@
         <button id="btnReset" class="mi w-full text-left px-4 py-2 text-red-600 hover:bg-red-50"><span class="ic" data-ic="trash"></span>Vider les données (repartir de zéro)</button>
         <div class="border-t border-slate-100 my-1"></div>
         <div class="px-4 pt-1 pb-0.5 text-[10px] font-bold uppercase tracking-wider text-slate-400">Aide &amp; retours</div>
+        <button id="btnGuide" class="mi w-full text-left px-4 py-2 hover:bg-slate-50"><span class="ic" data-ic="bulb"></span>Revoir le guide de démarrage</button>
         <button id="btnHelp" class="mi w-full text-left px-4 py-2 hover:bg-slate-50"><span class="ic" data-ic="help"></span>Aide / FAQ</button>
         <button id="btnFeedback" class="mi w-full text-left px-4 py-2 hover:bg-slate-50"><span class="ic" data-ic="bulb"></span>Proposer une amélioration</button>
         <button id="btnPrivacy" class="mi w-full text-left px-4 py-2 hover:bg-slate-50"><span class="ic" data-ic="lock"></span>Confidentialité &amp; RGPD</button>
@@ -919,6 +921,46 @@
     <p class="text-sm text-slate-500 mb-5">Choisissez un profil : il configure les équipes, les créneaux et la conformité adaptés. Vous pourrez tout personnaliser ensuite.</p>
     <div id="profileGrid" class="grid grid-cols-2 sm:grid-cols-3 gap-3"></div>
     <p class="text-xs text-amber-600 mt-4" id="profileWarn">⚠️ Changer de profil remplace les équipes/créneaux et recharge des données d'exemple. Sauvegardez avant si besoin.</p>
+  </div>
+</div>
+
+<!-- ============ MODALE « MES ÉQUIPES » (éditeur simple) ============ -->
+<div id="teamsModal" class="no-print fixed inset-0 bg-black/40 z-50 hidden items-center justify-center p-4">
+  <div class="bg-white rounded-2xl shadow-xl w-full max-w-md max-h-[88vh] overflow-y-auto">
+    <div class="flex items-start gap-2 px-5 pt-5 pb-1">
+      <div class="mr-auto">
+        <h3 class="text-lg font-bold text-slate-800">Mes équipes</h3>
+        <p class="text-sm text-slate-500 mt-0.5">Les groupes qui segmentent tes employés (ex. Salle, Cuisine…). Renomme, change la couleur, ajoute ou supprime.</p>
+      </div>
+      <button type="button" class="closeTeams text-slate-400 hover:text-slate-700 text-2xl leading-none px-1 shrink-0">&times;</button>
+    </div>
+    <form id="teamsForm" class="px-5 pb-5">
+      <div id="teamsList" class="space-y-2 mt-3"></div>
+      <button type="button" id="addTeamRow2" class="ic-btn mt-3 text-sm text-teal-600 font-semibold hover:underline"><span class="ic" data-ic="plus" data-ic-size="14"></span>Ajouter une équipe</button>
+      <p id="teamsErr" class="hidden text-sm text-red-600 mt-3"></p>
+      <div class="flex gap-2 justify-end mt-5">
+        <button type="button" class="closeTeams px-4 py-2 rounded-lg border border-slate-300 font-semibold text-sm hover:bg-slate-50">Annuler</button>
+        <button type="submit" class="px-4 py-2 rounded-lg bg-teal-600 text-white font-semibold text-sm hover:bg-teal-700">Enregistrer</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- ============ GUIDE DE PREMIÈRE UTILISATION (onboarding) ============ -->
+<div id="onboardModal" class="no-print fixed inset-0 bg-black/50 z-[70] hidden items-center justify-center p-4">
+  <div class="bg-white rounded-3xl shadow-2xl w-full max-w-sm overflow-hidden">
+    <div class="px-6 pt-9 pb-5 text-center">
+      <div id="obEmoji" class="text-5xl mb-4" aria-hidden="true"></div>
+      <h2 id="obTitle" class="text-xl font-extrabold text-slate-800 mb-2"></h2>
+      <p id="obText" class="text-slate-500 text-sm leading-relaxed"></p>
+    </div>
+    <div class="px-6 pb-6">
+      <div id="obDots" class="flex justify-center gap-1.5 mb-5"></div>
+      <div class="flex items-center gap-2">
+        <button type="button" id="obSkip" class="text-slate-400 text-sm font-semibold px-2 hover:text-slate-600">Passer</button>
+        <button type="button" id="obNext" class="ml-auto px-6 py-2.5 rounded-xl bg-teal-600 text-white font-bold text-sm hover:bg-teal-700">Suivant</button>
+      </div>
+    </div>
   </div>
 </div>
 
@@ -2805,6 +2847,8 @@ document.addEventListener('keydown',e=>{ if(e.key==='Escape'){
   if(!wizardModal.classList.contains('hidden')) cancelWizard();
   closeShiftModal(); closeEmpModal(); closeNoteModal(); closeConfModal(); closeSettings(); closeHistory(); closeEstb();
   closeCloud(); closeAbsModal(); closeSheet(); closeSendEmp(); closePaywall();
+  if(typeof closeTeams==='function') closeTeams();
+  if(typeof closeOnboard==='function' && onboardModal && !onboardModal.classList.contains('hidden')) closeOnboard();
   if(!firstRun) closeProfileModal();
 }});
 
@@ -2982,8 +3026,66 @@ function finishWizard(){
   closeWizard();
   document.getElementById('coachHint').classList.remove('hidden');
   toast('Planning créé ✓ À toi de jouer !');
+  maybeOnboard();
 }
 document.getElementById('coachClose').addEventListener('click',()=>document.getElementById('coachHint').classList.add('hidden'));
+
+/* ============ GUIDE DE PREMIÈRE UTILISATION (onboarding) ============ */
+const OB_STEPS=[
+  {e:'👋', t:'Bienvenue sur Oplaa !', x:'Le planning de ton équipe, enfin simple. On te montre l\'essentiel en 20 secondes.'},
+  {e:'🗓️', t:'Ajoute un service', x:'Touche une case du planning (ou le bouton <b>＋ Ajouter</b>) pour poser un horaire. Glisse une carte pour la déplacer.'},
+  {e:'🎨', t:'Tes équipes', x:'Salle, Cuisine, Bar… ce sont tes groupes. Tu peux les <b>renommer, en ajouter ou en supprimer</b> dans <b>Données ▸ Mes équipes</b>.'},
+  {e:'📲', t:'Partage à chacun', x:'Envoie à chaque employé <b>son</b> planning. Ils ne voient que leurs horaires — jamais les salaires ni les infos des autres.'},
+  {e:'🚀', t:'C\'est parti !', x:'Tu peux revoir ce guide quand tu veux dans <b>Données ▸ Revoir le guide</b>. Bon planning !'}
+];
+let _obStep=0;
+const onboardModal=document.getElementById('onboardModal');
+function obRender(){ const s=OB_STEPS[_obStep];
+  document.getElementById('obEmoji').textContent=s.e;
+  document.getElementById('obTitle').textContent=s.t;
+  document.getElementById('obText').innerHTML=s.x;
+  document.getElementById('obDots').innerHTML=OB_STEPS.map((_,i)=>`<span class="rounded-full ${i===_obStep?'bg-teal-600 w-5':'bg-slate-200 w-2'}" style="height:.5rem;transition:width .2s"></span>`).join('');
+  document.getElementById('obNext').textContent = _obStep===OB_STEPS.length-1 ? 'Commencer' : 'Suivant';
+  document.getElementById('obSkip').style.visibility = _obStep===OB_STEPS.length-1 ? 'hidden' : 'visible';
+}
+function openOnboard(){ _obStep=0; obRender(); onboardModal.classList.remove('hidden'); onboardModal.classList.add('flex'); }
+function closeOnboard(){ onboardModal.classList.add('hidden'); onboardModal.classList.remove('flex'); try{ localStorage.setItem('oplaa_onboarded','1'); }catch(e){} }
+function maybeOnboard(){ let seen=false; try{ seen=localStorage.getItem('oplaa_onboarded')==='1'; }catch(e){} if(!seen) setTimeout(openOnboard, 450); }
+document.getElementById('obNext').addEventListener('click',()=>{ if(_obStep<OB_STEPS.length-1){ _obStep++; obRender(); } else closeOnboard(); });
+document.getElementById('obSkip').addEventListener('click',closeOnboard);
+document.getElementById('btnGuide').addEventListener('click',()=>{ dataMenu.classList.add('hidden'); openOnboard(); });
+
+/* ============ « MES ÉQUIPES » (renommer / couleur / ajouter / supprimer) ============ */
+const teamsModal=document.getElementById('teamsModal');
+function openTeams(){ dataMenu.classList.add('hidden');
+  document.getElementById('teamsList').innerHTML = state.teams.map(teamRowHtml).join('');
+  if(window.OplaaIcons) OplaaIcons.paint(teamsModal);
+  document.getElementById('teamsErr').classList.add('hidden');
+  teamsModal.classList.remove('hidden'); teamsModal.classList.add('flex');
+}
+function closeTeams(){ teamsModal.classList.add('hidden'); teamsModal.classList.remove('flex'); }
+document.getElementById('addTeamRow2').addEventListener('click',()=>{ document.getElementById('teamsList').insertAdjacentHTML('beforeend', teamRowHtml()); if(window.OplaaIcons) OplaaIcons.paint(teamsModal); });
+document.querySelectorAll('.closeTeams').forEach(b=>b.addEventListener('click',closeTeams));
+teamsModal.addEventListener('click',e=>{ if(e.target===teamsModal){ closeTeams(); return; } if(e.target.closest('.del-row')) e.target.closest('.del-row').parentElement.remove(); });
+document.getElementById('btnTeams').addEventListener('click',openTeams);
+document.getElementById('teamsForm').addEventListener('submit',ev=>{
+  ev.preventDefault();
+  const err=document.getElementById('teamsErr');
+  const usedT=new Set(); const newTeams=[];
+  document.querySelectorAll('#teamsList .set-team').forEach(row=>{
+    const label=row.querySelector('.s-label').value.trim(); if(!label) return;
+    const key=row.dataset.key || slugKey(label,usedT); if(row.dataset.key) usedT.add(key);
+    newTeams.push({ key, label, color: row.querySelector('.s-color').value });
+  });
+  if(!newTeams.length){ err.textContent='Il faut au moins une équipe.'; err.classList.remove('hidden'); return; }
+  const teamKeys=new Set(newTeams.map(t=>t.key));
+  const orphanShift=state.shifts.find(s=>!teamKeys.has(s.team));
+  if(orphanShift){ err.textContent=`Impossible : des services utilisent l'équipe « ${teamOf(orphanShift.team).label} ». Réaffecte-les (ou supprime ces services) d'abord.`; err.classList.remove('hidden'); return; }
+  const orphanEmp=state.employees.find(e=>e.role && !teamKeys.has(e.role));
+  if(orphanEmp){ err.textContent=`Impossible : « ${orphanEmp.name} » est dans l'équipe « ${teamOf(orphanEmp.role).label} ». Change son équipe d'abord.`; err.classList.remove('hidden'); return; }
+  state.teams=newTeams; state.profile='custom';
+  syncGlobals(); save(); renderAll(); closeTeams(); toast('Équipes mises à jour ✓');
+});
 
 /* ============ RÉGLAGES (équipes / créneaux) ============ */
 const settingsModal=document.getElementById('settingsModal');
@@ -3585,6 +3687,7 @@ document.getElementById('welcomeDemo').addEventListener('click', ()=>{
   setAccent(state.accent); applyLogo(); setView('planning'); saveQuiet(); renderAll(); applyMode();
   applyDemoBanner();
   toast('Mode démo — données d’exemple');
+  maybeOnboard();
 });
 if(firstRun) showWelcome();
 applyDemoBanner();
