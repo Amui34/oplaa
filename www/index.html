@@ -122,7 +122,8 @@
   body.role-employee #btnExport, body.role-employee #btnImport, body.role-employee #btnReset,
   body.role-employee #btnSettings, body.role-employee #btnProfile, body.role-employee #btnRename,
   body.role-employee #btnEstb, body.role-employee #dupWeek, body.role-employee #btnUndo,
-  body.role-employee #btnHistory, body.role-employee #btnEmailM, body.role-employee #btnPrintM{ display:none !important; }
+  body.role-employee #btnHistory, body.role-employee #btnEmailM, body.role-employee #btnPrintM,
+  body.role-employee #btnTemplates, body.role-employee #btnTeams{ display:none !important; }
   @media print{ #rgpdMark{ display:none !important; } }
   /* Icônes trait fin : alignement libellé + picto */
   [hidden]{ display:none !important; }
@@ -216,6 +217,7 @@
         <button id="btnUndo" class="mi w-full text-left px-4 py-2 hover:bg-slate-50"><span class="ic" data-ic="undo"></span>Annuler la dernière modification</button>
         <button id="btnHistory" class="mi w-full text-left px-4 py-2 hover:bg-slate-50"><span class="ic" data-ic="history"></span>Historique / versions…</button>
         <button id="dupWeek" class="mi w-full text-left px-4 py-2 hover:bg-slate-50"><span class="ic" data-ic="copy"></span>Dupliquer la semaine précédente</button>
+        <button id="btnTemplates" class="mi w-full text-left px-4 py-2 hover:bg-slate-50"><span class="ic" data-ic="save"></span>Modèles de semaine…</button>
         <div class="border-t border-slate-100 my-1"></div>
         <div class="px-4 pt-1 pb-0.5 text-[10px] font-bold uppercase tracking-wider text-slate-400">Configuration</div>
         <button id="btnTeams" class="mi w-full text-left px-4 py-2 hover:bg-slate-50"><span class="ic" data-ic="users"></span>Mes équipes (renommer, ajouter…)</button>
@@ -359,7 +361,7 @@
         <button data-scope="mois"    class="scope-btn px-3 py-1.5 rounded-md">Mois</button>
       </div>
       <button id="btnSheet" class="px-3 py-2 rounded-lg bg-teal-600 text-white font-semibold hover:bg-teal-700 text-sm">📋 Feuille d'heures à valider</button>
-      <button id="btnSuiviCSV" class="px-3 py-2 rounded-lg bg-white border border-slate-300 font-semibold hover:bg-slate-50 text-sm">⬇︎ Export CSV</button>
+      <button id="btnSuiviCSV" class="px-3 py-2 rounded-lg bg-white border border-slate-300 font-semibold hover:bg-slate-50 text-sm">⬇︎ Export paie (CSV)</button>
     </div>
     <p class="no-print text-sm text-slate-500 mb-2" id="suiviPeriod"></p>
     <div id="suiviSummary" class="no-print flex flex-wrap gap-2 text-sm mb-4"></div>
@@ -948,6 +950,27 @@
     <p class="text-sm text-slate-500 mb-5">Choisissez un profil : il configure les équipes, les créneaux et la conformité adaptés. Vous pourrez tout personnaliser ensuite.</p>
     <div id="profileGrid" class="grid grid-cols-2 sm:grid-cols-3 gap-3"></div>
     <p class="text-xs text-amber-600 mt-4" id="profileWarn">⚠️ Changer de profil remplace les équipes/créneaux et recharge des données d'exemple. Sauvegardez avant si besoin.</p>
+  </div>
+</div>
+
+<!-- ============ MODALE « MODÈLES DE SEMAINE » ============ -->
+<div id="tplModal" class="no-print fixed inset-0 bg-black/40 z-50 hidden items-center justify-center p-4">
+  <div class="bg-white rounded-2xl shadow-xl w-full max-w-md max-h-[88vh] overflow-y-auto">
+    <div class="flex items-start gap-2 px-5 pt-5 pb-1">
+      <div class="mr-auto">
+        <h3 class="text-lg font-bold text-slate-800">Modèles de semaine</h3>
+        <p class="text-sm text-slate-500 mt-0.5">Enregistre une semaine-type et applique-la en 1 clic sur n'importe quelle semaine.</p>
+      </div>
+      <button type="button" class="closeTpl text-slate-400 hover:text-slate-700 text-2xl leading-none px-1 shrink-0">&times;</button>
+    </div>
+    <div class="px-5 pb-5">
+      <div class="flex gap-2 mt-3">
+        <input type="text" id="tplName" placeholder="Nom du modèle (ex : Semaine normale)" class="flex-1 border border-slate-300 rounded-lg px-3 py-2 text-sm" />
+        <button type="button" id="tplSave" class="px-3 py-2 rounded-lg bg-teal-600 text-white font-semibold text-sm hover:bg-teal-700 whitespace-nowrap">Enregistrer la semaine actuelle</button>
+      </div>
+      <p id="tplErr" class="hidden text-sm text-red-600 mt-2"></p>
+      <div id="tplList" class="space-y-2 mt-4"></div>
+    </div>
   </div>
 </div>
 
@@ -1553,6 +1576,7 @@ function migrate(s){
   if(typeof s.logo!=='string') s.logo='';   // logo de l'établissement (data URL, optionnel)
   if(s.empScope!=='team' && s.empScope!=='all') s.empScope='all';   // portée vue employé : 'team' (son équipe) | 'all' (tout l'établissement)
   if(!s.planningSent || typeof s.planningSent!=='object') s.planningSent={};   // { empId: {week, at, hash} } — traçabilité de communication du planning
+  if(!Array.isArray(s.weekTemplates)) s.weekTemplates=[];   // modèles de semaine réutilisables [{id,name,shifts:[...],absences:[...],createdAt}]
   if(s.viewMode!=='jour' && s.viewMode!=='semaine') s.viewMode='semaine';   // mode d'affichage mémorisé
   // Règles & avantages (par établissement, modulables) — pauses obligatoires + tickets resto
   if(!s.rules || typeof s.rules!=='object') s.rules={};
@@ -2888,6 +2912,51 @@ document.getElementById('dupWeek').addEventListener('click',()=>{
   save(); renderAll(); toast(`${src.length} service(s)${srcAbs.length?` + ${srcAbs.length} congé(s)`:''} copié(s) depuis la semaine précédente ✓`);
 });
 
+/* ============ MODÈLES DE SEMAINE ============ */
+const tplModal=document.getElementById('tplModal');
+function openTpl(){ dataMenu.classList.add('hidden'); document.getElementById('tplName').value=''; document.getElementById('tplErr').classList.add('hidden'); renderTplList(); tplModal.classList.remove('hidden'); tplModal.classList.add('flex'); }
+function closeTpl(){ tplModal.classList.add('hidden'); tplModal.classList.remove('flex'); }
+function renderTplList(){
+  const list=document.getElementById('tplList'); const tpls=state.weekTemplates||[];
+  if(!tpls.length){ list.innerHTML=`<p class="text-sm text-slate-400 text-center py-4">Aucun modèle pour l'instant. Enregistre la semaine affichée ci-dessus.</p>`; return; }
+  list.innerHTML = tpls.map(t=>`<div class="flex items-center gap-2 border border-slate-200 rounded-xl px-3 py-2">
+    <div class="min-w-0 flex-1"><div class="font-semibold text-slate-800 truncate">${escapeHtml(t.name)}</div>
+      <div class="text-xs text-slate-400">${(t.shifts||[]).length} service(s)${(t.absences||[]).length?` · ${t.absences.length} congé(s)`:''}</div></div>
+    <button type="button" class="tpl-apply px-3 py-1.5 rounded-lg bg-teal-600 text-white font-semibold text-sm hover:bg-teal-700" data-id="${t.id}">Appliquer</button>
+    <button type="button" class="tpl-del text-slate-300 hover:text-red-600 text-lg shrink-0" data-id="${t.id}" title="Supprimer">🗑</button>
+  </div>`).join('');
+}
+document.getElementById('tplSave').addEventListener('click',()=>{
+  const err=document.getElementById('tplErr');
+  const name=document.getElementById('tplName').value.trim();
+  if(!name){ err.textContent='Donne un nom au modèle.'; err.classList.remove('hidden'); return; }
+  const src=weekShifts(state.weekStart);
+  if(!src.length){ err.textContent='La semaine affichée est vide — rien à enregistrer.'; err.classList.remove('hidden'); return; }
+  const shifts=src.map(s=>({ empId:s.empId||'', extraName:s.extraName||'', day:s.day, team:s.team, period:s.period, start:s.start, end:s.end, note:s.note||'' }));
+  const absences=weekAbsences(state.weekStart).map(a=>({ empId:a.empId, day:a.day, type:a.type }));
+  state.weekTemplates=state.weekTemplates||[];
+  state.weekTemplates.push({ id:uid(), name, shifts, absences, createdAt:Date.now() });
+  save(); document.getElementById('tplName').value=''; err.classList.add('hidden'); renderTplList(); toast(`Modèle « ${name} » enregistré ✓`);
+});
+tplModal.addEventListener('click',e=>{
+  if(e.target===tplModal){ closeTpl(); return; }
+  const ap=e.target.closest('.tpl-apply'); if(ap){ applyTemplate(ap.dataset.id); return; }
+  const dl=e.target.closest('.tpl-del'); if(dl){ const t=(state.weekTemplates||[]).find(x=>x.id===dl.dataset.id); if(t && confirm(`Supprimer le modèle « ${t.name} » ?`)){ state.weekTemplates=state.weekTemplates.filter(x=>x.id!==dl.dataset.id); save(); renderTplList(); } return; }
+});
+document.querySelectorAll('.closeTpl').forEach(b=>b.addEventListener('click',closeTpl));
+function applyTemplate(id){
+  const t=(state.weekTemplates||[]).find(x=>x.id===id); if(!t) return;
+  const cur=state.weekStart;
+  if(weekShifts(cur).length && !confirm('La semaine affichée contient déjà des services. Ajouter aussi ceux du modèle ?')) return;
+  // On ne garde que les employés encore existants (les extras au nom libre restent)
+  const ids=new Set(state.employees.map(e=>e.id));
+  let n=0;
+  (t.shifts||[]).forEach(s=>{ if(s.empId && !ids.has(s.empId) && !s.extraName) return; state.shifts.push({ id:uid(), week:cur, empId:(s.empId&&ids.has(s.empId))?s.empId:'', extraName:s.extraName||'', day:s.day, team:s.team, period:s.period, start:s.start, end:s.end, note:s.note||'', realStart:'', realEnd:'', breaks:[] }); n++; });
+  let na=0; (t.absences||[]).forEach(a=>{ if(a.empId && !ids.has(a.empId)) return; if(!absenceOf(a.empId,a.day)){ state.absences.push({ id:uid(), week:cur, empId:a.empId, day:a.day, type:a.type }); na++; } });
+  save(); renderAll(); closeTpl(); toast(`Modèle « ${t.name} » appliqué : ${n} service(s)${na?` + ${na} congé(s)`:''} ✓`);
+}
+document.getElementById('btnTemplates').addEventListener('click',openTpl);
+
 /* ============ ÉVÉNEMENTS GRILLE / ÉQUIPE ============ */
 document.getElementById('gridBody').addEventListener('click', e=>{
   const card=e.target.closest('[data-shift]');
@@ -3472,18 +3541,33 @@ document.getElementById('btnEmail').addEventListener('click',()=>{
 
 function exportSuiviCSV(){
   const weeks=weeksOfScope(), nbW=weeks.length, scoped=state.shifts.filter(s=>weeks.includes(s.week));
-  const rows=[['Employé','Équipe','Contrat','Jours travaillés','Jours off','Prévu (h)','Réel (h)','Écart (h)','vs Contrat (h)','Coût (€)']];
+  const period = suiviScope==='mois'
+    ? parseLocalDate(state.weekStart).toLocaleDateString('fr-FR',{month:'long',year:'numeric'})
+    : `semaine du ${fmtDate(parseLocalDate(state.weekStart))}`;
+  const rows=[
+    ['Oplaa — Récap paie', state.restaurant, period, `établi le ${new Date().toLocaleDateString('fr-FR')}`],
+    [],
+    ['Employé','Équipe','Type de contrat','Heures contrat/sem','Jours travaillés','Congés','Maladie','Repos','Indispo','Jours off','Prévu (h)','Réel (h)','Écart (h)','Heures sup (h)','Taux (€/h)','Coût réel (€)','Salaire contrat estimé (€/mois)']
+  ];
+  let T={prevu:0,reel:0,cost:0,abs:0,ot:0};
   activeEmployees().forEach(e=>{
-    const sh=scoped.filter(s=>s.empId===e.id);
-    const worked=new Set(sh.map(s=>s.week+'|'+s.day)).size, off=7*nbW-worked;
-    const prevu=sh.reduce((a,s)=>a+shiftHours(s),0), reel=sh.reduce((a,s)=>a+realHours(s),0);
-    const ch=contractHours(e), vsC=ch==null?'':(prevu-ch*nbW).toFixed(1), cost=e.rate?reel*e.rate:0;
-    rows.push([e.name, teamOf(e.role).label, e.contract, worked, off, prevu.toFixed(1), reel.toFixed(1), (reel-prevu).toFixed(1), vsC, cost?cost.toFixed(0):'']);
+    const H=empHours(e.id,weeks), prevu=H.prevu, reel=H.reel;
+    const workedDays=new Set(scoped.filter(s=>s.empId===e.id && !isAbsentDay(e.id,s.week,s.day)).map(s=>s.week+'|'+s.day)).size;
+    const bd=absenceBreakdown(e.id,weeks), off=Math.max(0,7*nbW-workedDays-bd.total);
+    const ch=contractHours(e), ot=ch==null?0:Math.max(0,prevu-ch*nbW), cost=e.rate?reel*e.rate:0, mg=monthlyGross(e);
+    T.prevu+=prevu; T.reel+=reel; T.cost+=cost; T.abs+=bd.total; T.ot+=ot;
+    rows.push([ e.name, teamOf(e.role).label, e.contractType||'', ch==null?'':fmtNum(ch), workedDays,
+      bd.by.conge||0, bd.by.maladie||0, bd.by.repos||0, bd.by.indispo||0, off,
+      prevu.toFixed(1), reel.toFixed(1), (reel-prevu).toFixed(1), ot.toFixed(1),
+      e.rate?fmtNum(e.rate):'', cost?cost.toFixed(0):'', mg!=null?Math.round(mg):'' ]);
   });
+  rows.push([]);
+  rows.push(['TOTAUX','','','','', '', '', '', '', '', T.prevu.toFixed(1), T.reel.toFixed(1), (T.reel-T.prevu).toFixed(1), T.ot.toFixed(1), '', T.cost?T.cost.toFixed(0):'', '']);
+  rows.push([`Congés/absences cumulés : ${T.abs} jour(s)`]);
   const csv=rows.map(r=>r.map(c=>{ c=String(c); return /[";\n]/.test(c)?'"'+c.replace(/"/g,'""')+'"':c; }).join(';')).join('\r\n');
   const blob=new Blob(['﻿'+csv],{type:'text/csv;charset=utf-8'}); const a=document.createElement('a');
-  a.href=URL.createObjectURL(blob); a.download=`oplaa-suivi-${suiviScope}-${isoDay(new Date())}.csv`; a.click(); URL.revokeObjectURL(a.href);
-  toast('Export CSV téléchargé ⬇︎');
+  a.href=URL.createObjectURL(blob); a.download=`oplaa-paie-${suiviScope}-${isoDay(parseLocalDate(state.weekStart))}.csv`; a.click(); URL.revokeObjectURL(a.href);
+  toast('Export paie téléchargé ⬇︎');
 }
 document.getElementById('btnSuiviCSV').addEventListener('click', exportSuiviCSV);
 

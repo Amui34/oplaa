@@ -135,6 +135,27 @@ test('employé : heures libres (semaine/mois) + salaire mensuel calculé', async
   expect(r.label).toContain('Temps partiel');
 });
 
+test('modèles de semaine : enregistrer puis appliquer sur une semaine vide', async ({ page }) => {
+  await page.locator('#welcomeDemo').click();
+  await page.waitForTimeout(200);
+  const r = await page.evaluate(() => {
+    const cur = state.weekStart;
+    const n = weekShifts(cur).length;
+    openTpl();
+    document.getElementById('tplName').value = 'Semaine test';
+    document.getElementById('tplSave').click();
+    const tpl = state.weekTemplates[state.weekTemplates.length - 1];
+    state.weekStart = isoDay(addDays(cur, 21)); saveQuiet();
+    const before = weekShifts(state.weekStart).length;
+    applyTemplate(tpl.id);
+    const after = weekShifts(state.weekStart).length;
+    return { saved: tpl.shifts.length, srcCount: n, before, after };
+  });
+  expect(r.saved).toBe(r.srcCount);
+  expect(r.before).toBe(0);
+  expect(r.after).toBe(r.saved);
+});
+
 test('planning : ruban de jours continu (dimanche → lundi suivant, sans coupure)', async ({ page }) => {
   await page.locator('#welcomeDemo').click();
   // Le mode Semaine affiche plus de 7 jours d'affilée (ruban continu multi-semaines)
