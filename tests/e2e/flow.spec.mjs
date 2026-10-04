@@ -156,6 +156,24 @@ test('modèles de semaine : enregistrer puis appliquer sur une semaine vide', as
   expect(r.after).toBe(r.saved);
 });
 
+test('service : dupliquer sur plusieurs jours en 1 clic', async ({ page }) => {
+  await page.locator('#welcomeDemo').click();
+  await page.waitForTimeout(200);
+  const r = await page.evaluate(() => {
+    const s = state.shifts.find(x => x.empId === state.employees[0].id);
+    const before = state.shifts.filter(x => x.empId === s.empId && x.week === s.week).length;
+    openShiftModal(s);
+    document.getElementById('dupShiftBtn').click();        // ouvre le picker
+    document.getElementById('dupDaysAll').click();         // toute la semaine
+    const selected = document.querySelectorAll('#dupDaysChips .dup-day.bg-teal-600').length;
+    document.getElementById('dupDaysGo').click();          // duplique
+    const after = state.shifts.filter(x => x.empId === s.empId && x.week === s.week).length;
+    return { selected, added: after - before };
+  });
+  expect(r.selected).toBe(6);        // 7 jours - le jour actuel (désactivé)
+  expect(r.added).toBe(6);
+});
+
 test('planning : ruban de jours continu (dimanche → lundi suivant, sans coupure)', async ({ page }) => {
   await page.locator('#welcomeDemo').click();
   // Le mode Semaine affiche plus de 7 jours d'affilée (ruban continu multi-semaines)

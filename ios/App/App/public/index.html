@@ -81,6 +81,10 @@
     .print-container { box-shadow:none !important; border:none !important; }
     main { padding:0 !important; }
     .shift-card { break-inside:avoid; }
+    /* Impression du planning : semaine courante en pleine largeur (pas de scroll/clipping) */
+    #gridScroll { overflow:visible !important; }
+    #gridScroll table { width:100% !important; min-width:0 !important; }
+    #gridScroll th, #gridScroll td { min-width:0 !important; }
     /* Impression ciblée de la feuille d'heures */
     body.printing-sheet header, body.printing-sheet main { display:none !important; }
     body.printing-sheet #sheetModal { display:block !important; position:static; background:#fff; padding:0; overflow:visible; }
@@ -564,9 +568,17 @@
         <label class="text-sm font-semibold text-slate-600">Note sur ce créneau <span class="font-normal text-slate-400">(optionnel)</span></label>
         <input type="text" id="shiftNote" placeholder="Ex : ouverture, inventaire, formation…" class="mt-1 w-full border border-slate-300 rounded-lg px-3 py-2" />
       </div>
+      <div id="dupDaysBox" class="hidden rounded-lg border border-teal-200 bg-teal-50/60 p-3">
+        <div class="text-sm font-semibold text-slate-700 mb-2">Dupliquer ce service sur :</div>
+        <div id="dupDaysChips" class="flex flex-wrap gap-1.5 mb-2"></div>
+        <div class="flex items-center gap-2">
+          <button type="button" id="dupDaysAll" class="text-xs text-teal-600 font-semibold hover:underline">Toute la semaine</button>
+          <button type="button" id="dupDaysGo" class="ml-auto px-3 py-1.5 rounded-lg bg-teal-600 text-white font-semibold text-sm hover:bg-teal-700">Dupliquer</button>
+        </div>
+      </div>
       <div class="flex items-center gap-2 pt-2">
         <button type="button" id="deleteShiftBtn" class="mr-auto text-sm text-red-600 font-semibold hover:underline hidden">Supprimer</button>
-        <button type="button" id="dupShiftBtn" class="hidden text-sm text-teal-600 font-semibold hover:underline">⧉ Dupliquer</button>
+        <button type="button" id="dupShiftBtn" class="hidden text-sm text-teal-600 font-semibold hover:underline">⧉ Dupliquer…</button>
         <button type="button" class="closeModal px-4 py-2 rounded-lg border border-slate-300 font-semibold">Annuler</button>
         <button type="submit" class="px-4 py-2 rounded-lg bg-teal-600 text-white font-semibold hover:bg-teal-700">Enregistrer</button>
       </div>
@@ -2211,6 +2223,7 @@ document.getElementById('shiftBreaks').addEventListener('input', e=>{ if(e.targe
 function openShiftModal(shift, presetDay, presetTeam, presetPeriod, presetWeek){
   if(!ensurePro()) return;
   if(!state.employees.length){ toast('Ajoutez d’abord un employé (onglet Équipe).'); return; }
+  document.getElementById('dupDaysBox').classList.add('hidden');   // zone « dupliquer » repliée par défaut
   fillShiftSelects();
   const del=document.getElementById('deleteShiftBtn');
   if(shift){
@@ -2315,12 +2328,25 @@ document.getElementById('deleteShiftBtn').addEventListener('click', ()=>{
   state.shifts=state.shifts.filter(s=>s.id!==id);
   save(); renderAll(); closeShiftModal(); toast('Service supprimé');
 });
+function renderDupDays(){
+  const id=document.getElementById('shiftId').value; const s=state.shifts.find(x=>x.id===id); if(!s) return;
+  document.getElementById('dupDaysChips').innerHTML = DAYS.map((d,i)=>
+    `<button type="button" class="dup-day px-2.5 py-1.5 rounded-lg text-xs font-semibold border ${i===s.day?'bg-slate-100 text-slate-300 border-slate-200 cursor-not-allowed':'bg-white text-slate-600 border-slate-300 hover:bg-teal-50'}" data-d="${i}" ${i===s.day?'disabled':''}>${DAYS_SHORT[i]}</button>`
+  ).join('');
+}
 document.getElementById('dupShiftBtn').addEventListener('click', ()=>{
   if(!ensurePro()) return;
-  const id=document.getElementById('shiftId').value; const orig=state.shifts.find(s=>s.id===id); if(!orig) return;
-  const copy={ ...orig, id:uid() };
-  state.shifts.push(copy);
-  save(); renderAll(); openShiftModal(copy); toast('Service dupliqué ✓ — ajuste le jour ou la personne');
+  const box=document.getElementById('dupDaysBox'); const show=box.classList.contains('hidden');
+  box.classList.toggle('hidden', !show); if(show) renderDupDays();
+});
+document.getElementById('dupDaysChips').addEventListener('click', e=>{ const b=e.target.closest('.dup-day'); if(!b||b.disabled) return; b.classList.toggle('bg-teal-600'); b.classList.toggle('text-white'); b.classList.toggle('border-teal-600'); });
+document.getElementById('dupDaysAll').addEventListener('click', ()=>{ document.querySelectorAll('#dupDaysChips .dup-day:not([disabled])').forEach(b=>b.classList.add('bg-teal-600','text-white','border-teal-600')); });
+document.getElementById('dupDaysGo').addEventListener('click', ()=>{
+  const id=document.getElementById('shiftId').value; const s=state.shifts.find(x=>x.id===id); if(!s) return;
+  const days=[...document.querySelectorAll('#dupDaysChips .dup-day.bg-teal-600')].map(b=>parseInt(b.dataset.d,10));
+  if(!days.length){ toast('Choisis au moins un jour.'); return; }
+  let n=0; days.forEach(d=>{ state.shifts.push({ ...s, id:uid(), day:d, realStart:'', realEnd:'' }); n++; });
+  save(); renderAll(); closeShiftModal(); toast(`Service dupliqué sur ${n} jour${n>1?'s':''} ✓`);
 });
 document.getElementById('shiftEmployee').addEventListener('change', function(){
   toggleExtraField();
@@ -2967,14 +2993,23 @@ document.getElementById('gridBody').addEventListener('click', e=>{
 /* Glisser-déposer un créneau (desktop) */
 let dragShiftId=null;
 (function(){ const gb=document.getElementById('gridBody');
-  gb.addEventListener('dragstart', e=>{ const c=e.target.closest('[data-shift]'); if(c){ dragShiftId=c.dataset.shift; e.dataTransfer.effectAllowed='move'; try{e.dataTransfer.setData('text/plain',dragShiftId);}catch(_){}} });
+  gb.addEventListener('dragstart', e=>{ const c=e.target.closest('[data-shift]'); if(c){ dragShiftId=c.dataset.shift; e.dataTransfer.effectAllowed='copyMove'; try{e.dataTransfer.setData('text/plain',dragShiftId);}catch(_){}} });
   gb.addEventListener('dragover', e=>{ const td=e.target.closest('[data-add-day]'); if(td && dragShiftId){ e.preventDefault(); td.classList.add('ring-2','ring-teal-300','ring-inset'); } });
   gb.addEventListener('dragleave', e=>{ const td=e.target.closest('[data-add-day]'); if(td) td.classList.remove('ring-2','ring-teal-300','ring-inset'); });
   gb.addEventListener('drop', e=>{ const td=e.target.closest('[data-add-day]'); if(!td||!dragShiftId) return; e.preventDefault(); td.classList.remove('ring-2','ring-teal-300','ring-inset');
-    const s=state.shifts.find(x=>x.id===dragShiftId); const nd=parseInt(td.dataset.addDay,10), nt=td.dataset.addTeam, nw=td.dataset.addWeek||s.week;
-    if(s && !(s.day===nd && s.team===nt && s.week===nw)){ s.day=nd; s.team=nt; s.week=nw; save(); renderAll(); toast('Créneau déplacé ✓'); }
+    const s=state.shifts.find(x=>x.id===dragShiftId); if(!s){ dragShiftId=null; return; }
+    const nd=parseInt(td.dataset.addDay,10), nt=td.dataset.addTeam, nw=td.dataset.addWeek||s.week;
+    const copy = e.altKey || e.ctrlKey || e.metaKey;   // Alt/Ctrl/Cmd + glisser = copier
+    if(copy){ state.shifts.push({ ...s, id:uid(), day:nd, team:nt, week:nw, realStart:'', realEnd:'' }); save(); renderAll(); toast('Créneau copié ✓'); }
+    else if(!(s.day===nd && s.team===nt && s.week===nw)){ s.day=nd; s.team=nt; s.week=nw; save(); renderAll(); toast('Créneau déplacé ✓'); }
     dragShiftId=null; });
 })();
+
+/* Impression : n'imprimer que la semaine courante (pas tout le ruban), puis restaurer */
+let _printPrevRibbon=null;
+window.addEventListener('beforeprint', ()=>{ try{ if(typeof ribbonWeeks!=='undefined' && ribbonWeeks>1){ _printPrevRibbon=ribbonWeeks; ribbonWeeks=1; if(typeof renderGrid==='function') renderGrid(); } }catch(e){} });
+window.addEventListener('afterprint', ()=>{ try{ if(_printPrevRibbon!=null){ ribbonWeeks=_printPrevRibbon; _printPrevRibbon=null; if(typeof renderGrid==='function') renderGrid(); } }catch(e){} });
+
 document.getElementById('empBody').addEventListener('click', e=>{
   const ed=e.target.closest('.editEmp'); if(ed){ openEmpModal(empById(ed.dataset.id)); return; }
   const sd=e.target.closest('.sendEmp'); if(sd){ openSendEmp(sd.dataset.id); }
