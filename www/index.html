@@ -93,6 +93,9 @@
     body.printing-sheet #sheetModal input { border:none !important; }
   }
   .print-title { display:none; }
+  /* Mettre un employé en évidence : on atténue les autres services */
+  body.emp-focus #gridBody .shift-card{ opacity:.2; transition:opacity .15s ease; }
+  body.emp-focus #gridBody .shift-card.emp-match{ opacity:1; box-shadow:0 0 0 2px var(--o-600) inset; }
   /* Anti-dérive horizontale : la page ne glisse jamais latéralement quand on zoome/déplace.
      overflow-x:clip bloque le débordement SANS créer de conteneur de défilement → l'en-tête sticky reste intact.
      Le planning, lui, garde son propre défilement horizontal (zones .overflow-x-auto). */
@@ -288,6 +291,8 @@
       </div>
       <!-- Filtre équipe -->
       <div id="teamFilter" class="flex flex-wrap bg-slate-100 rounded-lg p-1 text-sm font-semibold"></div>
+      <!-- Mettre un employé en évidence -->
+      <select id="empFocus" class="ml-auto border border-slate-300 rounded-lg px-2 py-1.5 text-sm bg-white max-w-[180px]"><option value="">👤 Voir un employé…</option></select>
     </div>
 
     <!-- Résumé de la semaine : heures, effectif, coût estimé -->
@@ -1761,7 +1766,7 @@ function renderGrid(){
     const note = s.note ? `<div class="text-[10px] text-teal-600 truncate" title="${(s.note||'').replace(/"/g,'&quot;')}">📝 ${escapeHtml(s.note)}</div>` : '';
     const bm=breakMinutes(s); const brk = bm ? `<span class="text-slate-400">· ${(s.breaks||[]).map(b=>breakType(b.type).emoji).join('')} ${bm}′</span>` : '';
     const extraTag = isExtra ? `<span title="Extra / renfort" class="shrink-0 text-[8px] font-bold uppercase tracking-wide text-amber-700 bg-amber-100 rounded px-1 py-0.5 leading-none">extra</span>` : '';
-    return `<div draggable="true" class="shift-card card bg-white rounded-lg border ${conflict?'border-red-300 ring-1 ring-red-200':isExtra?'border-amber-300 border-dashed':'border-slate-200'} px-1.5 py-1 mb-1 hover:shadow-sm flex items-start gap-1 cursor-grab active:cursor-grabbing" data-shift="${s.id}">
+    return `<div draggable="true" class="shift-card card bg-white rounded-lg border ${conflict?'border-red-300 ring-1 ring-red-200':isExtra?'border-amber-300 border-dashed':'border-slate-200'} px-1.5 py-1 mb-1 hover:shadow-sm flex items-start gap-1 cursor-grab active:cursor-grabbing" data-shift="${s.id}" data-emp="${s.empId||''}">
               <div class="min-w-0 flex-1"><div class="text-[11px] font-semibold text-slate-800 leading-tight truncate flex items-center gap-1">${escapeHtml(name)}${extraTag}</div>
               <div class="text-[10px] text-slate-500">${s.start}–${s.end} ${brk}</div>${note}</div>${warn||realMark}
             </div>`;
@@ -1847,6 +1852,8 @@ function renderGrid(){
     ${perPeriod?`<span class="inline-flex items-center gap-1.5 rounded-lg bg-slate-100 text-slate-600 px-3 py-1.5">📋 ${perPeriod}</span>`:''}
   ` : ''; }
 
+  if(typeof fillEmpFocus==='function') fillEmpFocus();
+  if(typeof applyEmpFocus==='function') applyEmpFocus();
   renderNotes();
 }
 
@@ -3010,6 +3017,15 @@ let dragShiftId=null;
 let _printPrevRibbon=null;
 window.addEventListener('beforeprint', ()=>{ try{ if(typeof ribbonWeeks!=='undefined' && ribbonWeeks>1){ _printPrevRibbon=ribbonWeeks; ribbonWeeks=1; if(typeof renderGrid==='function') renderGrid(); } }catch(e){} });
 window.addEventListener('afterprint', ()=>{ try{ if(_printPrevRibbon!=null){ ribbonWeeks=_printPrevRibbon; _printPrevRibbon=null; if(typeof renderGrid==='function') renderGrid(); } }catch(e){} });
+
+/* Mettre un employé en évidence dans le planning */
+let focusEmpId='';
+function fillEmpFocus(){ const sel=document.getElementById('empFocus'); if(!sel) return; const cur=focusEmpId;
+  sel.innerHTML='<option value="">👤 Voir un employé…</option>'+activeEmployees().map(e=>`<option value="${e.id}">${escapeHtml(e.name)}</option>`).join('');
+  focusEmpId = (cur && activeEmployees().some(e=>e.id===cur)) ? cur : ''; sel.value=focusEmpId; }
+function applyEmpFocus(){ const on=!!focusEmpId; document.body.classList.toggle('emp-focus', on);
+  document.querySelectorAll('#gridBody .shift-card').forEach(c=>c.classList.toggle('emp-match', on && c.dataset.emp===focusEmpId)); }
+document.getElementById('empFocus').addEventListener('change', function(){ focusEmpId=this.value; applyEmpFocus(); });
 
 document.getElementById('empBody').addEventListener('click', e=>{
   const ed=e.target.closest('.editEmp'); if(ed){ openEmpModal(empById(ed.dataset.id)); return; }
