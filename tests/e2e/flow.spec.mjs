@@ -187,6 +187,26 @@ test('envoi : WhatsApp disponible + numéro converti au format international', a
   expect(r.plus).toBe('33612345678');
 });
 
+test('planning : copier le planning d’un employé vers un autre', async ({ page }) => {
+  await page.locator('#welcomeDemo').click();
+  await page.waitForTimeout(200);
+  const r = await page.evaluate(() => {
+    const wk = state.weekStart;
+    const from = state.employees.find(e => state.shifts.some(s => s.week === wk && s.empId === e.id));
+    const to = state.employees.find(e => e.id !== from.id);
+    const srcCount = state.shifts.filter(s => s.week === wk && s.empId === from.id).length;
+    openCopyPlan();
+    document.getElementById('copyPlanFrom').value = from.id;
+    document.getElementById('copyPlanTo').value = to.id;
+    document.getElementById('copyPlanReplace').checked = true;
+    document.getElementById('copyPlanGo').click();
+    const toAfter = state.shifts.filter(s => s.week === wk && s.empId === to.id).length;
+    return { srcCount, toAfter };
+  });
+  expect(r.srcCount).toBeGreaterThan(0);
+  expect(r.toAfter).toBe(r.srcCount);
+});
+
 test('planning : ruban de jours continu (dimanche → lundi suivant, sans coupure)', async ({ page }) => {
   await page.locator('#welcomeDemo').click();
   // Le mode Semaine affiche plus de 7 jours d'affilée (ruban continu multi-semaines)

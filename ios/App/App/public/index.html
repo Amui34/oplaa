@@ -130,7 +130,7 @@
   body.role-employee #btnSettings, body.role-employee #btnProfile, body.role-employee #btnRename,
   body.role-employee #btnEstb, body.role-employee #dupWeek, body.role-employee #btnUndo,
   body.role-employee #btnHistory, body.role-employee #btnEmailM, body.role-employee #btnPrintM,
-  body.role-employee #btnTemplates, body.role-employee #btnTeams{ display:none !important; }
+  body.role-employee #btnTemplates, body.role-employee #btnTeams, body.role-employee #btnCopyPlan{ display:none !important; }
   @media print{ #rgpdMark{ display:none !important; } }
   /* Icônes trait fin : alignement libellé + picto */
   [hidden]{ display:none !important; }
@@ -225,6 +225,7 @@
         <button id="btnHistory" class="mi w-full text-left px-4 py-2 hover:bg-slate-50"><span class="ic" data-ic="history"></span>Historique / versions…</button>
         <button id="dupWeek" class="mi w-full text-left px-4 py-2 hover:bg-slate-50"><span class="ic" data-ic="copy"></span>Dupliquer la semaine précédente</button>
         <button id="btnTemplates" class="mi w-full text-left px-4 py-2 hover:bg-slate-50"><span class="ic" data-ic="save"></span>Modèles de semaine…</button>
+        <button id="btnCopyPlan" class="mi w-full text-left px-4 py-2 hover:bg-slate-50"><span class="ic" data-ic="copy"></span>Copier un planning (vers un employé)…</button>
         <div class="border-t border-slate-100 my-1"></div>
         <div class="px-4 pt-1 pb-0.5 text-[10px] font-bold uppercase tracking-wider text-slate-400">Configuration</div>
         <button id="btnTeams" class="mi w-full text-left px-4 py-2 hover:bg-slate-50"><span class="ic" data-ic="users"></span>Mes équipes (renommer, ajouter…)</button>
@@ -971,6 +972,29 @@
     <p class="text-sm text-slate-500 mb-5">Choisissez un profil : il configure les équipes, les créneaux et la conformité adaptés. Vous pourrez tout personnaliser ensuite.</p>
     <div id="profileGrid" class="grid grid-cols-2 sm:grid-cols-3 gap-3"></div>
     <p class="text-xs text-amber-600 mt-4" id="profileWarn">⚠️ Changer de profil remplace les équipes/créneaux et recharge des données d'exemple. Sauvegardez avant si besoin.</p>
+  </div>
+</div>
+
+<!-- ============ MODALE « COPIER UN PLANNING » (employé → employé) ============ -->
+<div id="copyPlanModal" class="no-print fixed inset-0 bg-black/40 z-50 hidden items-center justify-center p-4">
+  <div class="bg-white rounded-2xl shadow-xl w-full max-w-md p-5">
+    <div class="flex items-start gap-2 mb-1">
+      <div class="mr-auto">
+        <h3 class="text-lg font-bold text-slate-800">Copier un planning</h3>
+        <p class="text-sm text-slate-500 mt-0.5">Recopie tous les services d'un employé vers un autre, pour la <b>semaine affichée</b>.</p>
+      </div>
+      <button type="button" class="closeCopyPlan text-slate-400 hover:text-slate-700 text-2xl leading-none px-1 shrink-0">&times;</button>
+    </div>
+    <div class="grid grid-cols-2 gap-3 mt-3">
+      <div><label class="text-sm font-semibold text-slate-600">De</label><select id="copyPlanFrom" class="mt-1 w-full border border-slate-300 rounded-lg px-3 py-2 text-sm"></select></div>
+      <div><label class="text-sm font-semibold text-slate-600">Vers</label><select id="copyPlanTo" class="mt-1 w-full border border-slate-300 rounded-lg px-3 py-2 text-sm"></select></div>
+    </div>
+    <label class="flex items-center gap-2 mt-3 text-sm text-slate-600"><input type="checkbox" id="copyPlanReplace"> Remplacer d'abord les services existants de la cible</label>
+    <p id="copyPlanErr" class="hidden text-sm text-red-600 mt-2"></p>
+    <div class="flex gap-2 justify-end mt-5">
+      <button type="button" class="closeCopyPlan px-4 py-2 rounded-lg border border-slate-300 font-semibold text-sm hover:bg-slate-50">Annuler</button>
+      <button type="button" id="copyPlanGo" class="px-4 py-2 rounded-lg bg-teal-600 text-white font-semibold text-sm hover:bg-teal-700">Copier</button>
+    </div>
   </div>
 </div>
 
@@ -3011,6 +3035,32 @@ function applyTemplate(id){
   save(); renderAll(); closeTpl(); toast(`Modèle « ${t.name} » appliqué : ${n} service(s)${na?` + ${na} congé(s)`:''} ✓`);
 }
 document.getElementById('btnTemplates').addEventListener('click',openTpl);
+
+/* ============ COPIER UN PLANNING (employé → employé) ============ */
+const copyPlanModal=document.getElementById('copyPlanModal');
+function openCopyPlan(){ dataMenu.classList.add('hidden');
+  const opts=activeEmployees().map(e=>`<option value="${e.id}">${escapeHtml(e.name)}</option>`).join('');
+  const from=document.getElementById('copyPlanFrom'), to=document.getElementById('copyPlanTo');
+  from.innerHTML=opts; to.innerHTML=opts; if(to.options.length>1) to.selectedIndex=1;
+  document.getElementById('copyPlanReplace').checked=false; document.getElementById('copyPlanErr').classList.add('hidden');
+  copyPlanModal.classList.remove('hidden'); copyPlanModal.classList.add('flex');
+}
+function closeCopyPlan(){ copyPlanModal.classList.add('hidden'); copyPlanModal.classList.remove('flex'); }
+document.querySelectorAll('.closeCopyPlan').forEach(b=>b.addEventListener('click',closeCopyPlan));
+copyPlanModal.addEventListener('click',e=>{ if(e.target===copyPlanModal) closeCopyPlan(); });
+document.getElementById('btnCopyPlan').addEventListener('click',openCopyPlan);
+document.getElementById('copyPlanGo').addEventListener('click',()=>{
+  const err=document.getElementById('copyPlanErr');
+  const fromId=document.getElementById('copyPlanFrom').value, toId=document.getElementById('copyPlanTo').value;
+  if(!fromId||!toId){ err.textContent='Choisis les deux employés.'; err.classList.remove('hidden'); return; }
+  if(fromId===toId){ err.textContent='Choisis deux employés différents.'; err.classList.remove('hidden'); return; }
+  const wk=state.weekStart;
+  const src=state.shifts.filter(s=>s.week===wk && s.empId===fromId);
+  if(!src.length){ err.textContent=`${empById(fromId).name} n'a aucun service cette semaine.`; err.classList.remove('hidden'); return; }
+  if(document.getElementById('copyPlanReplace').checked){ state.shifts=state.shifts.filter(s=>!(s.week===wk && s.empId===toId)); }
+  src.forEach(s=>state.shifts.push({ ...s, id:uid(), empId:toId, extraName:'', realStart:'', realEnd:'' }));
+  save(); renderAll(); closeCopyPlan(); toast(`Planning copié vers ${empById(toId).name.split(' ')[0]} (${src.length} service${src.length>1?'s':''}) ✓`);
+});
 
 /* ============ ÉVÉNEMENTS GRILLE / ÉQUIPE ============ */
 document.getElementById('gridBody').addEventListener('click', e=>{
