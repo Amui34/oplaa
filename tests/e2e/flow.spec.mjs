@@ -207,6 +207,23 @@ test('planning : copier le planning d’un employé vers un autre', async ({ pag
   expect(r.toAfter).toBe(r.srcCount);
 });
 
+test('planning : vue « par employé » (une ligne par personne)', async ({ page }) => {
+  await page.locator('#welcomeDemo').click();
+  await page.waitForTimeout(200);
+  const r = await page.evaluate(() => {
+    setGroup('employe');
+    const header = document.querySelector('#gridHead th')?.innerText;
+    const firstRowLabel = document.querySelector('#gridBody tr td')?.innerText.split('\n')[0];
+    const empCells = document.querySelectorAll('#gridBody td[data-add-emp]').length;
+    return { header, firstRowLabel, empCells, group: state.gridGroup };
+  });
+  expect(r.header).toBe('EMPLOYÉ');
+  expect(r.empCells).toBeGreaterThan(0);
+  expect(r.group).toBe('employe');
+  // Les 1res lignes sont des noms d'employés (pas des noms d'équipe)
+  expect(r.firstRowLabel).toBeTruthy();
+});
+
 test('planning : ruban de jours continu (dimanche → lundi suivant, sans coupure)', async ({ page }) => {
   await page.locator('#welcomeDemo').click();
   // Le mode Semaine affiche plus de 7 jours d'affilée (ruban continu multi-semaines)

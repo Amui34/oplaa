@@ -292,6 +292,11 @@
       </div>
       <!-- Filtre équipe -->
       <div id="teamFilter" class="flex flex-wrap bg-slate-100 rounded-lg p-1 text-sm font-semibold"></div>
+      <!-- Grouper par équipe / par employé -->
+      <div id="groupToggle" class="flex bg-slate-100 rounded-lg p-1 text-sm font-semibold">
+        <button data-group="equipe"  class="group-btn px-3 py-1.5 rounded-md">Par équipe</button>
+        <button data-group="employe" class="group-btn px-3 py-1.5 rounded-md">Par employé</button>
+      </div>
       <!-- Mettre un employé en évidence -->
       <select id="empFocus" class="ml-auto border border-slate-300 rounded-lg px-2 py-1.5 text-sm bg-white max-w-[180px]"><option value="">👤 Voir un employé…</option></select>
     </div>
@@ -1306,6 +1311,7 @@ function syncGlobals(){
 
 let teamFilter = 'all';
 let viewMode = 'semaine';     // 'semaine' | 'jour'
+let gridGroup = 'equipe';     // 'equipe' | 'employe' — groupement des lignes du planning
 let selectedDay = ((new Date().getDay()+6)%7); // jour affiché en mode Jour
 let ribbonWeeks = 3;          // nb de semaines affichées d'affilée en mode Semaine (ruban continu, extensible au défilement)
 let newShiftWeek = null;      // semaine cible d'un nouveau créneau créé depuis une colonne du ruban
@@ -1623,6 +1629,7 @@ function migrate(s){
   if(!s.planningSent || typeof s.planningSent!=='object') s.planningSent={};   // { empId: {week, at, hash} } — traçabilité de communication du planning
   if(!Array.isArray(s.weekTemplates)) s.weekTemplates=[];   // modèles de semaine réutilisables [{id,name,shifts:[...],absences:[...],createdAt}]
   if(s.viewMode!=='jour' && s.viewMode!=='semaine') s.viewMode='semaine';   // mode d'affichage mémorisé
+  if(s.gridGroup!=='employe' && s.gridGroup!=='equipe') s.gridGroup='equipe';   // groupement planning : équipe | employé
   // Règles & avantages (par établissement, modulables) — pauses obligatoires + tickets resto
   if(!s.rules || typeof s.rules!=='object') s.rules={};
   if(!s.rules.legalBreak || typeof s.rules.legalBreak!=='object') s.rules.legalBreak={ enabled:true, afterHours:6, minMinutes:20 };
@@ -1757,6 +1764,8 @@ function ribbonCols(){
 }
 function renderGrid(){
   const head=document.getElementById('gridHead'), body=document.getElementById('gridBody'), start=state.weekStart;
+  if(state.gridGroup==='employe'||state.gridGroup==='equipe') gridGroup=state.gridGroup;
+  segActivate('.group-btn','group',gridGroup);
   const grid=document.getElementById('grid');
   const cols = ribbonCols();
   grid.className = 'w-full border-collapse ' + (viewMode==='jour' ? 'min-w-full' : 'min-w-[980px]');
@@ -1770,7 +1779,7 @@ function renderGrid(){
   const sepCls = (c,idx)=> (viewMode!=='jour' && c.day===0 && idx>0) ? ' border-l-2 border-slate-300' : '';
 
   // En-tête : une colonne par jour (ruban continu)
-  let hrow = `<th class="sticky left-0 z-10 bg-slate-50 text-left px-3 py-2 text-xs font-bold text-slate-500 uppercase border-b border-r border-slate-200 min-w-[104px]">${teamWord}</th>`;
+  let hrow = `<th class="sticky left-0 z-10 bg-slate-50 text-left px-3 py-2 text-xs font-bold text-slate-500 uppercase border-b border-r border-slate-200 min-w-[104px]">${gridGroup==='employe'?'Employé':teamWord}</th>`;
   cols.forEach((c,idx)=>{
     const date=c.date, today=new Date().toDateString()===date.toDateString();
     const hasNote = state.notes.some(n=>n.week===c.week && n.day===c.day);
@@ -1806,7 +1815,40 @@ function renderGrid(){
   const teamHours = t => cols.reduce((a,c)=> a + colShifts(c,t.key).reduce((x,s)=>x+shiftHours(s),0), 0);
   const dayTotal  = c => visible.reduce((a,t)=> a + colShifts(c,t.key).reduce((x,s)=>x+shiftHours(s),0), 0);
   const dayCost   = c => visible.reduce((a,t)=> a + colShifts(c,t.key).reduce((x,s)=>{const e=empById(s.empId); return x + shiftHours(s)*((e&&e.rate)||0);},0), 0);
+  const visibleTeamKeys=new Set(visible.map(t=>t.key));
   let b='';
+  if(gridGroup==='employe'){
+    const empIds=new Set(activeEmployees().map(e=>e.id));
+    const emps=activeEmployees().filter(e=> teamFilter==='all' || visibleTeamKeys.has(e.role));
+    const empColShifts=(c,eid)=> state.shifts.filter(s=>s.week===c.week && s.day===c.day && s.empId===eid);
+    emps.forEach(emp=>{
+      const t=teamOf(emp.role);
+      const eh=cols.reduce((a,c)=>a+empColShifts(c,emp.id).reduce((x,s)=>x+shiftHours(s),0),0);
+      b += `<tr style="--c:${t.color}"><td class="sticky left-0 z-10 bg-white px-3 py-2 border-b border-r border-slate-200 align-top"><div class="font-bold text-sm text-slate-800 flex items-center gap-2"><span class="dot"></span>${escapeHtml(emp.name)}</div><div class="text-[10px] text-slate-400 mt-0.5 pl-4">${t.label}${eh>0?` · ${eh.toFixed(1)} h`:''}</div></td>`;
+      cols.forEach((c,idx)=>{
+        const all=empColShifts(c,emp.id); const known=new Set(PERIODS.map(p=>p.key));
+        b += `<td class="px-1.5 py-1.5 border-b border-l border-slate-100${sepCls(c,idx)} align-top bg-white cursor-pointer hover:bg-slate-50 transition" data-add-day="${c.day}" data-add-week="${c.week}" data-add-emp="${emp.id}" data-add-team="${emp.role}">`;
+        PERIODS.forEach(p=>{ const list=sortByStart(all.filter(s=>s.period===p.key)); if(list.length){ b+=grpLabel(p.label,p.accent?'text-teal-500':''); list.forEach(s=>b+=cardHtml(s)); } });
+        const others=sortByStart(all.filter(s=>!known.has(s.period))); if(others.length){ b+=grpLabel('Autre'); others.forEach(s=>b+=cardHtml(s)); }
+        if(!all.length) b += `<div class="no-print text-center text-slate-300 text-lg leading-none select-none">+</div>`;
+        b += `</td>`;
+      });
+      b += `</tr>`;
+    });
+    // Ligne « Extras / renforts » (services sans fiche employé)
+    const extras=state.shifts.filter(s=> !empIds.has(s.empId) && (teamFilter==='all'||visibleTeamKeys.has(s.team)));
+    if(extras.length){
+      b += `<tr style="--c:#D8974A"><td class="sticky left-0 z-10 bg-white px-3 py-2 border-b border-r border-slate-200 align-top"><div class="font-bold text-sm text-slate-800 flex items-center gap-2"><span class="dot"></span>🟠 Extras</div></td>`;
+      cols.forEach((c,idx)=>{
+        const all=sortByStart(state.shifts.filter(s=>s.week===c.week && s.day===c.day && !empIds.has(s.empId) && (teamFilter==='all'||visibleTeamKeys.has(s.team))));
+        b += `<td class="px-1.5 py-1.5 border-b border-l border-slate-100${sepCls(c,idx)} align-top bg-white">`;
+        all.forEach(s=>b+=cardHtml(s));
+        if(!all.length) b += `<div class="text-center text-slate-200 text-lg leading-none select-none">·</div>`;
+        b += `</td>`;
+      });
+      b += `</tr>`;
+    }
+  } else {
   visible.forEach(team=>{
     const th=teamHours(team);
     b += `<tr style="--c:${team.color}">`;
@@ -1830,6 +1872,7 @@ function renderGrid(){
     });
     b += `</tr>`;
   });
+  }
   // Ligne de totaux par jour (heures + coût)
   const grand = cols.reduce((a,c)=>a+dayTotal(c),0);
   const showCost = !!state.advanced;                       // coûts réservés à la vue manager
@@ -2273,7 +2316,7 @@ function collectBreaks(){ return [...document.querySelectorAll('#shiftBreaks .br
 document.getElementById('addBreakBtn').addEventListener('click', ()=>{ document.getElementById('shiftBreaks').insertAdjacentHTML('beforeend', breakRowHtml()); updateBreaksSum(); });
 document.getElementById('shiftBreaks').addEventListener('click', e=>{ const d=e.target.closest('.brk-del'); if(d){ d.closest('.brk-row').remove(); updateBreaksSum(); } });
 document.getElementById('shiftBreaks').addEventListener('input', e=>{ if(e.target.classList.contains('brk-min')) updateBreaksSum(); });
-function openShiftModal(shift, presetDay, presetTeam, presetPeriod, presetWeek){
+function openShiftModal(shift, presetDay, presetTeam, presetPeriod, presetWeek, presetEmp){
   if(!ensurePro()) return;
   if(!state.employees.length){ toast('Ajoutez d’abord un employé (onglet Équipe).'); return; }
   document.getElementById('dupDaysBox').classList.add('hidden');   // zone « dupliquer » repliée par défaut
@@ -2313,6 +2356,7 @@ function openShiftModal(shift, presetDay, presetTeam, presetPeriod, presetWeek){
     document.getElementById('repeatRow').classList.remove('hidden');
     renderRepeatDays(parseInt(document.getElementById('shiftDay').value,10));
     document.getElementById('shiftTeam').value = presetTeam ?? (state.employees[0]?.role || (TEAMS[0]&&TEAMS[0].key));
+    if(presetEmp && state.employees.some(e=>e.id===presetEmp)){ document.getElementById('shiftEmployee').value=presetEmp; toggleExtraField(); }
     document.getElementById('shiftPeriod').value=per;
     document.getElementById('shiftStart').value = pObj.start || '18:00';
     document.getElementById('shiftEnd').value   = pObj.end   || '23:00';
@@ -2922,6 +2966,8 @@ function renderTeamFilter(){
 function setFilter(t){ teamFilter=t; segActivate('.filter-btn','team',t); renderGrid(); }
 function setMode(m){ viewMode=m; state.viewMode=m; if(m==='semaine') ribbonWeeks=3; saveQuiet(); segActivate('.mode-btn','mode',m); renderGrid(); }
 function setScope(s){ suiviScope=s; segActivate('.scope-btn','scope',s); renderSuivi(); }
+function setGroup(g){ gridGroup=g; state.gridGroup=g; saveQuiet(); segActivate('.group-btn','group',g); renderGrid(); }
+document.querySelectorAll('.group-btn').forEach(b=>b.addEventListener('click',()=>setGroup(b.dataset.group)));
 document.getElementById('teamFilter').addEventListener('click',e=>{ const b=e.target.closest('.filter-btn'); if(b) setFilter(b.dataset.team); });
 document.querySelectorAll('.mode-btn').forEach(b=>b.addEventListener('click',()=>setMode(b.dataset.mode)));
 document.querySelectorAll('.scope-btn').forEach(b=>b.addEventListener('click',()=>setScope(b.dataset.scope)));
@@ -3067,7 +3113,7 @@ document.getElementById('gridBody').addEventListener('click', e=>{
   const card=e.target.closest('[data-shift]');
   if(card){ openShiftModal(state.shifts.find(x=>x.id===card.dataset.shift)); return; }
   const td=e.target.closest('[data-add-day]');
-  if(td){ openShiftModal(null, parseInt(td.dataset.addDay,10), td.dataset.addTeam, null, td.dataset.addWeek); }
+  if(td){ openShiftModal(null, parseInt(td.dataset.addDay,10), td.dataset.addTeam, null, td.dataset.addWeek, td.dataset.addEmp); }
 });
 /* Glisser-déposer un créneau (desktop) */
 let dragShiftId=null;
@@ -3077,10 +3123,13 @@ let dragShiftId=null;
   gb.addEventListener('dragleave', e=>{ const td=e.target.closest('[data-add-day]'); if(td) td.classList.remove('ring-2','ring-teal-300','ring-inset'); });
   gb.addEventListener('drop', e=>{ const td=e.target.closest('[data-add-day]'); if(!td||!dragShiftId) return; e.preventDefault(); td.classList.remove('ring-2','ring-teal-300','ring-inset');
     const s=state.shifts.find(x=>x.id===dragShiftId); if(!s){ dragShiftId=null; return; }
-    const nd=parseInt(td.dataset.addDay,10), nt=td.dataset.addTeam, nw=td.dataset.addWeek||s.week;
+    const nd=parseInt(td.dataset.addDay,10), nt=td.dataset.addTeam, nw=td.dataset.addWeek||s.week, ne=td.dataset.addEmp;
     const copy = e.altKey || e.ctrlKey || e.metaKey;   // Alt/Ctrl/Cmd + glisser = copier
-    if(copy){ state.shifts.push({ ...s, id:uid(), day:nd, team:nt, week:nw, realStart:'', realEnd:'' }); save(); renderAll(); toast('Créneau copié ✓'); }
-    else if(!(s.day===nd && s.team===nt && s.week===nw)){ s.day=nd; s.team=nt; s.week=nw; save(); renderAll(); toast('Créneau déplacé ✓'); }
+    if(copy){ const base={ ...s, id:uid(), day:nd, team:nt, week:nw, realStart:'', realEnd:'' }; if(ne){ base.empId=ne; base.extraName=''; } state.shifts.push(base); save(); renderAll(); toast('Créneau copié ✓'); }
+    else {
+      const changed = ne ? (s.empId!==ne || s.day!==nd || s.week!==nw) : (s.day!==nd || s.team!==nt || s.week!==nw);
+      if(changed){ if(ne){ s.empId=ne; s.extraName=''; } s.day=nd; s.team=nt; s.week=nw; save(); renderAll(); toast(ne?'Service réaffecté ✓':'Créneau déplacé ✓'); }
+    }
     dragShiftId=null; });
 })();
 
