@@ -733,9 +733,10 @@
     </div>
     <div class="mb-2">
       <div class="text-xs font-bold uppercase tracking-wide text-slate-400 mb-2">Moyen</div>
-      <div class="grid grid-cols-2 gap-2">
-        <button type="button" id="sendByEmail" class="px-3 py-3 rounded-xl bg-teal-600 text-white font-semibold hover:bg-teal-700">✉️ Par email</button>
-        <button type="button" id="sendBySms" class="px-3 py-3 rounded-xl btn-ink font-semibold">💬 Par SMS</button>
+      <div class="grid grid-cols-3 gap-2">
+        <button type="button" id="sendByWhatsApp" class="px-2 py-3 rounded-xl bg-[#25D366] text-white font-semibold hover:brightness-95 text-sm">🟢 WhatsApp</button>
+        <button type="button" id="sendByEmail" class="px-2 py-3 rounded-xl bg-teal-600 text-white font-semibold hover:bg-teal-700 text-sm">✉️ Email</button>
+        <button type="button" id="sendBySms" class="px-2 py-3 rounded-xl btn-ink font-semibold text-sm">💬 SMS</button>
       </div>
       <p id="sendEmpHint" class="text-[11px] text-slate-400 mt-2"></p>
     </div>
@@ -3063,7 +3064,7 @@ function openSendEmp(id){
   const noMail=!emp.email, noTel=!emp.phone;
   be.disabled=noMail; be.classList.toggle('opacity-40', noMail); be.classList.toggle('cursor-not-allowed', noMail);
   bs.disabled=noTel; bs.classList.toggle('opacity-40', noTel); bs.classList.toggle('cursor-not-allowed', noTel);
-  document.getElementById('sendEmpHint').textContent = (noMail?'Pas d’email renseigné. ':'') + (noTel?'Pas de téléphone renseigné.':'') || 'Ça ouvre ton app Mail ou Messages, prête à envoyer.';
+  document.getElementById('sendEmpHint').textContent = (noMail?'Pas d’email renseigné. ':'') + (noTel?'Pas de téléphone (WhatsApp/SMS) renseigné.':'') || 'Ça ouvre WhatsApp, Mail ou Messages, message prêt à envoyer.';
   const pl=document.querySelector('input[name="sendKind"][value="planning"]'); if(pl) pl.checked=true;
   document.getElementById('inviteRoleRow').classList.add('hidden');
   sendEmpModal.classList.remove('hidden'); sendEmpModal.classList.add('flex');
@@ -3115,6 +3116,17 @@ document.getElementById('sendBySms').addEventListener('click', async ()=>{
   const num=emp.phone.replace(/[^\d+]/g,'');
   if(kind==='planning'||kind==='maj') markPlanningSent(emp.id);
   window.location.href=`sms:${num}&body=${encodeURIComponent(body)}`;
+  closeSendEmp();
+});
+// Numéro au format international pour WhatsApp (France par défaut : 06… → 336…)
+function waNumber(phone){ let n=(phone||'').replace(/[^\d+]/g,''); if(n.startsWith('+')) return n.slice(1); if(n.startsWith('00')) return n.slice(2); if(n.startsWith('0')) return '33'+n.slice(1); return n; }
+document.getElementById('sendByWhatsApp').addEventListener('click', async ()=>{
+  const emp=empById(sendEmpId); if(!emp) return;
+  const kind=sendKind(); const body=await buildSendBody(emp, kind); if(body===null) return;
+  if(kind==='planning'||kind==='maj') markPlanningSent(emp.id);
+  const num=waNumber(emp.phone);
+  const url = num ? `https://wa.me/${num}?text=${encodeURIComponent(body)}` : `https://wa.me/?text=${encodeURIComponent(body)}`;
+  window.open(url, '_blank');
   closeSendEmp();
 });
 document.getElementById('addShiftBtn').addEventListener('click',()=>{ document.getElementById('addMenu').classList.add('hidden'); openShiftModal(); });

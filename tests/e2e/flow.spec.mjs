@@ -174,6 +174,19 @@ test('service : dupliquer sur plusieurs jours en 1 clic', async ({ page }) => {
   expect(r.added).toBe(6);
 });
 
+test('envoi : WhatsApp disponible + numéro converti au format international', async ({ page }) => {
+  await page.locator('#welcomeDemo').click();
+  await page.waitForTimeout(200);
+  const r = await page.evaluate(() => ({
+    btn: !!document.getElementById('sendByWhatsApp'),
+    fr: waNumber('06 12 34 56 78'),
+    plus: waNumber('+33 6 12 34 56 78'),
+  }));
+  expect(r.btn).toBe(true);
+  expect(r.fr).toBe('33612345678');
+  expect(r.plus).toBe('33612345678');
+});
+
 test('planning : ruban de jours continu (dimanche → lundi suivant, sans coupure)', async ({ page }) => {
   await page.locator('#welcomeDemo').click();
   // Le mode Semaine affiche plus de 7 jours d'affilée (ruban continu multi-semaines)
