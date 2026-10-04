@@ -298,6 +298,9 @@
     <!-- Résumé de la semaine : heures, effectif, coût estimé -->
     <div id="planningStats" class="no-print flex flex-wrap gap-2 text-sm mb-3"></div>
 
+    <!-- Charge de la semaine : mini-graphe des heures par jour -->
+    <div id="weekChart" class="no-print mb-3"></div>
+
     <!-- Sélecteur de jour (mode Jour) -->
     <div id="dayPicker" class="no-print hidden flex-wrap gap-1.5 mb-3"></div>
 
@@ -1852,6 +1855,24 @@ function renderGrid(){
     ${perPeriod?`<span class="inline-flex items-center gap-1.5 rounded-lg bg-slate-100 text-slate-600 px-3 py-1.5">📋 ${perPeriod}</span>`:''}
   ` : ''; }
 
+  // Charge de la semaine : heures par jour (mini-graphe)
+  const wc=document.getElementById('weekChart');
+  if(wc){
+    const dayH=[0,0,0,0,0,0,0];
+    state.shifts.filter(s=>s.week===start && !isAbsentDay(s.empId,start,s.day)).forEach(s=>{ if(s.day>=0&&s.day<7) dayH[s.day]+=shiftHours(s); });
+    const maxH=Math.max(1,...dayH); const todayDow=(new Date().getDay()+6)%7; const isThisWeek=start===isoDay(mondayOf(new Date()));
+    wc.innerHTML = dayH.some(h=>h>0) ? `<div class="rounded-xl border border-slate-200 bg-white px-3 py-2">
+      <div class="text-[11px] font-bold uppercase tracking-wide text-slate-400 mb-1.5">Charge de la semaine</div>
+      <div class="flex items-end gap-1.5" style="height:76px">${dayH.map((h,i)=>{
+        const pct=h/maxH; const hi=isThisWeek&&i===todayDow;
+        return `<button type="button" class="week-bar flex-1 h-full flex flex-col items-center justify-end gap-1 group" data-day="${i}" title="${DAYS[i]} : ${h.toFixed(1)} h">
+          <span class="text-[9px] ${h?'text-slate-500':'text-transparent'} group-hover:text-slate-700">${h?h.toFixed(0):''}</span>
+          <span class="w-full rounded-t" style="height:${Math.max(3,Math.round(pct*46))}px;background:${h?'var(--o-600)':'#E5DACC'};opacity:${h?(hi?1:.8):.5}"></span>
+          <span class="text-[10px] font-semibold ${hi?'text-[color:var(--o-600)]':'text-slate-500'}">${DAYS_SHORT[i]}</span>
+        </button>`; }).join('')}</div>
+    </div>` : '';
+  }
+
   if(typeof fillEmpFocus==='function') fillEmpFocus();
   if(typeof applyEmpFocus==='function') applyEmpFocus();
   renderNotes();
@@ -3026,6 +3047,8 @@ function fillEmpFocus(){ const sel=document.getElementById('empFocus'); if(!sel)
 function applyEmpFocus(){ const on=!!focusEmpId; document.body.classList.toggle('emp-focus', on);
   document.querySelectorAll('#gridBody .shift-card').forEach(c=>c.classList.toggle('emp-match', on && c.dataset.emp===focusEmpId)); }
 document.getElementById('empFocus').addEventListener('change', function(){ focusEmpId=this.value; applyEmpFocus(); });
+// Clic sur une barre de charge → ouvrir ce jour
+document.getElementById('weekChart').addEventListener('click', e=>{ const b=e.target.closest('.week-bar'); if(b){ selectedDay=parseInt(b.dataset.day,10); if(typeof setMode==='function') setMode('jour'); } });
 
 document.getElementById('empBody').addEventListener('click', e=>{
   const ed=e.target.closest('.editEmp'); if(ed){ openEmpModal(empById(ed.dataset.id)); return; }
