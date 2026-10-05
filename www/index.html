@@ -2151,8 +2151,11 @@ function renderTeam(){
     let docLine='';
     if(nd){ const days=Math.round((nd.date-new Date())/86400000); const cls=days<0?'text-red-600 font-semibold':(days<=RECALL_DAYS?'text-amber-600':'text-slate-400'); const tag=days<0?' ⚠️ en retard':(days<=RECALL_DAYS?` · dans ${days} j`:''); docLine=`<div class="text-[11px] ${cls}">📄 ${escapeHtml(nd.label)} : ${fmtDate(nd.date)}${tag}</div>`; }
     const mg=monthlyGross(e); const mh=monthlyHours(e);
+    const mPlanned = empShiftsMonth(e.id, state.weekStart).filter(s=>!isAbsentDay(s.empId,s.week,s.day)).reduce((a,s)=>a+shiftHours(s),0);
+    const mOver = mh!=null && mPlanned>mh+0.5;
+    const monthLine = (mPlanned>0 || mh!=null) ? `<div class="text-[11px] ${mOver?'text-amber-600 font-semibold':'text-slate-400'}">📅 Ce mois : ${mPlanned.toFixed(1)} h${mh!=null?` / ${Math.round(mh)} h`:''}</div>` : '';
     const salLine = mg!=null ? `<div class="cost-col text-[11px] text-slate-500">💶 ≈ ${Math.round(mg).toLocaleString('fr-FR')} €/mois${mh!=null?` · ${fmtNum(mh)} h/mois`:''}</div>` : '';
-    const contractCell = `${escapeHtml(contractLabel(e))}` + (ch!=null? `<div class="text-[11px] ${over?'text-red-600 font-semibold':'text-slate-400'}">${ph.toFixed(1)} h planifiées${over?` ⚠ +${(ph-ch).toFixed(1)}`:''}</div>` : (ph>0?`<div class="text-[11px] text-slate-400">${ph.toFixed(1)} h planifiées</div>`:'')) + salLine;
+    const contractCell = `${escapeHtml(contractLabel(e))}` + (ch!=null? `<div class="text-[11px] ${over?'text-red-600 font-semibold':'text-slate-400'}">${ph.toFixed(1)} h planifiées (sem.)${over?` ⚠ +${(ph-ch).toFixed(1)}`:''}</div>` : (ph>0?`<div class="text-[11px] text-slate-400">${ph.toFixed(1)} h planifiées (sem.)</div>`:'')) + monthLine + salLine;
     return `<tr class="border-t border-slate-100 hover:bg-slate-50">
       <td class="px-4 py-3 font-semibold text-slate-800">${escapeHtml(e.name)}
         ${e.email?`<div class="text-xs font-normal text-slate-400">✉️ ${escapeHtml(e.email)}</div>`:`<div class="text-xs font-normal text-amber-500 no-print">✉️ pas d’email</div>`}
