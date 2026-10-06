@@ -4001,7 +4001,32 @@ async function refreshCloud(){
     // Appareil / site vierge (ex. 1re connexion sur le web) → on récupère automatiquement les données du cloud
     await pullForOwner();
   }
+  if(cloudMembership) startRealtime();   // temps réel
   setSyncStatus(canAutoPush() ? 'ok' : null);   // indicateur d'en-tête : « Synchronisé ✓ » pour le patron connecté
+}
+
+/* ============ TEMPS RÉEL (Supabase Realtime) ============ */
+let _rtChannel=null, _rtTimer=null;
+function stopRealtime(){ if(_rtChannel){ try{ sb.removeChannel(_rtChannel); }catch(e){} _rtChannel=null; } clearTimeout(_rtTimer); }
+function startRealtime(){
+  stopRealtime();
+  if(!(sb && cloudMembership && typeof sb.channel==='function')) return;
+  const est=cloudMembership.establishment_id, isStaff=['owner','manager'].includes(cloudMembership.role);
+  const sub=(table)=>({event:'*',schema:'public',table,filter:`establishment_id=eq.${est}`});
+  try{
+    let ch=sb.channel('oplaa-'+est);
+    if(isStaff){
+      // Patron : les demandes de congés arrivent en direct (sans toucher au planning en cours d'édition)
+      ch=ch.on('postgres_changes', sub('day_off_requests'), async ()=>{ try{ await loadOffRequests(); if(!offInboxModal.classList.contains('hidden')) renderOffInbox(); }catch(e){} });
+    } else {
+      // Employé (lecture seule) : son planning se met à jour tout seul quand le patron le change
+      const pull=()=>{ clearTimeout(_rtTimer); _rtTimer=setTimeout(async ()=>{ if(_autoPushBusy) return; try{ await pullForEmployee(); setSyncStatus('ok'); }catch(e){} }, 800); };
+      ch=ch.on('postgres_changes', sub('shifts'), pull)
+           .on('postgres_changes', sub('absences'), pull)
+           .on('postgres_changes', sub('notes'), pull);
+    }
+    _rtChannel=ch.subscribe();
+  }catch(e){}
 }
 // Aiguillage par rôle : l'employé est verrouillé sur son espace ; patron/manager = app complète
 function applyRole(){
@@ -4140,6 +4165,7 @@ function applyDemoBanner(){
   const b=document.getElementById('demoBanner'); if(b) b.style.display=(state && state.demo)?'flex':'none';
 }
 async function backToWelcome(){
+  if(typeof stopRealtime==='function') stopRealtime();
   try{ if(sb && cloudSession) await sb.auth.signOut(); }catch(e){}
   cloudSession=null; cloudMembership=null;
   document.body.classList.remove('role-employee'); empLocked=false; confUnlocked=false;
@@ -4181,7 +4207,7 @@ document.getElementById('cloudSignUp').addEventListener('click', async ()=>{
   if(data.session){ toast('Compte créé ✓'); refreshCloud(); }
   else { cloudMsg('cloudAuthMsg','Compte créé ! Vérifie ta boîte mail pour confirmer, puis connecte-toi.', true); }
 });
-async function cloudSignOut(){ await sb.auth.signOut(); cloudSession=null; cloudMembership=null; updateCloudMenuLabel(); refreshCloud(); toast('Déconnecté'); }
+async function cloudSignOut(){ if(typeof stopRealtime==='function') stopRealtime(); await sb.auth.signOut(); cloudSession=null; cloudMembership=null; updateCloudMenuLabel(); refreshCloud(); toast('Déconnecté'); }
 document.getElementById('cloudSignOut').addEventListener('click', cloudSignOut);
 document.getElementById('cloudSignOut2').addEventListener('click', cloudSignOut);
 async function cloudDeleteAccount(){
