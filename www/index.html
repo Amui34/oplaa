@@ -3912,7 +3912,7 @@ async function pushToCloud(){
   const est = cloudMembership.establishment_id;
   try{
     await sb.from('establishments').update({ name:state.restaurant, teams:state.teams, periods:state.periods, compliance:state.complianceItems, team_word:state.teamWord, accent:state.accent, logo:state.logo||null, emp_scope:state.empScope, profile:state.profile }).eq('id', est);
-    const emps = state.employees.map(e=>({ establishment_id:est, local_id:e.id, name:e.name, role:e.role||'', contract:String(e.contract||''), rate:e.rate||0, phone:e.phone||'', email:e.email||'', archived:!!e.archived, compliance:e.compliance||{} }));
+    const emps = state.employees.map(e=>({ establishment_id:est, local_id:e.id, name:e.name, role:e.role||'', contract:String(e.contract||''), rate:e.rate||0, phone:e.phone||'', email:e.email||'', archived:!!e.archived, compliance:e.compliance||{}, conges_allowance:(e.congesAllowance!=null?e.congesAllowance:25), hours:(e.hours!=null&&e.hours!==''&&!isNaN(parseFloat(e.hours))?parseFloat(e.hours):null), hours_unit:(e.hoursUnit==='mois'?'mois':'semaine'), contract_type:e.contractType||null }));
     if(emps.length){ const {error}=await sb.from('employees').upsert(emps,{onConflict:'establishment_id,local_id'}); if(error) return {error:error.message}; }
     const { data:remEmps } = await sb.from('employees').select('id,local_id').eq('establishment_id', est);
     const map={}; (remEmps||[]).forEach(r=>{ if(r.local_id) map[r.local_id]=r.id; });
@@ -3966,7 +3966,7 @@ async function pullForOwner(){
     syncGlobals();
     const remoteToLocal={};
     const { data:emps } = await sb.from('employees').select('*').eq('establishment_id', est);
-    state.employees = (emps||[]).map(r=>{ const lid=r.local_id||r.id; remoteToLocal[r.id]=lid; return { id:lid, name:r.name, role:r.role||'', contract:r.contract||'', rate:r.rate||0, phone:r.phone||'', email:r.email||'', archived:!!r.archived, compliance:Object.assign(emptyCompliance(), r.compliance||{}) }; });
+    state.employees = (emps||[]).map(r=>{ const lid=r.local_id||r.id; remoteToLocal[r.id]=lid; return { id:lid, name:r.name, role:r.role||'', contract:r.contract||'', rate:r.rate||0, phone:r.phone||'', email:r.email||'', archived:!!r.archived, compliance:Object.assign(emptyCompliance(), r.compliance||{}), congesAllowance:(r.conges_allowance!=null?r.conges_allowance:25), hours:(r.hours!=null?r.hours:undefined), hoursUnit:(r.hours_unit==='mois'?'mois':'semaine'), contractType:r.contract_type||'' }; });
     const { data:shifts } = await sb.from('shifts').select('*').eq('establishment_id', est);
     state.shifts = (shifts||[]).map(s=>({ id:s.local_id||s.id, week:s.week, day:s.day, team:s.team, period:s.period, start:s.start_t, end:s.end_t, empId: s.employee_id?(remoteToLocal[s.employee_id]||''):'', extraName:s.extra_name||'', realStart:s.real_start||'', realEnd:s.real_end||'', breaks:Array.isArray(s.breaks)?s.breaks:[], note:s.note||'' }));
     const { data:abs } = await sb.from('absences').select('*').eq('establishment_id', est);
