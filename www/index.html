@@ -51,6 +51,9 @@
   /* Coûts / taux : réservés à la vue manager (masqués pour l'employé) */
   body.simple-mode .cost-col { display:none !important; }
   body.simple-mode .manager-only { display:none !important; }
+  /* Manager (co-gérant invité) : gère tout SAUF les salaires / coûts (réservés au patron propriétaire) */
+  body.role-manager .cost-col { display:none !important; }
+  body.role-manager .owner-only { display:none !important; }
   /* Surfaces blanches → surface du thème (bg-white et text-white restent des utilitaires distincts) */
   [data-theme="dark"] .bg-white { background-color: var(--surface) !important; }
   [data-theme="dark"] .bg-teal-50 { background-color: rgba(196,86,47,.16) !important; }
@@ -649,7 +652,7 @@
             <option value="semaine">semaine</option><option value="mois">mois</option>
           </select>
         </div>
-        <div>
+        <div class="cost-col">
           <label class="text-sm font-semibold text-slate-600">Taux €/h (brut)</label>
           <input type="number" id="empRate" min="0" step="0.5" inputmode="decimal" placeholder="12" class="mt-1 w-full border border-slate-300 rounded-lg px-3 py-2" />
         </div>
@@ -719,6 +722,8 @@
       <div class="manager-only rounded-xl bg-teal-50 border border-teal-200 text-teal-800 text-xs px-3 py-2 mb-2 flex items-center gap-2"><span class="ic shrink-0" data-ic="cloud" data-ic-size="15"></span><span>Synchronisation <b>automatique</b> : tes employés voient le planning à jour dès que tu le modifies.</span></div>
       <button type="button" id="cloudSync" class="manager-only w-full inline-flex items-center justify-center gap-2 px-4 py-3 rounded-xl bg-teal-600 text-white font-semibold hover:bg-teal-700 mb-2"><span class="ic" data-ic="cloud" data-ic-size="18"></span>Synchroniser maintenant</button>
       <button type="button" id="cloudPull" class="manager-only w-full inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-white border border-slate-300 font-semibold hover:bg-slate-50 mb-2"><span class="ic" data-ic="cloudDown" data-ic-size="18"></span>Récupérer mes données du cloud</button>
+      <button type="button" id="cloudInviteManager" class="manager-only w-full inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-white border border-teal-300 text-teal-700 font-semibold hover:bg-teal-50 mb-2">👥 Inviter un co-gérant / manager</button>
+      <div id="coManagerBox" class="hidden rounded-xl border border-teal-200 bg-teal-50 p-3 mb-3"></div>
       <p id="cloudSyncMsg" class="text-sm mb-3 hidden"></p>
       <button type="button" id="cloudSignOut" class="w-full px-4 py-2.5 rounded-xl bg-white border border-slate-300 font-semibold hover:bg-slate-50">Se déconnecter</button>
       <button type="button" id="cloudDeleteAcc" class="w-full mt-2 text-sm text-red-600 font-semibold hover:underline">Supprimer mon compte</button>
@@ -1919,7 +1924,7 @@ function renderGrid(){
   }
   // Ligne de totaux par jour (heures + coût)
   const grand = cols.reduce((a,c)=>a+dayTotal(c),0);
-  const showCost = !!state.advanced;                       // coûts réservés à la vue manager
+  const showCost = !!state.advanced && canSeeSalaries();   // coûts réservés au patron (masqués pour un manager invité)
   const grandCost = cols.reduce((a,c)=>a+dayCost(c),0);
   b += `<tr class="bg-slate-50">
           <td class="sticky left-0 z-10 bg-slate-50 px-3 py-2 border-r border-slate-200 text-[11px] font-bold uppercase tracking-wide text-slate-500">Total${grand>0?` · ${grand.toFixed(1)} h`:''}${showCost&&grandCost>0?`<div class="font-normal normal-case text-slate-400">${grandCost.toFixed(0)} €</div>`:''}</td>`;
@@ -2550,7 +2555,7 @@ function updatePayEstimate(){
   const weekly = unit==='mois' ? hv/WEEKS_PER_MONTH : hv;
   const monthly = weekly*WEEKS_PER_MONTH;
   const other = unit==='mois' ? `${fmtNum(weekly)} h/semaine` : `${fmtNum(monthly)} h/mois`;
-  const sal = (!isNaN(rate)&&rate>0) ? ` · <span class="cost-col font-semibold text-slate-800">≈ ${Math.round(monthly*rate).toLocaleString('fr-FR')} €/mois brut</span>` : ' · <span class="text-slate-400">ajoute le taux pour le salaire</span>';
+  const sal = !canSeeSalaries() ? '' : ((!isNaN(rate)&&rate>0) ? ` · <span class="cost-col font-semibold text-slate-800">≈ ${Math.round(monthly*rate).toLocaleString('fr-FR')} €/mois brut</span>` : ' · <span class="text-slate-400">ajoute le taux pour le salaire</span>');
   box.innerHTML = `📅 ≈ <b>${other}</b>${sal}`;
 }
 ['empHours','empHoursUnit','empRate'].forEach(id=>{ const el=document.getElementById(id); if(el){ el.addEventListener('input', updatePayEstimate); el.addEventListener('change', updatePayEstimate); } });
@@ -3866,6 +3871,8 @@ function exportSuiviCSV(){
   rows.push([]);
   rows.push(['TOTAUX','','','','', '', '', '', '', '', T.prevu.toFixed(1), T.reel.toFixed(1), (T.reel-T.prevu).toFixed(1), T.ot.toFixed(1), '', T.cost?T.cost.toFixed(0):'', '']);
   rows.push([`Congés/absences cumulés : ${T.abs} jour(s)`]);
+  // Manager invité : on retire les colonnes salaire (Taux / Coût réel / Salaire estimé = index 14,15,16)
+  if(!canSeeSalaries()){ const SAL=[14,15,16]; for(let i=0;i<rows.length;i++){ rows[i]=rows[i].filter((_,idx)=>!SAL.includes(idx)); } }
   const csv=rows.map(r=>r.map(c=>{ c=String(c); return /[";\n]/.test(c)?'"'+c.replace(/"/g,'""')+'"':c; }).join(';')).join('\r\n');
   const blob=new Blob(['﻿'+csv],{type:'text/csv;charset=utf-8'}); const a=document.createElement('a');
   a.href=URL.createObjectURL(blob); a.download=`oplaa-paie-${suiviScope}-${isoDay(parseLocalDate(state.weekStart))}.csv`; a.click(); URL.revokeObjectURL(a.href);
@@ -4031,11 +4038,16 @@ function startRealtime(){
 // Aiguillage par rôle : l'employé est verrouillé sur son espace ; patron/manager = app complète
 function applyRole(){
   const emp = !!(cloudMembership && cloudMembership.role==='employee');
+  const mgr = !!(cloudMembership && cloudMembership.role==='manager');
   document.body.classList.toggle('role-employee', emp);
+  document.body.classList.toggle('role-manager', mgr);   // co-gérant : tout sauf les salaires
   const ab=document.getElementById('btnAskOff'); if(ab) ab.hidden = !(emp && cloudSession);   // vraie demande de congé = employé connecté
   if(emp){ empLocked=true; setView('employe'); }
   else { empLocked=false; }
 }
+// Les salaires / coûts sont réservés au PATRON (propriétaire). Un manager invité ne les voit pas.
+// Hors connexion cloud (usage local), on considère l'utilisateur comme propriétaire.
+function canSeeSalaries(){ return !(cloudMembership && cloudMembership.role==='manager'); }
 let empLocked=false;
 
 // PATRON : envoie le planning local vers le cloud
@@ -4044,7 +4056,9 @@ async function pushToCloud(){
   const est = cloudMembership.establishment_id;
   try{
     await sb.from('establishments').update({ name:state.restaurant, teams:state.teams, periods:state.periods, compliance:state.complianceItems, team_word:state.teamWord, accent:state.accent, logo:state.logo||null, emp_scope:state.empScope, profile:state.profile }).eq('id', est);
-    const emps = state.employees.map(e=>({ establishment_id:est, local_id:e.id, name:e.name, role:e.role||'', contract:String(e.contract||''), rate:e.rate||0, phone:e.phone||'', email:e.email||'', archived:!!e.archived, compliance:e.compliance||{}, conges_allowance:(e.congesAllowance!=null?e.congesAllowance:25), hours:(e.hours!=null&&e.hours!==''&&!isNaN(parseFloat(e.hours))?parseFloat(e.hours):null), hours_unit:(e.hoursUnit==='mois'?'mois':'semaine'), contract_type:e.contractType||null }));
+    const emps = state.employees.map(e=>{ const o={ establishment_id:est, local_id:e.id, name:e.name, role:e.role||'', contract:String(e.contract||''), phone:e.phone||'', email:e.email||'', archived:!!e.archived, compliance:e.compliance||{}, conges_allowance:(e.congesAllowance!=null?e.congesAllowance:25), hours:(e.hours!=null&&e.hours!==''&&!isNaN(parseFloat(e.hours))?parseFloat(e.hours):null), hours_unit:(e.hoursUnit==='mois'?'mois':'semaine'), contract_type:e.contractType||null };
+      if(canSeeSalaries()) o.rate=e.rate||0;   // un manager n'envoie JAMAIS le taux → ne peut pas écraser les salaires
+      return o; });
     if(emps.length){ const {error}=await sb.from('employees').upsert(emps,{onConflict:'establishment_id,local_id'}); if(error) return {error:error.message}; }
     const { data:remEmps } = await sb.from('employees').select('id,local_id').eq('establishment_id', est);
     const map={}; (remEmps||[]).forEach(r=>{ if(r.local_id) map[r.local_id]=r.id; });
@@ -4097,7 +4111,9 @@ async function pullForOwner(){
     if(e){ state.restaurant=e.name||state.restaurant; if(e.teams&&e.teams.length)state.teams=e.teams; if(e.periods&&e.periods.length)state.periods=e.periods; if(e.compliance&&e.compliance.length)state.complianceItems=e.compliance; state.teamWord=e.team_word||state.teamWord; state.accent=e.accent||state.accent; state.logo=e.logo||''; state.empScope=e.emp_scope||'all'; state.profile=e.profile||state.profile; }
     syncGlobals();
     const remoteToLocal={};
-    const { data:emps } = await sb.from('employees').select('*').eq('establishment_id', est);
+    // Manager : on ne récupère PAS la colonne « rate » (taux) → les salaires ne quittent pas le serveur
+    const empCols = canSeeSalaries() ? '*' : 'id,local_id,name,role,contract,phone,email,archived,compliance,conges_allowance,hours,hours_unit,contract_type';
+    const { data:emps } = await sb.from('employees').select(empCols).eq('establishment_id', est);
     state.employees = (emps||[]).map(r=>{ const lid=r.local_id||r.id; remoteToLocal[r.id]=lid; return { id:lid, name:r.name, role:r.role||'', contract:r.contract||'', rate:r.rate||0, phone:r.phone||'', email:r.email||'', archived:!!r.archived, compliance:Object.assign(emptyCompliance(), r.compliance||{}), congesAllowance:(r.conges_allowance!=null?r.conges_allowance:25), hours:(r.hours!=null?r.hours:undefined), hoursUnit:(r.hours_unit==='mois'?'mois':'semaine'), contractType:r.contract_type||'' }; });
     const { data:shifts } = await sb.from('shifts').select('*').eq('establishment_id', est);
     state.shifts = (shifts||[]).map(s=>({ id:s.local_id||s.id, week:s.week, day:s.day, team:s.team, period:s.period, start:s.start_t, end:s.end_t, empId: s.employee_id?(remoteToLocal[s.employee_id]||''):'', extraName:s.extra_name||'', realStart:s.real_start||'', realEnd:s.real_end||'', breaks:Array.isArray(s.breaks)?s.breaks:[], note:s.note||'' }));
@@ -4127,6 +4143,35 @@ document.getElementById('cloudSync').addEventListener('click', async ()=>{
   if(r.error){ cloudMsg('cloudSyncMsg','Erreur : '+r.error, false); setSyncStatus('error'); return; }
   cloudMsg('cloudSyncMsg','✅ Planning synchronisé — tes employés le voient à jour.', true); setSyncStatus('ok');
   toast('Planning synchronisé ✓');
+});
+// Copie presse-papier (avec repli pour les vieux navigateurs / app native)
+async function copyText(txt){
+  try{ if(navigator.clipboard && navigator.clipboard.writeText){ await navigator.clipboard.writeText(txt); return true; } }catch(e){}
+  try{ const ta=document.createElement('textarea'); ta.value=txt; ta.style.position='fixed'; ta.style.opacity='0'; document.body.appendChild(ta); ta.focus(); ta.select(); const ok=document.execCommand('copy'); document.body.removeChild(ta); return ok; }catch(e){ return false; }
+}
+// INVITER UN CO-GÉRANT : génère un code d'invitation avec le rôle « manager » et propose de le partager
+document.getElementById('cloudInviteManager').addEventListener('click', async ()=>{
+  if(!(sb && cloudMembership && ['owner','manager'].includes(cloudMembership.role))){ toast('Connecte-toi à ton compte patron d’abord.'); return; }
+  const box=document.getElementById('coManagerBox');
+  box.classList.remove('hidden');
+  box.innerHTML='<span class="text-slate-500 text-sm">Génération du code…</span>';
+  // On pousse d'abord les données pour que le co-gérant récupère un planning à jour
+  try{ await pushToCloud(); }catch(e){}
+  const code=randCode();
+  const { error } = await sb.from('invite_codes').insert({ establishment_id:cloudMembership.establishment_id, code, role:'manager', employee_id:null, created_by:cloudSession.user.id });
+  if(error){ box.innerHTML='<span class="text-red-600 text-sm">Impossible de générer le code : '+error.message+'</span>'; return; }
+  const estName=(cloudMembership.establishments&&cloudMembership.establishments.name)||state.restaurant||'l’établissement';
+  const msg=`Tu es invité(e) à co-gérer « ${estName} » sur l'app Oplaa.\n\n1) Installe ou ouvre l'app Oplaa\n2) Écran d'accueil → « Je suis un employé » → « Créer un compte »\n3) Entre ce code d'invitation : ${code}\n\nTu pourras gérer le planning, les congés et l'équipe. (Les salaires restent privés, visibles par toi seul·e.)`;
+  box.innerHTML=`
+    <div class="text-xs font-bold uppercase tracking-wide text-teal-700 mb-1">Code co-gérant (usage unique)</div>
+    <div class="text-2xl font-extrabold tracking-[0.3em] text-teal-800 text-center bg-white border border-teal-200 rounded-lg py-2 mb-2">${code}</div>
+    <p class="text-[12px] text-slate-600 mb-2">Transmets ce code à ton co-gérant. Il crée un compte et l'entre → il accède aux mêmes données (sans les salaires).</p>
+    <div class="grid grid-cols-2 gap-2">
+      <button type="button" id="coMgrCopy" class="px-3 py-2 rounded-lg bg-white border border-slate-300 font-semibold text-sm hover:bg-slate-50">📋 Copier le message</button>
+      <a id="coMgrWa" href="https://wa.me/?text=${encodeURIComponent(msg)}" target="_blank" rel="noopener" class="px-3 py-2 rounded-lg bg-[#25D366] text-white font-semibold text-sm text-center hover:brightness-95">🟢 WhatsApp</a>
+    </div>`;
+  const cp=document.getElementById('coMgrCopy');
+  if(cp) cp.addEventListener('click', async ()=>{ const ok=await copyText(msg); toast(ok?'Message copié ✓':'Copie impossible — copie le code à la main'); });
 });
 /* ============ SYNCHRONISATION CLOUD AUTOMATIQUE (patron) ============ */
 let _applyingRemote=false;                 // true pendant qu'on applique des données venues du cloud (évite l'écho pull→push)
@@ -4227,8 +4272,17 @@ document.getElementById('cloudDeleteAcc').addEventListener('click', cloudDeleteA
 document.getElementById('cloudDeleteAcc2').addEventListener('click', cloudDeleteAccount);
 
 document.getElementById('cloudCreateEst').addEventListener('click', async ()=>{
+  // On demande le nom seulement s'il n'existe pas déjà (évite « Mon établissement » par défaut)
+  let nom = (state.restaurant && state.restaurant.trim() && state.restaurant.trim()!=='Mon établissement') ? state.restaurant.trim() : '';
+  if(!nom){
+    const saisi = prompt('Quel est le nom de ton établissement ?', '');
+    if(saisi===null) return;                         // annulé
+    nom = saisi.trim();
+    if(!nom){ cloudMsg('cloudOnbMsg','Donne un nom à ton établissement pour continuer.', false); return; }
+    state.restaurant = nom; syncGlobals(); saveQuiet();
+  }
   cloudMsg('cloudOnbMsg','Création de ton établissement…', true);
-  const { error } = await sb.rpc('create_establishment', { p_name: state.restaurant || 'Mon établissement' });
+  const { error } = await sb.rpc('create_establishment', { p_name: nom });
   if(error){ cloudMsg('cloudOnbMsg', traduireErreur(error.message), false); return; }
   toast('Établissement créé ✓'); refreshCloud();
 });
@@ -4239,7 +4293,10 @@ document.getElementById('cloudJoin').addEventListener('click', async ()=>{
   const { data, error } = await sb.rpc('join_with_code', { p_code: code });
   if(error){ cloudMsg('cloudOnbMsg', traduireErreur(error.message), false); return; }
   if(data && data.ok===false){ cloudMsg('cloudOnbMsg', data.error||'Code invalide.', false); return; }
-  toast('Bienvenue ! Tu as rejoint l’établissement ✓'); refreshCloud();
+  toast('Bienvenue ! Tu as rejoint l’établissement ✓');
+  await refreshCloud();
+  // Co-gérant/manager qui vient de rejoindre : on récupère toujours les données de l'établissement
+  if(cloudMembership && ['owner','manager'].includes(cloudMembership.role)){ try{ await pullForOwner(); }catch(e){} }
 });
 function traduireErreur(m){
   m=(m||'').toLowerCase();
