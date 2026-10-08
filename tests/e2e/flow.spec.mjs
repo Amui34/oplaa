@@ -71,18 +71,19 @@ test('guide : s’affiche au premier lancement et se parcourt jusqu’au bout', 
   await expect(page.locator('#onboardModal')).toBeHidden();
 });
 
-test('équipes : on peut renommer / ajouter un segment d’équipe', async ({ page }) => {
+test('équipes : on peut renommer / ajouter un segment d’équipe (via Réglages)', async ({ page }) => {
   await page.locator('#welcomeDemo').click();
   await page.locator('#btnData').click();
-  await page.locator('#btnTeams').click();
-  await expect(page.locator('#teamsModal')).toBeVisible();
+  // L'édition des équipes se fait désormais dans la fenêtre Réglages (section Équipes inline)
+  await page.locator('#btnSettings').click();
+  await expect(page.locator('#settingsModal')).toBeVisible();
   const before = await page.evaluate(() => state.teams.length);
   // Ajoute une équipe et la nomme
-  await page.locator('#addTeamRow2').click();
-  const lastLabel = page.locator('#teamsList .set-team .s-label').last();
+  await page.locator('#addTeamRow').click();
+  const lastLabel = page.locator('#setTeams .set-team .s-label').last();
   await lastLabel.fill('Terrasse');
-  await page.locator('#teamsForm button[type="submit"]').click();
-  await expect(page.locator('#teamsModal')).toBeHidden();
+  await page.locator('#settingsForm button[type="submit"]').click();
+  await expect(page.locator('#settingsModal')).toBeHidden();
   const after = await page.evaluate(() => state.teams.map(t => t.label));
   expect(after.length).toBe(before + 1);
   expect(after).toContain('Terrasse');
