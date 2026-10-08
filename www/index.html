@@ -206,50 +206,28 @@
     <div class="relative shrink-0">
       <button id="btnData" class="px-3 py-2 rounded-lg bg-white border border-slate-300 font-semibold hover:bg-slate-50 text-sm">Données</button>
       <div id="dataMenu" class="hidden absolute right-0 mt-1 w-64 max-h-[75vh] overflow-y-auto bg-white border border-slate-200 rounded-xl shadow-lg py-1.5 z-40 text-slate-700 text-sm">
-        <div class="px-4 pt-1 pb-0.5 text-[10px] font-bold uppercase tracking-wider text-slate-400">Établissement</div>
+        <!-- COMPTE -->
+        <div class="px-4 pt-1 pb-0.5 text-[10px] font-bold uppercase tracking-wider text-slate-400">Compte</div>
+        <button id="btnCloud" class="mi w-full text-left px-4 py-2 hover:bg-slate-50"><span class="ic" data-ic="cloud"></span><span id="btnCloudLabel">Mon compte (connexion)</span></button>
         <button id="btnEstb" class="mi w-full text-left px-4 py-2 hover:bg-slate-50"><span class="ic" data-ic="building"></span>Mes établissements…</button>
         <button id="btnOffInbox" class="mi w-full text-left px-4 py-2 hover:bg-slate-50 hidden"><span class="ic" data-ic="holiday"></span>Demandes de congés<span id="offBadge" class="hidden ml-auto text-[11px] font-bold bg-rose-500 text-white rounded-full px-2 py-0.5 leading-none">0</span></button>
         <div class="border-t border-slate-100 my-1"></div>
+        <!-- PLANNING -->
+        <div class="px-4 pt-1 pb-0.5 text-[10px] font-bold uppercase tracking-wider text-slate-400">Planning</div>
         <div class="lg:hidden">
-          <div class="px-4 pt-1 pb-0.5 text-[10px] font-bold uppercase tracking-wider text-slate-400">Partager</div>
           <button id="btnEmailM" class="mi w-full text-left px-4 py-2 hover:bg-slate-50"><span class="ic" data-ic="send"></span>Envoyer le planning</button>
           <button id="btnPrintM" class="mi w-full text-left px-4 py-2 hover:bg-slate-50"><span class="ic" data-ic="print"></span>Imprimer / PDF</button>
-          <div class="border-t border-slate-100 my-1"></div>
         </div>
-        <div class="px-4 pt-1 pb-0.5 text-[10px] font-bold uppercase tracking-wider text-slate-400">Compte</div>
-        <button id="btnCloud" class="mi w-full text-left px-4 py-2 hover:bg-slate-50"><span class="ic" data-ic="cloud"></span><span id="btnCloudLabel">Mon compte (connexion)</span></button>
-        <button id="btnHome" class="mi w-full text-left px-4 py-2 hover:bg-slate-50"><span class="ic" data-ic="undo"></span>Changer de compte / Accueil</button>
-        <div class="border-t border-slate-100 my-1"></div>
-        <div class="px-4 pt-1 pb-0.5 text-[10px] font-bold uppercase tracking-wider text-slate-400">Affichage</div>
-        <button id="btnEmployeePreview" class="mi w-full text-left px-4 py-2 hover:bg-slate-50"><span class="ic" data-ic="user"></span>Voir l'espace employé</button>
-        <button id="btnTheme" class="mi w-full text-left px-4 py-2 hover:bg-slate-50"><span class="ic" data-ic="moon" id="btnThemeIcon"></span><span id="btnThemeLabel">Passer en sombre</span></button>
-        <div class="border-t border-slate-100 my-1"></div>
-        <div class="px-4 pt-1 pb-0.5 text-[10px] font-bold uppercase tracking-wider text-slate-400">Édition</div>
         <button id="btnUndo" class="mi w-full text-left px-4 py-2 hover:bg-slate-50"><span class="ic" data-ic="undo"></span>Annuler la dernière modification</button>
-        <button id="btnHistory" class="mi w-full text-left px-4 py-2 hover:bg-slate-50"><span class="ic" data-ic="history"></span>Historique / versions…</button>
         <button id="dupWeek" class="mi w-full text-left px-4 py-2 hover:bg-slate-50"><span class="ic" data-ic="copy"></span>Dupliquer la semaine précédente</button>
         <button id="btnTemplates" class="mi w-full text-left px-4 py-2 hover:bg-slate-50"><span class="ic" data-ic="save"></span>Modèles de semaine…</button>
-        <button id="btnCopyPlan" class="mi w-full text-left px-4 py-2 hover:bg-slate-50"><span class="ic" data-ic="copy"></span>Copier un planning (vers un employé)…</button>
+        <button id="btnCopyPlan" class="mi w-full text-left px-4 py-2 hover:bg-slate-50"><span class="ic" data-ic="copy"></span>Copier un planning…</button>
+        <button id="btnHistory" class="mi w-full text-left px-4 py-2 hover:bg-slate-50"><span class="ic" data-ic="history"></span>Historique / versions…</button>
         <div class="border-t border-slate-100 my-1"></div>
-        <div class="px-4 pt-1 pb-0.5 text-[10px] font-bold uppercase tracking-wider text-slate-400">Configuration</div>
-        <button id="btnTeams" class="mi w-full text-left px-4 py-2 hover:bg-slate-50"><span class="ic" data-ic="users"></span>Mes équipes (renommer, ajouter…)</button>
-        <button id="btnSettings" class="mi w-full text-left px-4 py-2 hover:bg-slate-50"><span class="ic" data-ic="settings"></span>Réglages (créneaux, règles, couleur)</button>
-        <button id="btnProfile" class="mi w-full text-left px-4 py-2 hover:bg-slate-50"><span class="ic" data-ic="shuffle"></span>Changer de profil d'activité</button>
-        <button id="btnRename" class="mi w-full text-left px-4 py-2 hover:bg-slate-50"><span class="ic" data-ic="pencil"></span>Renommer l'établissement</button>
-        <div class="border-t border-slate-100 my-1"></div>
-        <div class="px-4 pt-1 pb-0.5 text-[10px] font-bold uppercase tracking-wider text-slate-400">Sauvegarde</div>
-        <button id="btnExport" class="mi w-full text-left px-4 py-2 hover:bg-slate-50"><span class="ic" data-ic="save"></span>Sauvegarder (JSON)</button>
-        <button id="btnImport" class="mi w-full text-left px-4 py-2 hover:bg-slate-50"><span class="ic" data-ic="folder"></span>Charger une sauvegarde</button>
-        <button id="btnReset" class="mi w-full text-left px-4 py-2 text-red-600 hover:bg-red-50"><span class="ic" data-ic="trash"></span>Vider les données (repartir de zéro)</button>
-        <div class="border-t border-slate-100 my-1"></div>
-        <div class="px-4 pt-1 pb-0.5 text-[10px] font-bold uppercase tracking-wider text-slate-400">Aide &amp; retours</div>
-        <button id="btnGuide" class="mi w-full text-left px-4 py-2 hover:bg-slate-50"><span class="ic" data-ic="bulb"></span>Revoir le guide de démarrage</button>
-        <button id="btnHelp" class="mi w-full text-left px-4 py-2 hover:bg-slate-50"><span class="ic" data-ic="help"></span>Aide / FAQ</button>
-        <button id="btnFeedback" class="mi w-full text-left px-4 py-2 hover:bg-slate-50"><span class="ic" data-ic="bulb"></span>Proposer une amélioration</button>
-        <button id="btnPrivacy" class="mi w-full text-left px-4 py-2 hover:bg-slate-50"><span class="ic" data-ic="lock"></span>Confidentialité &amp; RGPD</button>
-        <div class="mi px-4 py-1.5 text-[10px] text-slate-400 leading-snug"><span class="ic" data-ic="shield" data-ic-size="14" style="align-self:flex-start;margin-top:1px"></span><span>Données protégées : chaque employé ne voit que son planning. Salaires et coordonnées jamais partagés (RGPD).</span></div>
-        <button id="btnContact" class="mi w-full text-left px-4 py-2 hover:bg-slate-50"><span class="ic" data-ic="mail"></span>Contacter le créateur</button>
-        <div class="px-4 pt-1 pb-1.5 text-[10px] text-slate-300">Oplaa v1.0 · © 2026 Noa Madar</div>
+        <!-- RÉGLAGES (tout le reste est dans la fenêtre) -->
+        <button id="btnSettings" class="mi w-full text-left px-4 py-2 hover:bg-slate-50 font-semibold"><span class="ic" data-ic="settings"></span>Réglages &amp; plus…</button>
+        <div class="mi px-4 py-1.5 text-[10px] text-emerald-600 leading-snug"><span class="ic" data-ic="cloud" data-ic-size="13" style="align-self:flex-start;margin-top:1px"></span><span>Tout est enregistré et synchronisé automatiquement.</span></div>
+        <div class="px-4 pt-0.5 pb-1.5 text-[10px] text-slate-300">Oplaa v1.0 · © 2026 Noa Madar</div>
       </div>
       <input type="file" id="importFile" accept="application/json" class="hidden" />
     </div>
@@ -1216,6 +1194,42 @@
         <button type="submit" class="px-4 py-2 rounded-lg bg-teal-600 text-white font-semibold hover:bg-teal-700">Enregistrer</button>
       </div>
     </form>
+
+    <!-- Autres actions (déplacées depuis l'ancien menu Données pour l'alléger) -->
+    <div id="settingsExtra" class="mt-5 pt-4 border-t border-slate-200 space-y-4 text-sm">
+      <div>
+        <div class="text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-1">Établissement</div>
+        <button type="button" id="btnRename" class="set-act mi w-full text-left px-3 py-2 rounded-lg hover:bg-slate-50"><span class="ic" data-ic="pencil"></span>Renommer l'établissement</button>
+        <button type="button" id="btnProfile" class="set-act mi w-full text-left px-3 py-2 rounded-lg hover:bg-slate-50"><span class="ic" data-ic="shuffle"></span>Changer de profil d'activité</button>
+      </div>
+      <div>
+        <div class="text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-1">Affichage</div>
+        <button type="button" id="btnEmployeePreview" class="set-act mi w-full text-left px-3 py-2 rounded-lg hover:bg-slate-50"><span class="ic" data-ic="user"></span>Voir l'espace employé</button>
+        <button type="button" id="btnTheme" class="mi w-full text-left px-3 py-2 rounded-lg hover:bg-slate-50"><span class="ic" data-ic="moon" id="btnThemeIcon"></span><span id="btnThemeLabel">Passer en sombre</span></button>
+      </div>
+      <div>
+        <div class="text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-1">Compte</div>
+        <button type="button" id="btnHome" class="set-act mi w-full text-left px-3 py-2 rounded-lg hover:bg-slate-50"><span class="ic" data-ic="undo"></span>Changer de compte / Accueil</button>
+      </div>
+      <div>
+        <div class="text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-1">Aide &amp; confidentialité</div>
+        <button type="button" id="btnGuide" class="set-act mi w-full text-left px-3 py-2 rounded-lg hover:bg-slate-50"><span class="ic" data-ic="bulb"></span>Revoir le guide de démarrage</button>
+        <button type="button" id="btnHelp" class="set-act mi w-full text-left px-3 py-2 rounded-lg hover:bg-slate-50"><span class="ic" data-ic="help"></span>Aide / FAQ</button>
+        <button type="button" id="btnFeedback" class="set-act mi w-full text-left px-3 py-2 rounded-lg hover:bg-slate-50"><span class="ic" data-ic="bulb"></span>Proposer une amélioration</button>
+        <button type="button" id="btnPrivacy" class="set-act mi w-full text-left px-3 py-2 rounded-lg hover:bg-slate-50"><span class="ic" data-ic="lock"></span>Confidentialité &amp; RGPD</button>
+        <button type="button" id="btnContact" class="set-act mi w-full text-left px-3 py-2 rounded-lg hover:bg-slate-50"><span class="ic" data-ic="mail"></span>Contacter le créateur</button>
+        <div class="px-3 py-1.5 text-[10px] text-slate-400 leading-snug flex items-start gap-1.5"><span class="ic" data-ic="shield" data-ic-size="13" style="margin-top:1px"></span><span>Chaque employé ne voit que son planning. Salaires et coordonnées jamais partagés (RGPD).</span></div>
+      </div>
+      <details class="rounded-lg border border-slate-200">
+        <summary class="px-3 py-2 cursor-pointer font-semibold text-slate-500 select-none">Avancé — sauvegarde manuelle</summary>
+        <div class="px-1 py-1">
+          <p class="px-3 py-1 text-[11px] text-slate-400">Pas nécessaire au quotidien : tout s'enregistre et se synchronise déjà tout seul. Utile seulement pour exporter/transférer à la main.</p>
+          <button type="button" id="btnExport" class="set-act mi w-full text-left px-3 py-2 rounded-lg hover:bg-slate-50"><span class="ic" data-ic="save"></span>Sauvegarder dans un fichier (JSON)</button>
+          <button type="button" id="btnImport" class="set-act mi w-full text-left px-3 py-2 rounded-lg hover:bg-slate-50"><span class="ic" data-ic="folder"></span>Charger une sauvegarde</button>
+          <button type="button" id="btnReset" class="set-act mi w-full text-left px-3 py-2 rounded-lg text-red-600 hover:bg-red-50"><span class="ic" data-ic="trash"></span>Vider les données (repartir de zéro)</button>
+        </div>
+      </details>
+    </div>
   </div>
 </div>
 
@@ -3621,7 +3635,7 @@ function closeTeams(){ teamsModal.classList.add('hidden'); teamsModal.classList.
 document.getElementById('addTeamRow2').addEventListener('click',()=>{ document.getElementById('teamsList').insertAdjacentHTML('beforeend', teamRowHtml()); if(window.OplaaIcons) OplaaIcons.paint(teamsModal); });
 document.querySelectorAll('.closeTeams').forEach(b=>b.addEventListener('click',closeTeams));
 teamsModal.addEventListener('click',e=>{ if(e.target===teamsModal){ closeTeams(); return; } if(e.target.closest('.del-row')) e.target.closest('.del-row').parentElement.remove(); });
-document.getElementById('btnTeams').addEventListener('click',openTeams);
+{ const _bt=document.getElementById('btnTeams'); if(_bt) _bt.addEventListener('click',openTeams); }   // btnTeams retiré du menu (édition des équipes désormais dans Réglages) — binding sécurisé
 document.getElementById('teamsForm').addEventListener('submit',ev=>{
   ev.preventDefault();
   const err=document.getElementById('teamsErr');
@@ -3700,6 +3714,9 @@ function closeSettings(){ settingsModal.classList.add('hidden'); settingsModal.c
 document.getElementById('setAccent').addEventListener('input', e=> setAccent(e.target.value));  // aperçu live
 document.getElementById('accentPresets').addEventListener('click', e=>{ const b=e.target.closest('.accent-preset'); if(b){ document.getElementById('setAccent').value=b.dataset.c; setAccent(b.dataset.c); }});
 document.getElementById('btnSettings').addEventListener('click',openSettings);
+// Les actions listées en bas de Réglages ouvrent souvent une autre fenêtre / changent de vue :
+// on ferme d'abord Réglages (phase capture → avant le handler propre au bouton) pour éviter l'empilement.
+settingsModal.addEventListener('click', e=>{ if(e.target.closest && e.target.closest('.set-act')) closeSettings(); }, true);
 /* --- Multi-établissements : UI --- */
 function openEstb(){ document.getElementById('dataMenu').classList.add('hidden'); renderEstbList(); document.getElementById('estbAddForm').hidden=true;
   document.getElementById('estbNewProfile').innerHTML=Object.keys(PROFILE_PRESETS).map(k=>`<option value="${k}">${PROFILE_PRESETS[k].icon} ${PROFILE_PRESETS[k].name}</option>`).join('');
