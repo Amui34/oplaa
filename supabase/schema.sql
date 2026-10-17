@@ -292,7 +292,35 @@ $$;
 
 grant execute on function create_establishment(text) to authenticated;
 
+-- ─────────────────────────────────────────────────────────────────────────
+--  TEMPS RÉEL (Supabase Realtime) — tables écoutées par l'app via
+--  postgres_changes avec le filtre `establishment_id=eq.<id>` :
+--    patron/manager : day_off_requests (badge + boîte de demandes en direct)
+--    employé        : shifts, absences, notes (son planning se met à jour seul)
+--  Idempotent : ré-exécutable sans erreur.
+-- ─────────────────────────────────────────────────────────────────────────
+do $$
+declare t text;
+begin
+  foreach t in array array['shifts','absences','notes','day_off_requests'] loop
+    if not exists (
+      select 1 from pg_publication_tables
+      where pubname = 'supabase_realtime' and schemaname = 'public' and tablename = t
+    ) then
+      execute format('alter publication supabase_realtime add table public.%I', t);
+    end if;
+  end loop;
+end $$;
+
+-- REPLICA IDENTITY FULL : indispensable pour que les événements UPDATE/DELETE
+-- portent la colonne establishment_id (sinon le filtre ne matche pas et, p. ex.,
+-- un service supprimé par le patron n'est jamais répercuté chez l'employé).
+alter table shifts           replica identity full;
+alter table absences         replica identity full;
+alter table notes            replica identity full;
+alter table day_off_requests replica identity full;
+
 -- ============================================================================
---  FIN. Prochaine étape : je branche l'app (client Supabase + écrans de
---  connexion) une fois que tu m'as donné l'URL du projet + la clé anon/public.
+--  FIN DU SCHÉMA. L'app est branchée (www/supabase-config.js : URL + clé
+--  anon/publishable uniquement — jamais la clé service_role).
 -- ============================================================================
