@@ -136,6 +136,38 @@ create table if not exists day_off_requests (
   created_at        timestamptz not null default now()
 );
 
+-- Journal des accès (RGPD) — l'app y écrit push / pull_owner / pull_employee
+create table if not exists access_log (
+  id                uuid primary key default gen_random_uuid(),
+  establishment_id  uuid not null references establishments(id) on delete cascade,
+  user_id           uuid not null default auth.uid() references auth.users(id) on delete cascade,
+  action            text not null,
+  created_at        timestamptz not null default now()
+);
+
+-- ─────────────────────────────────────────────────────────────────────────
+--  ÉVOLUTIONS (colonnes ajoutées après la 1re version — idempotent)
+--  `create table if not exists` n'ajoute pas de colonne à une table existante,
+--  d'où ces `add column if not exists`. Rejouable sur base vide ou existante.
+-- ─────────────────────────────────────────────────────────────────────────
+
+-- local_id : identifiant côté app (localStorage). L'app synchronise par
+-- upsert sur (establishment_id, local_id) → un index UNIQUE est obligatoire.
+alter table employees add column if not exists local_id text;
+alter table shifts    add column if not exists local_id text;
+alter table absences  add column if not exists local_id text;
+alter table notes     add column if not exists local_id text;
+create unique index if not exists employees_est_local_uq on employees (establishment_id, local_id);
+create unique index if not exists shifts_est_local_uq    on shifts    (establishment_id, local_id);
+create unique index if not exists absences_est_local_uq  on absences  (establishment_id, local_id);
+create unique index if not exists notes_est_local_uq     on notes     (establishment_id, local_id);
+
+-- Contrat (2026-10-06) : droit à congés, heures saisies librement + unité, type de contrat
+alter table employees add column if not exists conges_allowance numeric default 25;
+alter table employees add column if not exists hours            numeric;
+alter table employees add column if not exists hours_unit       text default 'semaine' check (hours_unit in ('semaine','mois'));
+alter table employees add column if not exists contract_type    text;
+
 -- ─────────────────────────────────────────────────────────────────────────
 --  FONCTIONS D'AIDE (contrôle d'accès)
 -- ─────────────────────────────────────────────────────────────────────────
@@ -228,6 +260,15 @@ create policy off_select on day_off_requests for select using (
 );
 drop policy if exists off_staff_update on day_off_requests;
 create policy off_staff_update on day_off_requests for update using (is_staff(establishment_id)) with check (is_staff(establishment_id));
+
+-- access_log : chaque membre peut journaliser ses propres accès ; seul le staff lit
+alter table access_log enable row level security;
+drop policy if exists log_member_insert on access_log;
+create policy log_member_insert on access_log for insert
+  with check (is_member(establishment_id) and user_id = auth.uid());
+drop policy if exists log_staff_select on access_log;
+create policy log_staff_select on access_log for select
+  using (is_staff(establishment_id));
 
 -- ─────────────────────────────────────────────────────────────────────────
 --  VUE PUBLIQUE EMPLOYÉ — prénoms + équipe UNIQUEMENT (aucune donnée sensible)

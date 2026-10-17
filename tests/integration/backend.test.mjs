@@ -3,8 +3,8 @@
 // Hit le vrai projet Supabase de test. Confirmation email désactivée → signup renvoie un token.
 import { describe, it, expect, beforeAll } from 'vitest';
 
-const URL = 'https://rourjugjspqppjhrizxw.supabase.co';
-const ANON = 'sb_publishable_0YHzUC53GjuvekVfb8Azvg_Ze3fSUOF';
+const URL = 'https://eugbledrebkshzbnxeiu.supabase.co';
+const ANON = 'sb_publishable_xjDgml2Ba1X-OXR9yszqaQ_ntmZ3Q5W';
 const PW = 'TestOplaa!2026';
 const H = (tok) => ({ apikey: ANON, 'Content-Type': 'application/json', ...(tok ? { Authorization: `Bearer ${tok}` } : {}) });
 
