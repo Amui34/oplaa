@@ -8,8 +8,8 @@
 // → À utiliser uniquement contre un projet de test dédié (changer URL/ANON ci-dessous).
 import { describe, it, expect, beforeAll } from 'vitest';
 
-const URL = 'https://eugbledrebkshzbnxeiu.supabase.co';
-const ANON = 'sb_publishable_xjDgml2Ba1X-OXR9yszqaQ_ntmZ3Q5W';
+const URL = 'https://kldkqxqbmxtdedzjoghw.supabase.co';
+const ANON = 'sb_publishable_Ma29Syo4LkbtLLxIP4s9EA_8UIef3EL';
 const PW = 'TestOplaa!2026';
 const H = (tok) => ({ apikey: ANON, 'Content-Type': 'application/json', ...(tok ? { Authorization: `Bearer ${tok}` } : {}) });
 
