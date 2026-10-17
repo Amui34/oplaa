@@ -1,6 +1,11 @@
 // Tests d'intégration — backend Supabase : comptes, RPC, et surtout les garanties RGPD/RLS
 // (un employé ne doit JAMAIS voir les salaires ni les infos de ses collègues).
-// Hit le vrai projet Supabase de test. Confirmation email désactivée → signup renvoie un token.
+//
+// ⚠️ OPT-IN : `npm run test:int` (OPLAA_IT=1). Exclus de `npm test` depuis le 2026-10-17.
+// Prérequis : un projet Supabase avec « Confirm email » DÉSACTIVÉ (le signup doit renvoyer
+// un access_token). Le projet de PRODUCTION (eugbledrebkshzbnxeiu) l'a ACTIVÉ : y lancer
+// ces tests échouerait au signup ET consommerait le quota d'emails de confirmation.
+// → À utiliser uniquement contre un projet de test dédié (changer URL/ANON ci-dessous).
 import { describe, it, expect, beforeAll } from 'vitest';
 
 const URL = 'https://eugbledrebkshzbnxeiu.supabase.co';
