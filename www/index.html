@@ -700,8 +700,7 @@
       <div class="manager-only rounded-xl bg-teal-50 border border-teal-200 text-teal-800 text-xs px-3 py-2 mb-2 flex items-center gap-2"><span class="ic shrink-0" data-ic="cloud" data-ic-size="15"></span><span>Synchronisation <b>automatique</b> : tes employés voient le planning à jour dès que tu le modifies.</span></div>
       <button type="button" id="cloudSync" class="manager-only w-full inline-flex items-center justify-center gap-2 px-4 py-3 rounded-xl bg-teal-600 text-white font-semibold hover:bg-teal-700 mb-2"><span class="ic" data-ic="cloud" data-ic-size="18"></span>Synchroniser maintenant</button>
       <button type="button" id="cloudPull" class="manager-only w-full inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-white border border-slate-300 font-semibold hover:bg-slate-50 mb-2"><span class="ic" data-ic="cloudDown" data-ic-size="18"></span>Récupérer mes données du cloud</button>
-      <button type="button" id="cloudInviteManager" class="manager-only w-full inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-white border border-teal-300 text-teal-700 font-semibold hover:bg-teal-50 mb-2">👥 Inviter un co-gérant / manager</button>
-      <div id="coManagerBox" class="hidden rounded-xl border border-teal-200 bg-teal-50 p-3 mb-3"></div>
+      <button type="button" id="btnAccess" class="manager-only w-full inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-white border border-teal-300 text-teal-700 font-semibold hover:bg-teal-50 mb-2">👥 Accès &amp; rôles (inviter, promouvoir…)</button>
       <p id="cloudSyncMsg" class="text-sm mb-3 hidden"></p>
       <button type="button" id="cloudSignOut" class="w-full px-4 py-2.5 rounded-xl bg-white border border-slate-300 font-semibold hover:bg-slate-50">Se déconnecter</button>
       <button type="button" id="cloudDeleteAcc" class="w-full mt-2 text-sm text-red-600 font-semibold hover:underline">Supprimer mon compte</button>
@@ -985,6 +984,31 @@
 </div>
 
 <!-- ============ MODALE « DEMANDES DE CONGÉS » (patron) ============ -->
+<!-- ============ MODALE ACCÈS & RÔLES ============ -->
+<div id="accessModal" class="no-print fixed inset-0 bg-black/50 z-[60] hidden items-center justify-center p-4">
+  <div class="bg-white rounded-2xl shadow-xl w-full max-w-lg p-5 max-h-[90vh] overflow-y-auto">
+    <div class="flex items-center justify-between mb-1">
+      <h3 class="text-lg font-bold">👥 Accès &amp; rôles</h3>
+      <button class="closeAccess text-slate-400 hover:text-slate-600 text-2xl leading-none">&times;</button>
+    </div>
+    <p class="text-sm text-slate-500 mb-3">Qui a accès à « <b id="accEst"></b> », et avec quel rôle.</p>
+    <div id="accList" class="space-y-2 mb-4"><span class="text-sm text-slate-400">Chargement…</span></div>
+    <div class="rounded-xl border border-teal-200 bg-teal-50 p-3">
+      <div class="font-semibold text-sm text-teal-800 mb-2">➕ Inviter quelqu'un</div>
+      <div class="grid grid-cols-2 gap-2 mb-2">
+        <label class="text-xs text-slate-600">Rôle
+          <select id="accInvRole" class="mt-1 w-full border border-slate-300 rounded-lg px-2 py-2 text-sm bg-white"></select></label>
+        <label class="text-xs text-slate-600">Fiche employé (optionnel)
+          <select id="accInvEmp" class="mt-1 w-full border border-slate-300 rounded-lg px-2 py-2 text-sm bg-white"></select></label>
+      </div>
+      <button type="button" id="accInvGo" class="w-full px-3 py-2 rounded-lg bg-teal-600 text-white font-semibold text-sm hover:bg-teal-700">Générer un code d'invitation</button>
+      <div id="accInvBox" class="hidden mt-2"></div>
+    </div>
+    <p id="accMsg" class="text-sm mt-3 hidden"></p>
+    <p class="text-[11px] text-slate-400 mt-3 leading-snug"><b>Admin</b> : tout, salaires et accès compris · <b>Manager</b> : planning, congés, équipe, réglages — pas les salaires · <b>Employé</b> : son planning et ses demandes.</p>
+  </div>
+</div>
+
 <div id="offInboxModal" class="no-print fixed inset-0 bg-black/40 z-50 hidden items-center justify-center p-4">
   <div class="bg-white rounded-2xl shadow-xl w-full max-w-md max-h-[88vh] overflow-y-auto">
     <div class="flex items-start gap-2 px-5 pt-5 pb-1">
@@ -3958,6 +3982,7 @@ let tt; function toast(m){ const t=document.getElementById('toast'); t.textConte
 
 /* ============ COMPTE CLOUD (SUPABASE) ============ */
 let sb = null, cloudSession = null, cloudMembership = null;
+const ROLE_LABEL = { owner:'Admin', manager:'Manager', employee:'Employé' };   // libellés de rôle (base : 'owner' = Admin)
 try { if(window.supabase && window.OPLAA_SUPABASE){ sb = window.supabase.createClient(OPLAA_SUPABASE.url, OPLAA_SUPABASE.anonKey); } } catch(e){ console.warn('Supabase indispo', e); }
 
 const cloudModal = document.getElementById('cloudModal');
@@ -4009,10 +4034,8 @@ async function refreshCloud(){
   if(cloudMembership){
     document.getElementById('cloudMemEmail').textContent = session.user.email;
     document.getElementById('cloudMemEst').textContent = (cloudMembership.establishments && cloudMembership.establishments.name) || 'Établissement';
-    document.getElementById('cloudMemRole').textContent = ({owner:'Patron',manager:'Manager',employee:'Employé'})[cloudMembership.role] || cloudMembership.role;
-    document.getElementById('cloudMemHint').textContent = cloudMembership.role==='employee'
-      ? 'Tu vois uniquement ton planning.'
-      : 'Synchronise pour partager le planning avec ton équipe.';
+    document.getElementById('cloudMemRole').textContent = ROLE_LABEL[cloudMembership.role] || cloudMembership.role;
+    document.getElementById('cloudMemHint').textContent = ({ employee:'Tu vois uniquement ton planning.', manager:'Tu gères le planning, les congés et l’équipe (pas les salaires).', owner:'Tu es admin : tout, y compris les accès et les salaires.' })[cloudMembership.role] || '';
     showCloudState('cloudMember');
   } else {
     document.getElementById('cloudOnbEmail').textContent = session.user.email;
@@ -4072,7 +4095,8 @@ async function pushToCloud(){
   if(!sb || !cloudMembership || !['owner','manager'].includes(cloudMembership.role)) return {error:'Connecte-toi en patron d’abord.'};
   const est = cloudMembership.establishment_id;
   try{
-    await sb.from('establishments').update({ name:state.restaurant, teams:state.teams, periods:state.periods, compliance:state.complianceItems, team_word:state.teamWord, accent:state.accent, logo:state.logo||null, emp_scope:state.empScope, profile:state.profile }).eq('id', est);
+    const estUpd = await sb.from('establishments').update({ name:state.restaurant, teams:state.teams, periods:state.periods, compliance:state.complianceItems, team_word:state.teamWord, accent:state.accent, logo:state.logo||null, emp_scope:state.empScope, profile:state.profile }).eq('id', est);
+    if(estUpd.error) return {error:'Réglages non synchronisés : '+estUpd.error.message};
     const emps = state.employees.map(e=>{ const o={ establishment_id:est, local_id:e.id, name:e.name, role:e.role||'', contract:String(e.contract||''), phone:e.phone||'', email:e.email||'', archived:!!e.archived, compliance:e.compliance||{}, conges_allowance:(e.congesAllowance!=null?e.congesAllowance:25), hours:(e.hours!=null&&e.hours!==''&&!isNaN(parseFloat(e.hours))?parseFloat(e.hours):null), hours_unit:(e.hoursUnit==='mois'?'mois':'semaine'), contract_type:e.contractType||null };
       if(canSeeSalaries()) o.rate=e.rate||0;   // un manager n'envoie JAMAIS le taux → ne peut pas écraser les salaires
       return o; });
@@ -4166,30 +4190,79 @@ async function copyText(txt){
   try{ if(navigator.clipboard && navigator.clipboard.writeText){ await navigator.clipboard.writeText(txt); return true; } }catch(e){}
   try{ const ta=document.createElement('textarea'); ta.value=txt; ta.style.position='fixed'; ta.style.opacity='0'; document.body.appendChild(ta); ta.focus(); ta.select(); const ok=document.execCommand('copy'); document.body.removeChild(ta); return ok; }catch(e){ return false; }
 }
-// INVITER UN CO-GÉRANT : génère un code d'invitation avec le rôle « manager » et propose de le partager
-document.getElementById('cloudInviteManager').addEventListener('click', async ()=>{
-  if(!(sb && cloudMembership && ['owner','manager'].includes(cloudMembership.role))){ toast('Connecte-toi à ton compte patron d’abord.'); return; }
-  const box=document.getElementById('coManagerBox');
-  box.classList.remove('hidden');
-  box.innerHTML='<span class="text-slate-500 text-sm">Génération du code…</span>';
-  // On pousse d'abord les données pour que le co-gérant récupère un planning à jour
-  try{ await pushToCloud(); }catch(e){}
-  const code=randCode();
-  const { error } = await sb.from('invite_codes').insert({ establishment_id:cloudMembership.establishment_id, code, role:'manager', employee_id:null, created_by:cloudSession.user.id });
-  if(error){ box.innerHTML='<span class="text-red-600 text-sm">Impossible de générer le code : '+error.message+'</span>'; return; }
-  const estName=(cloudMembership.establishments&&cloudMembership.establishments.name)||state.restaurant||'l’établissement';
-  const msg=`Tu es invité(e) à co-gérer « ${estName} » sur l'app Oplaa.\n\n1) Installe ou ouvre l'app Oplaa\n2) Écran d'accueil → « Je suis un employé » → « Créer un compte »\n3) Entre ce code d'invitation : ${code}\n\nTu pourras gérer le planning, les congés et l'équipe. (Les salaires restent privés, visibles par toi seul·e.)`;
-  box.innerHTML=`
-    <div class="text-xs font-bold uppercase tracking-wide text-teal-700 mb-1">Code co-gérant (usage unique)</div>
-    <div class="text-2xl font-extrabold tracking-[0.3em] text-teal-800 text-center bg-white border border-teal-200 rounded-lg py-2 mb-2">${code}</div>
-    <p class="text-[12px] text-slate-600 mb-2">Transmets ce code à ton co-gérant. Il crée un compte et l'entre → il accède aux mêmes données (sans les salaires).</p>
-    <div class="grid grid-cols-2 gap-2">
-      <button type="button" id="coMgrCopy" class="px-3 py-2 rounded-lg bg-white border border-slate-300 font-semibold text-sm hover:bg-slate-50">📋 Copier le message</button>
-      <a id="coMgrWa" href="https://wa.me/?text=${encodeURIComponent(msg)}" target="_blank" rel="noopener" class="px-3 py-2 rounded-lg bg-[#25D366] text-white font-semibold text-sm text-center hover:brightness-95">🟢 WhatsApp</a>
-    </div>`;
-  const cp=document.getElementById('coMgrCopy');
-  if(cp) cp.addEventListener('click', async ()=>{ const ok=await copyText(msg); toast(ok?'Message copié ✓':'Copie impossible — copie le code à la main'); });
+// ACCÈS & RÔLES : liste des membres, changement de rôle, retrait, invitation (un seul écran)
+const accessModal = document.getElementById('accessModal');
+function isAdmin(){ return !!(cloudMembership && cloudMembership.role==='owner'); }
+function closeAccess(){ accessModal.classList.add('hidden'); accessModal.classList.remove('flex'); }
+document.querySelectorAll('.closeAccess').forEach(b=>b.addEventListener('click', closeAccess));
+accessModal.addEventListener('click', e=>{ if(e.target===accessModal) closeAccess(); });
+function accMsg(txt, ok){ const m=document.getElementById('accMsg'); m.textContent=txt; m.className='text-sm mt-3 '+(ok?'text-teal-700':'text-red-600'); m.classList.remove('hidden'); }
+async function openAccess(){
+  if(!(sb && cloudMembership && ['owner','manager'].includes(cloudMembership.role))){ toast('Connecte-toi à ton compte admin ou manager d’abord.'); return; }
+  document.getElementById('accEst').textContent = (cloudMembership.establishments && cloudMembership.establishments.name) || state.restaurant || 'l’établissement';
+  // Rôles proposés à l'invitation : un manager ne peut inviter que des employés (règle appliquée aussi par la base)
+  const roles = isAdmin() ? ['employee','manager','owner'] : ['employee'];
+  document.getElementById('accInvRole').innerHTML = roles.map(r=>`<option value="${r}">${ROLE_LABEL[r]}</option>`).join('');
+  document.getElementById('accInvEmp').innerHTML = '<option value="">— aucune —</option>' + state.employees.filter(e=>!e.archived).map(e=>`<option value="${e.id}">${e.name.replace(/</g,'&lt;')}</option>`).join('');
+  document.getElementById('accInvBox').classList.add('hidden');
+  document.getElementById('accMsg').classList.add('hidden');
+  accessModal.classList.remove('hidden'); accessModal.classList.add('flex');
+  await renderAccess();
+}
+async function renderAccess(){
+  const box=document.getElementById('accList');
+  const { data, error } = await sb.rpc('list_members', { est: cloudMembership.establishment_id });
+  if(error){ box.innerHTML='<span class="text-sm text-red-600">Impossible de charger les membres : '+error.message+'</span>'; return; }
+  const me = cloudSession && cloudSession.user && cloudSession.user.id;
+  const admin = isAdmin();
+  box.innerHTML = (data||[]).map(m=>{
+    const who = (m.employee_name ? `<div class="font-semibold text-slate-800">${m.employee_name.replace(/</g,'&lt;')}</div>` : '') + `<div class="text-xs text-slate-500 truncate">${(m.email||'').replace(/</g,'&lt;')}${m.user_id===me?' <span class="text-teal-600">(toi)</span>':''}</div>`;
+    const sel = admin
+      ? `<select data-acc-role="${m.user_id}" class="border border-slate-300 rounded-lg px-2 py-1.5 text-sm bg-white">${['owner','manager','employee'].map(r=>`<option value="${r}" ${r===m.role?'selected':''}>${ROLE_LABEL[r]}</option>`).join('')}</select>`
+      : `<span class="text-sm font-semibold text-slate-700 px-2">${ROLE_LABEL[m.role]||m.role}</span>`;
+    const rm = admin ? `<button type="button" data-acc-rm="${m.user_id}" title="Retirer l'accès" class="text-slate-400 hover:text-red-600 px-1 text-lg leading-none">✕</button>` : '';
+    return `<div class="flex items-center gap-2 rounded-xl border border-slate-200 px-3 py-2"><div class="flex-1 min-w-0">${who}</div>${sel}${rm}</div>`;
+  }).join('') || '<span class="text-sm text-slate-400">Aucun membre.</span>';
+}
+document.getElementById('accList').addEventListener('change', async e=>{
+  const sel=e.target.closest('select[data-acc-role]'); if(!sel) return;
+  const { data, error } = await sb.rpc('set_member_role', { est: cloudMembership.establishment_id, target: sel.dataset.accRole, new_role: sel.value });
+  if(error || (data && data.ok===false)){ accMsg(error?error.message:(data.error||'Refusé.'), false); await renderAccess(); return; }
+  accMsg('Rôle mis à jour ✓', true);
+  if(cloudSession && sel.dataset.accRole===cloudSession.user.id){ await refreshCloud(); }   // on a changé son propre rôle
+  await renderAccess();
 });
+document.getElementById('accList').addEventListener('click', async e=>{
+  const b=e.target.closest('button[data-acc-rm]'); if(!b) return;
+  if(!confirm('Retirer l’accès de cette personne ? Elle ne pourra plus se connecter à cet établissement (sa fiche employé est conservée).')) return;
+  const { data, error } = await sb.rpc('remove_member', { est: cloudMembership.establishment_id, target: b.dataset.accRm });
+  if(error || (data && data.ok===false)){ accMsg(error?error.message:(data.error||'Refusé.'), false); return; }
+  accMsg('Accès retiré ✓', true); await renderAccess();
+});
+function inviteMessage(role, code){
+  const estName=(cloudMembership.establishments&&cloudMembership.establishments.name)||state.restaurant||'l’établissement';
+  const intro = role==='owner' ? `Tu es invité(e) comme ADMIN de « ${estName} » sur l'app Oplaa.` : role==='manager' ? `Tu es invité(e) à co-gérer « ${estName} » sur l'app Oplaa (rôle Manager).` : `Tu es invité(e) à rejoindre « ${estName} » sur l'app Oplaa pour voir ton planning.`;
+  const after = role==='owner' ? `Tu auras accès à tout, y compris les salaires et la gestion des accès.` : role==='manager' ? `Tu pourras gérer le planning, les congés et l'équipe (les salaires restent privés).` : `Tu verras ton planning et pourras demander tes congés.`;
+  return `${intro}\n\n1) Installe ou ouvre l'app Oplaa\n2) Écran d'accueil → « Je suis un employé » → « Créer un compte »\n3) Entre ce code d'invitation : ${code}\n\n${after}`;
+}
+document.getElementById('accInvGo').addEventListener('click', async ()=>{
+  const role=document.getElementById('accInvRole').value, empLocal=document.getElementById('accInvEmp').value;
+  const box=document.getElementById('accInvBox'); box.classList.remove('hidden'); box.innerHTML='<span class="text-slate-500 text-sm">Génération du code…</span>';
+  let employee_id=null;
+  try{ const p=await pushToCloud(); if(p.error) throw new Error(p.error); if(empLocal) employee_id=_localToRemoteEmp[empLocal]||null; }catch(e){ box.innerHTML='<span class="text-red-600 text-sm">Synchronisation impossible : '+e.message+'</span>'; return; }
+  const code=randCode();
+  const { error } = await sb.from('invite_codes').insert({ establishment_id:cloudMembership.establishment_id, code, role, employee_id, created_by:cloudSession.user.id });
+  if(error){ box.innerHTML='<span class="text-red-600 text-sm">Impossible de générer le code : '+error.message+'</span>'; return; }
+  const msg=inviteMessage(role, code);
+  box.innerHTML=`<div class="text-xs font-bold uppercase tracking-wide text-teal-700 mb-1">Code ${ROLE_LABEL[role]} (usage unique)</div>
+    <div class="text-2xl font-extrabold tracking-[0.3em] text-teal-800 text-center bg-white border border-teal-200 rounded-lg py-2 mb-2">${code}</div>
+    <div class="grid grid-cols-2 gap-2">
+      <button type="button" id="accInvCopy" class="px-3 py-2 rounded-lg bg-white border border-slate-300 font-semibold text-sm hover:bg-slate-50">📋 Copier le message</button>
+      <a href="https://wa.me/?text=${encodeURIComponent(msg)}" target="_blank" rel="noopener" class="px-3 py-2 rounded-lg bg-[#25D366] text-white font-semibold text-sm text-center hover:brightness-95">🟢 WhatsApp</a>
+    </div>`;
+  document.getElementById('accInvCopy').addEventListener('click', async ()=>{ const ok=await copyText(msg); toast(ok?'Message copié ✓':'Copie impossible — copie le code à la main'); });
+});
+document.getElementById('btnAccess').addEventListener('click', openAccess);
 /* ============ SYNCHRONISATION CLOUD AUTOMATIQUE (patron) ============ */
 let _applyingRemote=false;                 // true pendant qu'on applique des données venues du cloud (évite l'écho pull→push)
 let _autoPushTimer=null, _autoPushBusy=false, _autoPushPending=false;

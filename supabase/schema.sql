@@ -117,7 +117,7 @@ create table if not exists invite_codes (
   id                uuid primary key default gen_random_uuid(),
   establishment_id  uuid not null references establishments(id) on delete cascade,
   code              text not null unique,
-  role              text not null default 'employee' check (role in ('manager','employee')),
+  role              text not null default 'employee' check (role in ('owner','manager','employee')),
   employee_id       uuid references employees(id) on delete set null,  -- lie à une fiche précise
   created_by        uuid not null references auth.users(id),
   used_by           uuid references auth.users(id),
@@ -168,6 +168,10 @@ alter table employees add column if not exists hours            numeric;
 alter table employees add column if not exists hours_unit       text default 'semaine' check (hours_unit in ('semaine','mois'));
 alter table employees add column if not exists contract_type    text;
 
+-- Accès & rôles (2026-10-21) : un code d'invitation peut aussi donner le rôle admin ('owner')
+alter table invite_codes drop constraint if exists invite_codes_role_check;
+alter table invite_codes add constraint invite_codes_role_check check (role in ('owner','manager','employee'));
+
 -- ─────────────────────────────────────────────────────────────────────────
 --  FONCTIONS D'AIDE (contrôle d'accès)
 -- ─────────────────────────────────────────────────────────────────────────
@@ -206,11 +210,16 @@ alter table timesheets       enable row level security;
 alter table invite_codes     enable row level security;
 alter table day_off_requests enable row level security;
 
--- establishments : les membres lisent ; seul le patron modifie
+-- establishments : les membres lisent ; les ADMINS (rôle 'owner', plusieurs possibles) font tout ;
+-- les managers peuvent mettre à jour les réglages (équipes, créneaux, règles, nom, logo) — c'est
+-- ce qui fait que leurs modifications se synchronisent. owner_id = créateur, informatif.
 drop policy if exists est_select on establishments;
 create policy est_select on establishments for select using (is_member(id));
 drop policy if exists est_owner_all on establishments;
-create policy est_owner_all on establishments for all using (owner_id = auth.uid()) with check (owner_id = auth.uid());
+drop policy if exists est_admin_all on establishments;
+create policy est_admin_all on establishments for all using (is_owner(id)) with check (is_owner(id));
+drop policy if exists est_staff_update on establishments;
+create policy est_staff_update on establishments for update using (is_staff(id)) with check (is_staff(id));
 
 -- memberships : on voit les membres de ses établissements ; le patron gère
 drop policy if exists mem_select on memberships;
@@ -247,9 +256,11 @@ create policy ts_staff_all on timesheets for all using (is_staff(establishment_i
 drop policy if exists ts_emp_select on timesheets;
 create policy ts_emp_select on timesheets for select using (is_member(establishment_id));
 
--- invite_codes : patron/manager seulement
+-- invite_codes : patron/manager seulement. Un manager ne peut créer que des codes EMPLOYÉ ;
+-- les codes manager/admin sont réservés aux admins (sinon un manager pourrait s'auto-promouvoir).
 drop policy if exists inv_staff_all on invite_codes;
-create policy inv_staff_all on invite_codes for all using (is_staff(establishment_id)) with check (is_staff(establishment_id));
+create policy inv_staff_all on invite_codes for all using (is_staff(establishment_id))
+  with check (is_staff(establishment_id) and (role = 'employee' or is_owner(establishment_id)));
 
 -- day_off_requests : l'employé crée/voit les siennes ; le staff voit/gère toutes
 drop policy if exists off_emp_insert on day_off_requests;
@@ -332,6 +343,61 @@ end;
 $$;
 
 grant execute on function create_establishment(text) to authenticated;
+
+-- ─────────────────────────────────────────────────────────────────────────
+--  ACCÈS & RÔLES (2026-10-21) — écran « Accès » de l'app
+--  Rôles : 'owner' = Admin (plusieurs possibles) · 'manager' · 'employee'
+-- ─────────────────────────────────────────────────────────────────────────
+
+-- Liste des membres d'un établissement (avec e-mail) — staff uniquement.
+create or replace function list_members(est uuid)
+returns table (user_id uuid, email text, role text, employee_id uuid, employee_name text, joined_at timestamptz)
+language sql stable security definer set search_path = public as $$
+  select m.user_id, u.email::text, m.role, m.employee_id, e.name, m.created_at
+  from memberships m
+  join auth.users u on u.id = m.user_id
+  left join employees e on e.id = m.employee_id
+  where m.establishment_id = est and is_staff(est)
+  order by case m.role when 'owner' then 0 when 'manager' then 1 else 2 end, u.email
+$$;
+grant execute on function list_members(uuid) to authenticated;
+
+-- Changer le rôle d'un membre — admin uniquement ; on ne peut jamais retirer le dernier admin.
+create or replace function set_member_role(est uuid, target uuid, new_role text)
+returns jsonb language plpgsql security definer set search_path = public as $$
+declare n_admins int; cur text;
+begin
+  if not is_owner(est) then return jsonb_build_object('ok', false, 'error', 'Réservé aux admins.'); end if;
+  if new_role not in ('owner','manager','employee') then return jsonb_build_object('ok', false, 'error', 'Rôle inconnu.'); end if;
+  select role into cur from memberships where establishment_id = est and user_id = target;
+  if cur is null then return jsonb_build_object('ok', false, 'error', 'Membre introuvable.'); end if;
+  if cur = 'owner' and new_role <> 'owner' then
+    select count(*) into n_admins from memberships where establishment_id = est and role = 'owner';
+    if n_admins <= 1 then return jsonb_build_object('ok', false, 'error', 'Impossible : il faut garder au moins un admin.'); end if;
+  end if;
+  update memberships set role = new_role where establishment_id = est and user_id = target;
+  return jsonb_build_object('ok', true);
+end;
+$$;
+grant execute on function set_member_role(uuid, uuid, text) to authenticated;
+
+-- Retirer l'accès d'un membre — admin uniquement ; jamais le dernier admin. La fiche employé reste.
+create or replace function remove_member(est uuid, target uuid)
+returns jsonb language plpgsql security definer set search_path = public as $$
+declare n_admins int; cur text;
+begin
+  if not is_owner(est) then return jsonb_build_object('ok', false, 'error', 'Réservé aux admins.'); end if;
+  select role into cur from memberships where establishment_id = est and user_id = target;
+  if cur is null then return jsonb_build_object('ok', false, 'error', 'Membre introuvable.'); end if;
+  if cur = 'owner' then
+    select count(*) into n_admins from memberships where establishment_id = est and role = 'owner';
+    if n_admins <= 1 then return jsonb_build_object('ok', false, 'error', 'Impossible : il faut garder au moins un admin.'); end if;
+  end if;
+  delete from memberships where establishment_id = est and user_id = target;
+  return jsonb_build_object('ok', true);
+end;
+$$;
+grant execute on function remove_member(uuid, uuid) to authenticated;
 
 -- ─────────────────────────────────────────────────────────────────────────
 --  TEMPS RÉEL (Supabase Realtime) — tables écoutées par l'app via
