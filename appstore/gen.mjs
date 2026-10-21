@@ -14,7 +14,7 @@ while(true){
   }
   shots.push(html.slice(start,j)); i=j;
 }
-const names=['1-planning','2-employe','3-feuille','4-suivi','5-conges'];
+const names=['1-planning','2-employe','3-feuille','4-suivi','5-conges','6-acces'];
 shots.forEach((shot,k)=>{
   const page=`<!doctype html><html><head><meta charset="utf8">
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
