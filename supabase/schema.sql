@@ -400,6 +400,32 @@ $$;
 grant execute on function remove_member(uuid, uuid) to authenticated;
 
 -- ─────────────────────────────────────────────────────────────────────────
+--  SUPPRESSION DE COMPTE in-app (exigence Apple) — bouton « Supprimer mon compte »
+--  Si l'utilisateur est le DERNIER admin d'un établissement, l'établissement part
+--  avec lui (cascade). S'il reste un autre admin, l'établissement lui est transféré.
+--  (Manquait dans ce fichier jusqu'au 2026-10-21 → était absent du projet recréé.)
+-- ─────────────────────────────────────────────────────────────────────────
+create or replace function delete_account()
+returns void language plpgsql security definer set search_path = public as $$
+declare me uuid := auth.uid(); e record; other uuid;
+begin
+  if me is null then raise exception 'Connexion requise'; end if;
+  for e in select id from establishments where owner_id = me loop
+    select m.user_id into other from memberships m
+      where m.establishment_id = e.id and m.role = 'owner' and m.user_id <> me limit 1;
+    if other is null then
+      delete from establishments where id = e.id;          -- dernier admin : tout est supprimé (cascade)
+    else
+      update establishments set owner_id = other where id = e.id;   -- un autre admin reprend
+    end if;
+  end loop;
+  delete from memberships where user_id = me;
+  delete from auth.users where id = me;
+end;
+$$;
+grant execute on function delete_account() to authenticated;
+
+-- ─────────────────────────────────────────────────────────────────────────
 --  TEMPS RÉEL (Supabase Realtime) — tables écoutées par l'app via
 --  postgres_changes avec le filtre `establishment_id=eq.<id>` :
 --    admin/manager  : day_off_requests (demandes en direct) + shifts/absences/notes/employees/establishments (co-édition)

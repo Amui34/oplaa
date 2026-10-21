@@ -1,15 +1,14 @@
 // Tests d'intégration — backend Supabase : comptes, RPC, et surtout les garanties RGPD/RLS
-// (un employé ne doit JAMAIS voir les salaires ni les infos de ses collègues).
+// (un employé ne doit JAMAIS voir les salaires ni les infos de ses collègues) + Accès & rôles.
 //
-// ⚠️ OPT-IN : `npm run test:int` (OPLAA_IT=1). Exclus de `npm test` depuis le 2026-10-17.
-// Prérequis : un projet Supabase avec « Confirm email » DÉSACTIVÉ (le signup doit renvoyer
-// un access_token). Le projet de PRODUCTION (kldkqxqbmxtdedzjoghw) l'a ACTIVÉ : y lancer
-// ces tests échouerait au signup ET consommerait le quota d'emails de confirmation.
-// → À utiliser uniquement contre un projet de test dédié (changer URL/ANON ci-dessous).
+// Cible : le PROJET DE TEST `rourjugjspqppjhrizxw` (ancien projet Oplaa recyclé — org noamadar-cloud),
+// « Confirm email » DÉSACTIVÉ (le signup renvoie un access_token). Ne jamais pointer sur la prod
+// (`kldkqxqbmxtdedzjoghw`, confirmation activée) : ça créerait des comptes et brûlerait le quota d'e-mails.
+// Les tests s'ignorent d'eux-mêmes si le projet de test est injoignable (en pause, hors ligne).
 import { describe, it, expect, beforeAll } from 'vitest';
 
-const URL = 'https://kldkqxqbmxtdedzjoghw.supabase.co';
-const ANON = 'sb_publishable_Ma29Syo4LkbtLLxIP4s9EA_8UIef3EL';
+const URL = 'https://rourjugjspqppjhrizxw.supabase.co';
+const ANON = 'sb_publishable_0YHzUC53GjuvekVfb8Azvg_Ze3fSUOF';
 const PW = 'TestOplaa!2026';
 const H = (tok) => ({ apikey: ANON, 'Content-Type': 'application/json', ...(tok ? { Authorization: `Bearer ${tok}` } : {}) });
 
@@ -30,10 +29,18 @@ async function uid(tok) { const r = await fetch(`${URL}/auth/v1/user`, { headers
 const stamp = Date.now();
 const ctx = {};
 
-describe('backend Supabase — comptes, RPC et confidentialité RLS', () => {
+const reachable = await fetch(`${URL}/auth/v1/health`, { headers: { apikey: ANON }, signal: AbortSignal.timeout(6000) }).then((r) => r.ok).catch(() => false);
+if (!reachable) console.warn('⏭  Projet Supabase de test injoignable → tests d’intégration ignorés.');
+
+describe.skipIf(!reachable)('backend Supabase — comptes, RPC, RLS et accès', () => {
   beforeAll(async () => {
     ctx.ownerTok = await signup(`it_owner_${stamp}@oplaa-test.fr`);
     ctx.empTok = await signup(`it_emp_${stamp}@oplaa-test.fr`);
+    if (!ctx.ownerTok || !ctx.empTok) throw new Error('Le signup ne renvoie pas de token : « Confirm email » est activé sur la cible — ce n’est pas le projet de test.');
+    // Les RPC « Accès & rôles » existent-elles sur ce projet ? (schema.sql ≥ 2026-10-21)
+    const probe = await rpc('list_members', { est: '00000000-0000-0000-0000-000000000000' }, ctx.ownerTok);
+    ctx.hasAccess = probe.status !== 404;
+    if (!ctx.hasAccess) console.warn('⏭  RPC Accès & rôles absentes du projet de test (rejouer schema.sql) → tests Accès ignorés.');
   }, 30000);
 
   it('le patron crée un établissement (RPC create_establishment)', async () => {
@@ -95,6 +102,63 @@ describe('backend Supabase — comptes, RPC et confidentialité RLS', () => {
     const r = await rest(`invite_codes?establishment_id=eq.${ctx.est}`, ctx.empTok);
     expect(r.json.length).toBe(0);
   }, 20000);
+
+  it("accès : l'admin voit la liste des membres avec e-mails (list_members)", async ({ skip }) => {
+    if (!ctx.hasAccess) skip();
+    const r = await rpc('list_members', { est: ctx.est }, ctx.ownerTok);
+    expect(r.status).toBe(200);
+    const emails = r.json.map((m) => m.email);
+    expect(emails).toContain(`it_owner_${stamp}@oplaa-test.fr`);
+    expect(emails).toContain(`it_emp_${stamp}@oplaa-test.fr`);
+    expect(r.json.find((m) => m.email === `it_emp_${stamp}@oplaa-test.fr`)?.role).toBe('employee');
+  }, 20000);
+
+  it("🔒 accès : un employé ne voit PAS la liste des membres", async ({ skip }) => {
+    if (!ctx.hasAccess) skip();
+    const r = await rpc('list_members', { est: ctx.est }, ctx.empTok);
+    expect(r.status).toBe(200);
+    expect(r.json.length).toBe(0);
+  }, 20000);
+
+  it("🔒 accès : un employé ne peut pas changer les rôles", async ({ skip }) => {
+    if (!ctx.hasAccess) skip();
+    const ownerId = await uid(ctx.ownerTok);
+    const r = await rpc('set_member_role', { est: ctx.est, target: ownerId, new_role: 'employee' }, ctx.empTok);
+    expect(r.json?.ok).toBe(false);
+  }, 20000);
+
+  it("accès : impossible de rétrograder le dernier admin", async ({ skip }) => {
+    if (!ctx.hasAccess) skip();
+    const ownerId = await uid(ctx.ownerTok);
+    const r = await rpc('set_member_role', { est: ctx.est, target: ownerId, new_role: 'manager' }, ctx.ownerTok);
+    expect(r.json?.ok).toBe(false);
+  }, 20000);
+
+  it("accès : l'admin promeut l'employé manager, puis le remet employé", async ({ skip }) => {
+    if (!ctx.hasAccess) skip();
+    const empId = await uid(ctx.empTok);
+    let r = await rpc('set_member_role', { est: ctx.est, target: empId, new_role: 'manager' }, ctx.ownerTok);
+    expect(r.json?.ok).toBe(true);
+    // Devenu manager, il voit les employés… mais PAS les salaires (l'app ne demande pas la colonne rate) — ici on vérifie l'accès table
+    const emps = await rest(`employees?select=name&establishment_id=eq.${ctx.est}`, ctx.empTok);
+    expect(emps.status).toBe(200);
+    expect(emps.json.length).toBeGreaterThan(0);
+    r = await rpc('set_member_role', { est: ctx.est, target: empId, new_role: 'employee' }, ctx.ownerTok);
+    expect(r.json?.ok).toBe(true);
+  }, 30000);
+
+  it("🔒 accès : un manager ne peut créer QUE des codes employé", async ({ skip }) => {
+    if (!ctx.hasAccess) skip();
+    const empId = await uid(ctx.empTok);
+    await rpc('set_member_role', { est: ctx.est, target: empId, new_role: 'manager' }, ctx.ownerTok);
+    const bad = await rest('invite_codes', ctx.empTok, { method: 'POST', headers: { Prefer: 'return=representation' },
+      body: JSON.stringify([{ establishment_id: ctx.est, code: 'MG' + String(stamp).slice(-6), role: 'manager', created_by: empId }]) });
+    expect(bad.status).toBeGreaterThanOrEqual(400);   // refusé par la RLS
+    const ok = await rest('invite_codes', ctx.empTok, { method: 'POST', headers: { Prefer: 'return=representation' },
+      body: JSON.stringify([{ establishment_id: ctx.est, code: 'EM' + String(stamp).slice(-6), role: 'employee', created_by: empId }]) });
+    expect(ok.status).toBeLessThan(300);
+    await rpc('set_member_role', { est: ctx.est, target: empId, new_role: 'employee' }, ctx.ownerTok);
+  }, 30000);
 
   it('suppression de compte in-app (RPC delete_account)', async () => {
     const throwaway = await signup(`it_del_${stamp}@oplaa-test.fr`);

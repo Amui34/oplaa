@@ -9,7 +9,7 @@
     "sync:ios": "cap copy ios",
     "test": "TZ=UTC vitest run",
     "test:unit": "TZ=UTC vitest run tests/unit",
-    "test:int": "OPLAA_IT=1 TZ=UTC vitest run tests/integration",
+    "test:int": "TZ=UTC vitest run tests/integration",
     "test:e2e": "playwright test"
   },
   "keywords": ["planning", "restaurant", "équipe", "shift", "capacitor", "ios"],
