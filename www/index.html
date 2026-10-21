@@ -4055,6 +4055,24 @@ async function refreshCloud(){
 /* ============ TEMPS RÉEL (Supabase Realtime) ============ */
 let _rtChannel=null, _rtTimer=null;
 function stopRealtime(){ if(_rtChannel){ try{ sb.removeChannel(_rtChannel); }catch(e){} _rtChannel=null; } clearTimeout(_rtTimer); }
+// ── Co-édition (admins/managers) : récupération déclenchée par le temps réel, mais seulement quand c'est sûr.
+let _rtDirty=false, _rtPulling=false;
+function anyModalOpen(){ return !!document.querySelector('[id$="Modal"].flex'); }
+function remoteChanged(retry){
+  if(!cloudMembership || !['owner','manager'].includes(cloudMembership.role)) return;
+  if(!retry && Date.now()-_lastPushAt<2500) return;          // écho de notre propre envoi → rien à faire
+  _rtDirty=true;
+  clearTimeout(_rtTimer);
+  _rtTimer=setTimeout(async ()=>{
+    if(_rtPulling) return;
+    // Pas pendant un envoi, pas si des modifs locales attendent d'être envoyées, pas pendant une saisie (modale ouverte)
+    if(_autoPushBusy || _autoPushPending || _autoPushTimer || anyModalOpen()) return;   // on réessaiera (fin d'envoi / tick)
+    _rtPulling=true;
+    try{ const r=await pullForOwner(); if(r && !r.error){ _rtDirty=false; setSyncStatus('ok'); toast('Mis à jour par un collègue ✓'); } }
+    catch(e){} finally{ _rtPulling=false; }
+  }, retry?300:1500);
+}
+setInterval(()=>{ if(_rtDirty && !_rtPulling) remoteChanged(true); }, 5000);   // réessai quand la saisie/l'envoi est terminé
 function startRealtime(){
   stopRealtime();
   if(!(sb && cloudMembership && typeof sb.channel==='function')) return;
@@ -4063,8 +4081,15 @@ function startRealtime(){
   try{
     let ch=sb.channel('oplaa-'+est);
     if(isStaff){
-      // Patron : les demandes de congés arrivent en direct (sans toucher au planning en cours d'édition)
+      // Admin/manager : les demandes de congés arrivent en direct
       ch=ch.on('postgres_changes', sub('day_off_requests'), async ()=>{ try{ await loadOffRequests(); if(!offInboxModal.classList.contains('hidden')) renderOffInbox(); }catch(e){} });
+      // Co-édition : quand un collègue modifie le planning / l'équipe / les réglages, on récupère — jamais pendant une saisie
+      const rc=()=>remoteChanged(false);
+      ch=ch.on('postgres_changes', sub('shifts'), rc)
+           .on('postgres_changes', sub('absences'), rc)
+           .on('postgres_changes', sub('notes'), rc)
+           .on('postgres_changes', sub('employees'), rc)
+           .on('postgres_changes', {event:'UPDATE',schema:'public',table:'establishments',filter:`id=eq.${est}`}, rc);
     } else {
       // Employé (lecture seule) : son planning se met à jour tout seul quand le patron le change
       const pull=()=>{ clearTimeout(_rtTimer); _rtTimer=setTimeout(async ()=>{ if(_autoPushBusy) return; try{ await pullForEmployee(); setSyncStatus('ok'); }catch(e){} }, 800); };
@@ -4112,14 +4137,19 @@ async function pushToCloud(){
     // Réconcilie : supprime côté cloud les services retirés localement
     const localIds=new Set(state.shifts.map(s=>s.id));
     const { data:remShifts } = await sb.from('shifts').select('id,local_id').eq('establishment_id', est);
-    const del=(remShifts||[]).filter(r=>r.local_id && !localIds.has(r.local_id)).map(r=>r.id);
+    // Co-édition : on ne supprime que les services qu'on avait VUS (connus) et retirés localement.
+    // Un service créé par un collègue depuis notre dernière récupération est inconnu → jamais supprimé par erreur.
+    const del=(remShifts||[]).filter(r=>r.local_id && !localIds.has(r.local_id) && _knownShiftLocalIds.has(r.local_id)).map(r=>r.id);
     if(del.length) await sb.from('shifts').delete().in('id', del);
     _localToRemoteEmp = map;
+    state.shifts.forEach(x=>_knownShiftLocalIds.add(x.id));
+    _lastPushAt=Date.now();   // pour ignorer l'écho temps réel de notre propre envoi
     logAccess('push');
     return {ok:true};
   }catch(e){ return {error:String(e.message||e)}; }
 }
 let _localToRemoteEmp = {};
+let _knownShiftLocalIds = new Set(), _lastPushAt = 0;   // co-édition entre managers
 // RGPD : journal des accès (best-effort ; silencieux si la table n'existe pas encore)
 async function logAccess(action){
   try{ if(sb && cloudSession && cloudMembership) await sb.from('access_log').insert({ establishment_id: cloudMembership.establishment_id, action }); }catch(e){}
@@ -4158,6 +4188,7 @@ async function pullForOwner(){
     state.employees = (emps||[]).map(r=>{ const lid=r.local_id||r.id; remoteToLocal[r.id]=lid; return { id:lid, name:r.name, role:r.role||'', contract:r.contract||'', rate:r.rate||0, phone:r.phone||'', email:r.email||'', archived:!!r.archived, compliance:Object.assign(emptyCompliance(), r.compliance||{}), congesAllowance:(r.conges_allowance!=null?r.conges_allowance:25), hours:(r.hours!=null?r.hours:undefined), hoursUnit:(r.hours_unit==='mois'?'mois':'semaine'), contractType:r.contract_type||'' }; });
     const { data:shifts } = await sb.from('shifts').select('*').eq('establishment_id', est);
     state.shifts = (shifts||[]).map(s=>({ id:s.local_id||s.id, week:s.week, day:s.day, team:s.team, period:s.period, start:s.start_t, end:s.end_t, empId: s.employee_id?(remoteToLocal[s.employee_id]||''):'', extraName:s.extra_name||'', realStart:s.real_start||'', realEnd:s.real_end||'', breaks:Array.isArray(s.breaks)?s.breaks:[], note:s.note||'' }));
+    _knownShiftLocalIds = new Set((shifts||[]).map(s=>s.local_id||s.id));   // ce qu'on a VU du cloud (co-édition)
     const { data:abs } = await sb.from('absences').select('*').eq('establishment_id', est);
     state.absences = (abs||[]).map(a=>({ id:a.local_id||a.id, week:a.week, day:a.day, empId:remoteToLocal[a.employee_id]||'', type:a.type })).filter(a=>a.empId);
     const { data:notes } = await sb.from('notes').select('*').eq('establishment_id', est);
@@ -4286,6 +4317,7 @@ function scheduleAutoPush(){
   _autoPushTimer=setTimeout(runAutoPush, 1500);   // on regroupe les modifications rapprochées
 }
 async function runAutoPush(){
+  _autoPushTimer=null;
   if(!canAutoPush()) return;
   if(_autoPushBusy){ _autoPushPending=true; return; }
   _autoPushBusy=true; setSyncStatus('syncing');
@@ -4293,6 +4325,7 @@ async function runAutoPush(){
   _autoPushBusy=false;
   setSyncStatus(r && r.error ? 'error' : 'ok');
   if(_autoPushPending){ _autoPushPending=false; scheduleAutoPush(); }
+  else if(_rtDirty) remoteChanged(true);   // un collègue a modifié pendant notre envoi → on récupère maintenant
 }
 
 /* ============ SORTIE DÉMO / RETOUR À L'ACCUEIL ============ */

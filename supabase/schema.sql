@@ -402,14 +402,14 @@ grant execute on function remove_member(uuid, uuid) to authenticated;
 -- ─────────────────────────────────────────────────────────────────────────
 --  TEMPS RÉEL (Supabase Realtime) — tables écoutées par l'app via
 --  postgres_changes avec le filtre `establishment_id=eq.<id>` :
---    patron/manager : day_off_requests (badge + boîte de demandes en direct)
+--    admin/manager  : day_off_requests (demandes en direct) + shifts/absences/notes/employees/establishments (co-édition)
 --    employé        : shifts, absences, notes (son planning se met à jour seul)
 --  Idempotent : ré-exécutable sans erreur.
 -- ─────────────────────────────────────────────────────────────────────────
 do $$
 declare t text;
 begin
-  foreach t in array array['shifts','absences','notes','day_off_requests'] loop
+  foreach t in array array['shifts','absences','notes','day_off_requests','employees','establishments'] loop
     if not exists (
       select 1 from pg_publication_tables
       where pubname = 'supabase_realtime' and schemaname = 'public' and tablename = t
@@ -426,6 +426,7 @@ alter table shifts           replica identity full;
 alter table absences         replica identity full;
 alter table notes            replica identity full;
 alter table day_off_requests replica identity full;
+alter table employees        replica identity full;   -- co-édition : l'équipe aussi
 
 -- ============================================================================
 --  FIN DU SCHÉMA. L'app est branchée (www/supabase-config.js : URL + clé
