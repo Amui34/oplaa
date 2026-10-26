@@ -426,6 +426,47 @@ $$;
 grant execute on function delete_account() to authenticated;
 
 -- ─────────────────────────────────────────────────────────────────────────
+--  OPLAA PRO : CODES GRATUITS (« code maison », 2026-10-26)
+--  Un code (ex. BIVOUAK) offre Oplaa Pro à un établissement pour N mois, ou à vie
+--  (months = null). Les codes se créent dans le Table Editor (table licence_codes) ;
+--  ils ne sont JAMAIS lisibles par l'app (aucune politique de lecture) : la saisie
+--  passe par la fonction redeem_licence, qui vérifie tout côté serveur.
+-- ─────────────────────────────────────────────────────────────────────────
+create table if not exists licence_codes (
+  code        text primary key,                       -- saisi en MAJUSCULES, sans espaces
+  label       text,                                   -- mémo interne (« partenaires », « testeurs »…)
+  months      int,                                    -- null = à vie
+  max_uses    int  not null default 1,
+  uses        int  not null default 0,
+  expires_at  timestamptz,                            -- date limite pour UTILISER le code (optionnel)
+  created_at  timestamptz not null default now()
+);
+alter table licence_codes enable row level security;  -- aucune politique → invisible aux clients
+
+alter table establishments add column if not exists pro_until  timestamptz;   -- null = pas Pro ; 'infinity' = à vie
+alter table establishments add column if not exists pro_source text;          -- 'code:BIVOUAK' | 'apple'
+
+create or replace function redeem_licence(est uuid, p_code text)
+returns jsonb language plpgsql security definer set search_path = public as $$
+declare c licence_codes; cur timestamptz; base timestamptz; nouveau timestamptz;
+begin
+  if not is_owner(est) then return jsonb_build_object('ok', false, 'error', 'Réservé aux admins.'); end if;
+  select * into c from licence_codes where code = upper(regexp_replace(coalesce(p_code,''), '\s', '', 'g'));
+  if not found then return jsonb_build_object('ok', false, 'error', 'Code inconnu.'); end if;
+  if c.expires_at is not null and c.expires_at < now() then return jsonb_build_object('ok', false, 'error', 'Ce code a expiré.'); end if;
+  if c.uses >= c.max_uses then return jsonb_build_object('ok', false, 'error', 'Ce code a déjà été utilisé.'); end if;
+  select pro_until into cur from establishments where id = est;
+  if cur = 'infinity' then return jsonb_build_object('ok', false, 'error', 'Cet établissement a déjà Oplaa Pro à vie.'); end if;
+  if c.months is null then nouveau := 'infinity';
+  else base := greatest(coalesce(cur, now()), now()); nouveau := base + make_interval(months => c.months); end if;
+  update establishments set pro_until = nouveau, pro_source = 'code:' || c.code where id = est;
+  update licence_codes set uses = uses + 1 where code = c.code;
+  return jsonb_build_object('ok', true, 'pro_until', nouveau, 'months', c.months);
+end;
+$$;
+grant execute on function redeem_licence(uuid, text) to authenticated;
+
+-- ─────────────────────────────────────────────────────────────────────────
 --  TEMPS RÉEL (Supabase Realtime) — tables écoutées par l'app via
 --  postgres_changes avec le filtre `establishment_id=eq.<id>` :
 --    admin/manager  : day_off_requests (demandes en direct) + shifts/absences/notes/employees/establishments (co-édition)

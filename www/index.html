@@ -698,6 +698,14 @@
       <div class="manager-only rounded-xl bg-teal-50 border border-teal-200 text-teal-800 text-xs px-3 py-2 mb-2 flex items-center gap-2"><span class="ic shrink-0" data-ic="cloud" data-ic-size="15"></span><span>Synchronisation <b>automatique</b> : tes employés voient le planning à jour dès que tu le modifies.</span></div>
       <button type="button" id="cloudSync" class="manager-only w-full inline-flex items-center justify-center gap-2 px-4 py-3 rounded-xl bg-teal-600 text-white font-semibold hover:bg-teal-700 mb-2"><span class="ic" data-ic="cloud" data-ic-size="18"></span>Synchroniser maintenant</button>
       <button type="button" id="cloudPull" class="manager-only w-full inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-white border border-slate-300 font-semibold hover:bg-slate-50 mb-2"><span class="ic" data-ic="cloudDown" data-ic-size="18"></span>Récupérer mes données du cloud</button>
+      <div id="proBox" class="owner-only rounded-xl border border-amber-200 bg-amber-50 p-3 mb-2">
+        <div id="proStatus" class="text-sm font-semibold text-amber-800 mb-2">Oplaa Pro</div>
+        <div class="flex gap-2">
+          <input type="text" id="proCode" placeholder="J'ai un code (ex. BIVOUAK)" autocapitalize="characters" class="flex-1 min-w-0 border border-amber-300 rounded-lg px-3 py-2 text-sm uppercase tracking-widest bg-white" />
+          <button type="button" id="proRedeem" class="px-3 py-2 rounded-lg bg-amber-600 text-white font-semibold text-sm hover:bg-amber-700">Activer</button>
+        </div>
+        <p id="proMsg" class="text-xs mt-2 hidden"></p>
+      </div>
       <button type="button" id="btnEstb" class="w-full inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-white border border-slate-300 font-semibold hover:bg-slate-50 mb-2">🏪 Mes établissements…</button>
       <button type="button" id="btnAccess" class="manager-only w-full inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-white border border-teal-300 text-teal-700 font-semibold hover:bg-teal-50 mb-2">👥 Accès &amp; rôles (inviter, promouvoir…)</button>
       <p id="cloudSyncMsg" class="text-sm mb-3 hidden"></p>
@@ -4066,6 +4074,7 @@ async function refreshCloud(){
   }
   if(cloudMembership) startRealtime();   // temps réel
   _membersCache=null; if(typeof renderManageBanner==='function') renderManageBanner();
+  if(typeof renderProBox==='function') renderProBox();
   setSyncStatus(canAutoPush() ? 'ok' : null);   // indicateur d'en-tête : « Synchronisé ✓ » pour le patron connecté
 }
 
@@ -4177,7 +4186,7 @@ async function pullForEmployee(){
   if(!sb || !cloudMembership) return;
   const est = cloudMembership.establishment_id, myId = cloudMembership.employee_id;
   const { data:e } = await sb.from('establishments').select('*').eq('id', est).maybeSingle();
-  if(e){ state.restaurant=e.name||state.restaurant; if(e.teams&&e.teams.length)state.teams=e.teams; if(e.periods&&e.periods.length)state.periods=e.periods; if(e.compliance)state.complianceItems=e.compliance; state.teamWord=e.team_word||state.teamWord; state.accent=e.accent||state.accent; state.logo=e.logo||''; state.empScope=e.emp_scope||'all'; state.profile=e.profile||state.profile; syncGlobals(); setAccent(state.accent); applyLogo(); }
+  if(e){ state.restaurant=e.name||state.restaurant; if(e.teams&&e.teams.length)state.teams=e.teams; if(e.periods&&e.periods.length)state.periods=e.periods; if(e.compliance)state.complianceItems=e.compliance; state.teamWord=e.team_word||state.teamWord; state.accent=e.accent||state.accent; state.logo=e.logo||''; state.empScope=e.emp_scope||'all'; state.profile=e.profile||state.profile; state.proUntil=e.pro_until||null; state.proSource=e.pro_source||null; syncGlobals(); setAccent(state.accent); applyLogo(); }
   const { data:team } = await sb.from('team_members_public').select('*').eq('establishment_id', est);
   state.employees = (team||[]).map(t=>({ id:t.id, name:t.name, role:t.role, contract:'', rate:0, phone:'', email:'', archived:!!t.archived, compliance:{} }));
   const { data:shifts } = await sb.from('shifts').select('*').eq('establishment_id', est);
@@ -4196,7 +4205,7 @@ async function pullForOwner(){
   const est = cloudMembership.establishment_id;
   try{
     const { data:e } = await sb.from('establishments').select('*').eq('id', est).maybeSingle();
-    if(e){ state.restaurant=e.name||state.restaurant; if(e.teams&&e.teams.length)state.teams=e.teams; if(e.periods&&e.periods.length)state.periods=e.periods; if(e.compliance&&e.compliance.length)state.complianceItems=e.compliance; state.teamWord=e.team_word||state.teamWord; state.accent=e.accent||state.accent; state.logo=e.logo||''; state.empScope=e.emp_scope||'all'; state.profile=e.profile||state.profile; }
+    if(e){ state.restaurant=e.name||state.restaurant; if(e.teams&&e.teams.length)state.teams=e.teams; if(e.periods&&e.periods.length)state.periods=e.periods; if(e.compliance&&e.compliance.length)state.complianceItems=e.compliance; state.teamWord=e.team_word||state.teamWord; state.accent=e.accent||state.accent; state.logo=e.logo||''; state.empScope=e.emp_scope||'all'; state.profile=e.profile||state.profile; state.proUntil=e.pro_until||null; state.proSource=e.pro_source||null; }
     syncGlobals();
     const remoteToLocal={};
     // Manager : on ne récupère PAS la colonne « rate » (taux) → les salaires ne quittent pas le serveur
@@ -4311,6 +4320,23 @@ document.getElementById('accInvGo').addEventListener('click', async ()=>{
   document.getElementById('accInvCopy').addEventListener('click', async ()=>{ const ok=await copyText(msg); toast(ok?'Message copié ✓':'Copie impossible — copie le code à la main'); });
 });
 document.getElementById('btnAccess').addEventListener('click', openAccess);
+// ── Oplaa Pro : statut + code gratuit (admins)
+function renderProBox(){
+  const st=document.getElementById('proStatus'); if(!st) return;
+  const lbl=proLabel();
+  st.textContent = lbl ? ('✅ '+lbl) : (SUBSCRIPTION_ENABLED ? 'Oplaa Pro — essai : '+trialDaysLeft()+' jour(s) restant(s)' : 'Oplaa Pro — un code partenaire ? Entre-le ici.');
+  const box=document.getElementById('proBox'); if(box) box.classList.toggle('hidden', !isAdmin());
+}
+document.getElementById('proRedeem').addEventListener('click', async ()=>{
+  const code=(document.getElementById('proCode').value||'').trim(), msg=document.getElementById('proMsg');
+  if(!code){ return; }
+  if(!(sb && cloudMembership && isAdmin())){ msg.textContent='Connecte-toi en admin d’abord.'; msg.className='text-xs mt-2 text-red-600'; return; }
+  msg.textContent='Vérification…'; msg.className='text-xs mt-2 text-slate-500';
+  const { data, error } = await sb.rpc('redeem_licence', { est: cloudMembership.establishment_id, p_code: code });
+  if(error || !data || data.ok===false){ msg.textContent=error?error.message:(data&&data.error)||'Refusé.'; msg.className='text-xs mt-2 text-red-600'; return; }
+  state.proUntil=data.pro_until; state.proSource='code'; saveQuiet(); renderProBox();
+  document.getElementById('proCode').value=''; msg.textContent='🎉 '+proLabel(); msg.className='text-xs mt-2 text-teal-700'; toast('Oplaa Pro activé 🎉');
+});
 
 // ── « Modèles & duplication » : une seule entrée de menu pour trois outils
 const dupModal=document.getElementById('dupModal');
@@ -4563,8 +4589,13 @@ function trialDaysLeft(){
 }
 function trialActive(){ return trialDaysLeft() > 0; }
 
+// Oplaa Pro offert via un code (ou activé côté serveur) : state.proUntil vient de l'établissement cloud
+function proUntilMs(){ const v=state&&state.proUntil; if(!v) return 0; if(v==='infinity') return Infinity; const t=Date.parse(v); return isNaN(t)?0:t; }
+function proFromCloud(){ return proUntilMs() > Date.now(); }
+function proLabel(){ const m=proUntilMs(); if(!(m>Date.now())) return ''; if(m===Infinity) return 'Oplaa Pro offert — à vie'; return 'Oplaa Pro offert jusqu\'au '+new Date(m).toLocaleDateString('fr-FR',{day:'numeric',month:'long',year:'numeric'}); }
 function isPro(){
   if(!SUBSCRIPTION_ENABLED) return true;                 // abonnement pas encore activé → tout est libre
+  if(proFromCloud()) return true;                        // code gratuit (ou activation serveur)
   if(proState.source==='subscribed' && proState.active) return true;
   return trialActive();
 }
