@@ -168,7 +168,7 @@
     <button id="welcomeEmploye" class="w-full inline-flex items-center justify-center gap-2 px-5 py-4 rounded-2xl bg-white border border-slate-300 text-slate-800 font-bold text-lg hover:bg-slate-50"><span class="ic" data-ic="user" data-ic-size="22"></span>Je suis employé — j'ai un code</button>
     <button id="welcomeDemo" hidden class="w-full inline-flex items-center justify-center gap-2 px-5 py-3 rounded-2xl text-slate-500 font-semibold hover:bg-slate-50 border border-dashed border-slate-300"><span class="ic" data-ic="bulb" data-ic-size="18"></span>Voir une démo (données d'exemple)</button>
   </div>
-  <p class="text-slate-400 text-xs mt-6 max-w-xs">Tu pourras te connecter à ton compte à tout moment depuis le menu Données.</p>
+  <p class="text-slate-400 text-xs mt-6 max-w-xs">Tu pourras te connecter à ton compte à tout moment depuis « ⋯ Menu ».</p>
 </div>
 
 <!-- ============ BANDEAU MODE DÉMO ============ -->
@@ -204,28 +204,17 @@
     <button id="btnPrint" class="hidden lg:inline-flex ic-btn px-3 py-2 rounded-lg btn-ink font-semibold text-sm"><span class="ic" data-ic="print" data-ic-size="16"></span>Imprimer</button>
     <span id="syncStatus" class="hidden sm:inline text-[11px] font-semibold text-teal-600"></span>
     <div class="relative shrink-0">
-      <button id="btnData" class="px-3 py-2 rounded-lg bg-white border border-slate-300 font-semibold hover:bg-slate-50 text-sm">Données</button>
+      <button id="btnData" class="px-3 py-2 rounded-lg bg-white border border-slate-300 font-semibold hover:bg-slate-50 text-sm">⋯ Menu</button>
       <div id="dataMenu" class="hidden absolute right-0 mt-1 w-64 max-h-[75vh] overflow-y-auto bg-white border border-slate-200 rounded-xl shadow-lg py-1.5 z-40 text-slate-700 text-sm">
-        <!-- COMPTE -->
-        <div class="px-4 pt-1 pb-0.5 text-[10px] font-bold uppercase tracking-wider text-slate-400">Compte</div>
         <button id="btnCloud" class="mi w-full text-left px-4 py-2 hover:bg-slate-50"><span class="ic" data-ic="cloud"></span><span id="btnCloudLabel">Mon compte (connexion)</span></button>
-        <button id="btnEstb" class="mi w-full text-left px-4 py-2 hover:bg-slate-50"><span class="ic" data-ic="building"></span>Mes établissements…</button>
-        <button id="btnOffInbox" class="mi w-full text-left px-4 py-2 hover:bg-slate-50 hidden"><span class="ic" data-ic="holiday"></span>Demandes de congés<span id="offBadge" class="hidden ml-auto text-[11px] font-bold bg-rose-500 text-white rounded-full px-2 py-0.5 leading-none">0</span></button>
-        <div class="border-t border-slate-100 my-1"></div>
-        <!-- PLANNING -->
-        <div class="px-4 pt-1 pb-0.5 text-[10px] font-bold uppercase tracking-wider text-slate-400">Planning</div>
         <div class="lg:hidden">
           <button id="btnEmailM" class="mi w-full text-left px-4 py-2 hover:bg-slate-50"><span class="ic" data-ic="send"></span>Envoyer le planning</button>
           <button id="btnPrintM" class="mi w-full text-left px-4 py-2 hover:bg-slate-50"><span class="ic" data-ic="print"></span>Imprimer / PDF</button>
         </div>
-        <button id="btnUndo" class="mi w-full text-left px-4 py-2 hover:bg-slate-50"><span class="ic" data-ic="undo"></span>Annuler la dernière modification</button>
-        <button id="dupWeek" class="mi w-full text-left px-4 py-2 hover:bg-slate-50"><span class="ic" data-ic="copy"></span>Dupliquer la semaine précédente</button>
-        <button id="btnTemplates" class="mi w-full text-left px-4 py-2 hover:bg-slate-50"><span class="ic" data-ic="save"></span>Modèles de semaine…</button>
-        <button id="btnCopyPlan" class="mi w-full text-left px-4 py-2 hover:bg-slate-50"><span class="ic" data-ic="copy"></span>Copier un planning…</button>
-        <button id="btnHistory" class="mi w-full text-left px-4 py-2 hover:bg-slate-50"><span class="ic" data-ic="history"></span>Historique / versions…</button>
-        <div class="border-t border-slate-100 my-1"></div>
-        <!-- RÉGLAGES (tout le reste est dans la fenêtre) -->
-        <button id="btnSettings" class="mi w-full text-left px-4 py-2 hover:bg-slate-50 font-semibold"><span class="ic" data-ic="settings"></span>Réglages &amp; plus…</button>
+        <button id="btnHistory" class="mi w-full text-left px-4 py-2 hover:bg-slate-50"><span class="ic" data-ic="history"></span>Historique &amp; annuler…</button>
+        <button id="btnDup" class="mi w-full text-left px-4 py-2 hover:bg-slate-50"><span class="ic" data-ic="copy"></span>Modèles &amp; duplication…</button>
+        <button id="btnSettings" class="mi w-full text-left px-4 py-2 hover:bg-slate-50"><span class="ic" data-ic="settings"></span>Réglages &amp; plus…</button>
+        <button id="btnGuide" class="mi w-full text-left px-4 py-2 hover:bg-slate-50"><span class="ic" data-ic="bulb"></span>Aide (guide de démarrage)</button>
         <div class="mi px-4 py-1.5 text-[10px] text-emerald-600 leading-snug"><span class="ic" data-ic="cloud" data-ic-size="13" style="align-self:flex-start;margin-top:1px"></span><span>Tout est enregistré et synchronisé automatiquement.</span></div>
         <div class="px-4 pt-0.5 pb-1.5 text-[10px] text-slate-300">Oplaa v1.0 · © 2026 Noa Madar</div>
       </div>
@@ -280,6 +269,7 @@
         <button data-group="employe" class="group-btn px-3 py-1.5 rounded-md">Par employé</button>
       </div>
       <!-- Mettre un employé en évidence -->
+      <button id="btnOffInbox" class="hidden inline-flex items-center gap-1.5 border border-rose-200 bg-rose-50 text-rose-700 rounded-lg px-3 py-1.5 text-sm font-semibold hover:bg-rose-100">🌴 Demandes de congés<span id="offBadge" class="hidden text-[11px] font-bold bg-rose-500 text-white rounded-full px-2 py-0.5 leading-none">0</span></button>
       <select id="empFocus" class="ml-auto border border-slate-300 rounded-lg px-2 py-1.5 text-sm bg-white max-w-[180px]"><option value="">👤 Voir un employé…</option></select>
     </div>
 
@@ -326,6 +316,14 @@
     <div class="no-print flex flex-wrap items-center gap-3 mb-4">
       <h2 class="text-lg font-extrabold text-slate-900">Équipe</h2>
       <input type="search" id="empSearch" placeholder="🔍 Rechercher un employé…" class="ml-auto w-full sm:w-64 border border-slate-300 rounded-lg px-3 py-2 text-sm" />
+    </div>
+    <div id="manageBanner" class="no-print manager-only rounded-2xl border border-teal-200 bg-teal-50 px-4 py-3 mb-4 flex flex-wrap items-center gap-3">
+      <div class="flex-1 min-w-[220px]">
+        <div class="text-[11px] font-bold uppercase tracking-wide text-teal-700">👥 Qui gère avec vous</div>
+        <div id="manageList" class="text-sm text-slate-700 mt-0.5">—</div>
+      </div>
+      <button type="button" id="btnInviteTeam" class="px-4 py-2 rounded-xl bg-teal-600 text-white font-semibold text-sm hover:bg-teal-700">＋ Inviter quelqu'un</button>
+      <button type="button" id="btnManageAccess" class="px-3 py-2 rounded-xl bg-white border border-teal-300 text-teal-700 font-semibold text-sm hover:bg-teal-50">Gérer les accès</button>
     </div>
     <div class="print-container bg-white rounded-2xl border border-slate-200 overflow-x-auto thin-scroll">
       <table class="w-full text-sm min-w-[320px] sm:min-w-[560px]">
@@ -700,6 +698,7 @@
       <div class="manager-only rounded-xl bg-teal-50 border border-teal-200 text-teal-800 text-xs px-3 py-2 mb-2 flex items-center gap-2"><span class="ic shrink-0" data-ic="cloud" data-ic-size="15"></span><span>Synchronisation <b>automatique</b> : tes employés voient le planning à jour dès que tu le modifies.</span></div>
       <button type="button" id="cloudSync" class="manager-only w-full inline-flex items-center justify-center gap-2 px-4 py-3 rounded-xl bg-teal-600 text-white font-semibold hover:bg-teal-700 mb-2"><span class="ic" data-ic="cloud" data-ic-size="18"></span>Synchroniser maintenant</button>
       <button type="button" id="cloudPull" class="manager-only w-full inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-white border border-slate-300 font-semibold hover:bg-slate-50 mb-2"><span class="ic" data-ic="cloudDown" data-ic-size="18"></span>Récupérer mes données du cloud</button>
+      <button type="button" id="btnEstb" class="w-full inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-white border border-slate-300 font-semibold hover:bg-slate-50 mb-2">🏪 Mes établissements…</button>
       <button type="button" id="btnAccess" class="manager-only w-full inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-white border border-teal-300 text-teal-700 font-semibold hover:bg-teal-50 mb-2">👥 Accès &amp; rôles (inviter, promouvoir…)</button>
       <p id="cloudSyncMsg" class="text-sm mb-3 hidden"></p>
       <button type="button" id="cloudSignOut" class="w-full px-4 py-2.5 rounded-xl bg-white border border-slate-300 font-semibold hover:bg-slate-50">Se déconnecter</button>
@@ -942,9 +941,10 @@
 <div id="historyModal" class="no-print fixed inset-0 bg-black/40 z-50 hidden items-center justify-center p-4">
   <div class="bg-white rounded-2xl shadow-xl w-full max-w-md p-5 max-h-[90vh] overflow-y-auto">
     <div class="flex items-center justify-between mb-1">
-      <h3 class="text-lg font-bold">Historique des versions</h3>
+      <h3 class="text-lg font-bold">Historique &amp; annuler</h3>
       <button class="closeHistory text-slate-400 hover:text-slate-600 text-2xl leading-none">&times;</button>
     </div>
+    <button id="btnUndo" class="w-full mb-3 inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-teal-600 text-white font-semibold hover:bg-teal-700">↶ Annuler la dernière modification</button>
     <p class="text-sm text-slate-500 mb-4">Chaque modification crée une version. Restaure un état antérieur en un clic (les <b>25</b> dernières sont conservées).</p>
     <div id="historyList" class="space-y-1.5"></div>
   </div>
@@ -984,6 +984,22 @@
 </div>
 
 <!-- ============ MODALE « DEMANDES DE CONGÉS » (patron) ============ -->
+<!-- ============ MODALE MODÈLES & DUPLICATION ============ -->
+<div id="dupModal" class="no-print fixed inset-0 bg-black/40 z-50 hidden items-center justify-center p-4">
+  <div class="bg-white rounded-2xl shadow-xl w-full max-w-md p-5">
+    <div class="flex items-center justify-between mb-1">
+      <h3 class="text-lg font-bold">Modèles &amp; duplication</h3>
+      <button class="closeDup text-slate-400 hover:text-slate-600 text-2xl leading-none">&times;</button>
+    </div>
+    <p class="text-sm text-slate-500 mb-4">Gagne du temps : réutilise une semaine ou un planning existant.</p>
+    <div class="space-y-2">
+      <button id="dupWeek" class="w-full text-left rounded-xl border border-slate-200 px-4 py-3 hover:border-teal-400 hover:bg-teal-50"><div class="font-semibold text-slate-800">📋 Dupliquer la semaine précédente</div><div class="text-xs text-slate-500">Recopie tous les services de la semaine d'avant sur celle-ci.</div></button>
+      <button id="btnTemplates" class="w-full text-left rounded-xl border border-slate-200 px-4 py-3 hover:border-teal-400 hover:bg-teal-50"><div class="font-semibold text-slate-800">💾 Modèles de semaine</div><div class="text-xs text-slate-500">Enregistre une semaine type et applique-la quand tu veux.</div></button>
+      <button id="btnCopyPlan" class="w-full text-left rounded-xl border border-slate-200 px-4 py-3 hover:border-teal-400 hover:bg-teal-50"><div class="font-semibold text-slate-800">👤 Copier un planning vers un employé</div><div class="text-xs text-slate-500">Les horaires d'une personne appliqués à une autre.</div></button>
+    </div>
+  </div>
+</div>
+
 <!-- ============ MODALE ACCÈS & RÔLES ============ -->
 <div id="accessModal" class="no-print fixed inset-0 bg-black/50 z-[60] hidden items-center justify-center p-4">
   <div class="bg-white rounded-2xl shadow-xl w-full max-w-lg p-5 max-h-[90vh] overflow-y-auto">
@@ -1237,7 +1253,6 @@
       </div>
       <div>
         <div class="text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-1">Aide &amp; confidentialité</div>
-        <button type="button" id="btnGuide" class="set-act mi w-full text-left px-3 py-2 rounded-lg hover:bg-slate-50"><span class="ic" data-ic="bulb"></span>Revoir le guide de démarrage</button>
         <button type="button" id="btnHelp" class="set-act mi w-full text-left px-3 py-2 rounded-lg hover:bg-slate-50"><span class="ic" data-ic="help"></span>Aide / FAQ</button>
         <button type="button" id="btnFeedback" class="set-act mi w-full text-left px-3 py-2 rounded-lg hover:bg-slate-50"><span class="ic" data-ic="bulb"></span>Proposer une amélioration</button>
         <button type="button" id="btnPrivacy" class="set-act mi w-full text-left px-3 py-2 rounded-lg hover:bg-slate-50"><span class="ic" data-ic="lock"></span>Confidentialité &amp; RGPD</button>
@@ -1658,7 +1673,7 @@ function genericSeed(base){
       });
     }
   });
-  const notes=[{ id:uid(), week:cur, day:null, level:'info', text:"Bienvenue ! Adaptez équipes, créneaux et employés à votre activité via Données → Réglages." }];
+  const notes=[{ id:uid(), week:cur, day:null, level:'info', text:"Bienvenue ! Adaptez équipes, créneaux et employés à votre activité via ⋯ Menu → Réglages." }];
   return { employees, shifts, notes };
 }
 
@@ -2222,6 +2237,7 @@ confModal.addEventListener('click',e=>{ if(e.target===confModal) closeConfModal(
 
 /* ============ ÉQUIPE ============ */
 function renderTeam(){
+  if(typeof renderManageBanner==='function') renderManageBanner();
   const body=document.getElementById('empBody'), empty=document.getElementById('empEmpty');
   renderExtras(); renderArchived();
   const act=activeEmployees();
@@ -3375,7 +3391,7 @@ document.querySelectorAll('input[name="sendKind"]').forEach(r=>r.addEventListene
 function randCode(){ const c='ABCDEFGHJKMNPQRSTUVWXYZ23456789'; let s=''; for(let i=0;i<6;i++) s+=c[Math.floor(Math.random()*c.length)]; return s; }
 async function generateInviteCode(){
   if(!sb || !cloudMembership || !['owner','manager'].includes(cloudMembership.role)){
-    return { error:'Connecte-toi à ton compte patron d’abord (Données → Mon compte).' };
+    return { error:'Connecte-toi à ton compte patron d’abord (⋯ Menu → Mon compte).' };
   }
   // Synchronise pour que la fiche existe dans le cloud, puis lie le code à cet employé
   let employee_id=null;
@@ -3568,7 +3584,7 @@ function renderWizard(){
       <div class="flex items-center gap-3 mb-3"><span class="ic text-slate-700" data-ic="${({restaurant:'utensils',commerce:'bag',cafe:'coffee',hotel:'bell',sante:'stethoscope',custom:'settings'})[wiz.profile]||'store'}" data-ic-size="28"></span><div><div class="font-extrabold text-slate-900">${P.name}</div><div class="text-sm text-slate-500">${wizTotal()} personne(s) · ${P.periods.map(p=>p.label).join(' · ')}</div></div></div>
       <div class="flex flex-wrap gap-2">${wizTeams().map(t=>`<span class="inline-flex items-center gap-1.5 text-sm bg-white border border-slate-200 rounded-full px-3 py-1"><span class="w-2.5 h-2.5 rounded-full" style="background:${t.color}"></span>${t.label} · <b>${wiz.counts[t.key]||0}</b></span>`).join('')}</div>
     </div>
-    <p class="text-xs text-slate-400 mt-3">Tu pourras tout ajuster ensuite (équipes, créneaux, employés) via <b>Données → Réglages</b>.</p>`;
+    <p class="text-xs text-slate-400 mt-3">Tu pourras tout ajuster ensuite (équipes, créneaux, employés) via <b>⋯ Menu → Réglages</b>.</p>`;
   }
 
   { const wb=document.getElementById('wizBack'); wb.style.visibility='visible'; wb.textContent = wiz.step===1 ? '← Accueil' : '← Retour'; }
@@ -3626,9 +3642,9 @@ document.getElementById('coachClose').addEventListener('click',()=>document.getE
 const OB_STEPS=[
   {e:'👋', t:'Bienvenue sur Oplaa !', x:'Le planning de ton équipe, enfin simple. On te montre l\'essentiel en 20 secondes.'},
   {e:'🗓️', t:'Ajoute un service', x:'Touche une case du planning (ou le bouton <b>＋ Ajouter</b>) pour poser un horaire. Glisse une carte pour la déplacer.'},
-  {e:'🎨', t:'Tes équipes', x:'Salle, Cuisine, Bar… ce sont tes groupes. Tu peux les <b>renommer, en ajouter ou en supprimer</b> dans <b>Données ▸ Mes équipes</b>.'},
+  {e:'🎨', t:'Tes équipes', x:'Salle, Cuisine, Bar… ce sont tes groupes. Tu peux les <b>renommer, en ajouter ou en supprimer</b> dans <b>⋯ Menu ▸ Réglages</b>.'},
   {e:'📲', t:'Partage à chacun', x:'Envoie à chaque employé <b>son</b> planning. Ils ne voient que leurs horaires — jamais les salaires ni les infos des autres.'},
-  {e:'🚀', t:'C\'est parti !', x:'Tu peux revoir ce guide quand tu veux dans <b>Données ▸ Revoir le guide</b>. Bon planning !'}
+  {e:'🚀', t:'C\'est parti !', x:'Tu peux revoir ce guide quand tu veux dans <b>⋯ Menu ▸ Aide</b>. Bon planning !'}
 ];
 let _obStep=0;
 const onboardModal=document.getElementById('onboardModal');
@@ -4049,6 +4065,7 @@ async function refreshCloud(){
     await pullForOwner();
   }
   if(cloudMembership) startRealtime();   // temps réel
+  _membersCache=null; if(typeof renderManageBanner==='function') renderManageBanner();
   setSyncStatus(canAutoPush() ? 'ok' : null);   // indicateur d'en-tête : « Synchronisé ✓ » pour le patron connecté
 }
 
@@ -4259,7 +4276,7 @@ document.getElementById('accList').addEventListener('change', async e=>{
   const sel=e.target.closest('select[data-acc-role]'); if(!sel) return;
   const { data, error } = await sb.rpc('set_member_role', { est: cloudMembership.establishment_id, target: sel.dataset.accRole, new_role: sel.value });
   if(error || (data && data.ok===false)){ accMsg(error?error.message:(data.error||'Refusé.'), false); await renderAccess(); return; }
-  accMsg('Rôle mis à jour ✓', true);
+  accMsg('Rôle mis à jour ✓', true); _membersCache=null; renderManageBanner();
   if(cloudSession && sel.dataset.accRole===cloudSession.user.id){ await refreshCloud(); }   // on a changé son propre rôle
   await renderAccess();
 });
@@ -4268,7 +4285,7 @@ document.getElementById('accList').addEventListener('click', async e=>{
   if(!confirm('Retirer l’accès de cette personne ? Elle ne pourra plus se connecter à cet établissement (sa fiche employé est conservée).')) return;
   const { data, error } = await sb.rpc('remove_member', { est: cloudMembership.establishment_id, target: b.dataset.accRm });
   if(error || (data && data.ok===false)){ accMsg(error?error.message:(data.error||'Refusé.'), false); return; }
-  accMsg('Accès retiré ✓', true); await renderAccess();
+  accMsg('Accès retiré ✓', true); _membersCache=null; renderManageBanner(); await renderAccess();
 });
 function inviteMessage(role, code){
   const estName=(cloudMembership.establishments&&cloudMembership.establishments.name)||state.restaurant||'l’établissement';
@@ -4294,6 +4311,43 @@ document.getElementById('accInvGo').addEventListener('click', async ()=>{
   document.getElementById('accInvCopy').addEventListener('click', async ()=>{ const ok=await copyText(msg); toast(ok?'Message copié ✓':'Copie impossible — copie le code à la main'); });
 });
 document.getElementById('btnAccess').addEventListener('click', openAccess);
+
+// ── « Modèles & duplication » : une seule entrée de menu pour trois outils
+const dupModal=document.getElementById('dupModal');
+function openDup(){ dataMenu.classList.add('hidden'); dupModal.classList.remove('hidden'); dupModal.classList.add('flex'); }
+function closeDup(){ dupModal.classList.add('hidden'); dupModal.classList.remove('flex'); }
+document.getElementById('btnDup').addEventListener('click', openDup);
+document.querySelectorAll('.closeDup').forEach(b=>b.addEventListener('click', closeDup));
+dupModal.addEventListener('click', e=>{ if(e.target===dupModal) closeDup(); });
+dupModal.addEventListener('click', e=>{ if(e.target.closest('#dupWeek,#btnTemplates,#btnCopyPlan')) closeDup(); }, true);   // l'outil choisi s'ouvre par-dessus → on ferme d'abord
+// « Annuler » vit dans Historique ; « Mes établissements » dans Mon compte → on ferme la fenêtre hôte avant
+document.getElementById('historyModal').addEventListener('click', e=>{ if(e.target.closest('#btnUndo')) closeHistory(); }, true);
+document.getElementById('cloudModal').addEventListener('click', e=>{ if(e.target.closest('#btnEstb')) closeCloud(); }, true);
+
+// ── Bandeau « Qui gère avec vous » (onglet Équipe) : qui est admin/manager, inviter, gérer les accès
+let _membersCache=null;
+async function renderManageBanner(){
+  const box=document.getElementById('manageBanner'), list=document.getElementById('manageList'), inv=document.getElementById('btnInviteTeam'), mg=document.getElementById('btnManageAccess');
+  if(!box) return;
+  const staff=!!(cloudMembership && ['owner','manager'].includes(cloudMembership.role));
+  if(cloudMembership && cloudMembership.role==='employee'){ box.classList.add('hidden'); return; }
+  box.classList.remove('hidden');
+  if(!staff){
+    list.innerHTML='Vous travaillez seul·e sur cet appareil. <b>Créez un compte</b> pour partager la gestion avec un associé ou un manager, et donner à chacun son planning.';
+    inv.textContent='Partager la gestion'; mg.classList.add('hidden'); return;
+  }
+  inv.textContent='＋ Inviter quelqu\'un'; mg.classList.remove('hidden');
+  const paint=rows=>{ const staffRows=rows.filter(m=>m.role!=='employee'); const nEmp=rows.length-staffRows.length;
+    list.innerHTML=(staffRows.map(m=>`<b>${(m.employee_name||m.email||'').replace(/</g,'&lt;')}</b> <span class="text-slate-500">(${ROLE_LABEL[m.role]||m.role})</span>`).join(' · ')||'<i>aucun autre gestionnaire</i>')+(nEmp?` <span class="text-slate-500">· ${nEmp} employé${nEmp>1?'s':''} connecté${nEmp>1?'s':''}</span>`:''); };
+  if(_membersCache) paint(_membersCache);
+  else list.textContent='Chargement…';
+  try{ const { data } = await sb.rpc('list_members', { est: cloudMembership.establishment_id }); if(data){ _membersCache=data; paint(data); } }catch(e){}
+}
+document.getElementById('btnInviteTeam').addEventListener('click', async ()=>{
+  if(!(cloudMembership && ['owner','manager'].includes(cloudMembership.role))){ openCloud(); return; }
+  await openAccess(); const inv=document.getElementById('accInvRole'); if(inv) inv.scrollIntoView({block:'center'});
+});
+document.getElementById('btnManageAccess').addEventListener('click', ()=>openAccess());
 /* ============ SYNCHRONISATION CLOUD AUTOMATIQUE (patron) ============ */
 let _applyingRemote=false;                 // true pendant qu'on applique des données venues du cloud (évite l'écho pull→push)
 let _autoPushTimer=null, _autoPushBusy=false, _autoPushPending=false;
