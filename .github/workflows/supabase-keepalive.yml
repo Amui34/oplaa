@@ -1,0 +1,30 @@
+name: Supabase keep-alive
+
+# Les projets Supabase gratuits sont mis en pause après 7 jours sans activité.
+# Une requête REST légère par jour suffit à les garder éveillés. Les clés ci-dessous
+# sont des clés PUBLIQUES (publishable) — protégées par le RLS, sans danger ici.
+# Le job échoue (→ e-mail GitHub) si un projet de PRODUCTION ne répond pas.
+on:
+  schedule:
+    - cron: '23 6 * * *'      # tous les jours à 06:23 UTC
+  workflow_dispatch:
+
+jobs:
+  ping:
+    name: Ping des projets Supabase
+    runs-on: ubuntu-latest
+    steps:
+      - name: Oplaa (prod) · Restostock (prod) · Oplaa (test)
+        run: |
+          set -u
+          ping() {  # url clé nom table critique(1/0)
+            code=$(curl -s -o /dev/null -w "%{http_code}" --max-time 30 \
+              "$1/rest/v1/$4?select=id&limit=1" -H "apikey: $2" -H "Authorization: Bearer $2" || echo 000)
+            if [ "$code" = "200" ]; then echo "✓ $3 → HTTP $code"
+            else echo "✗ $3 → HTTP $code"; [ "$5" = "1" ] && FAIL=1; fi
+          }
+          FAIL=0
+          ping https://kldkqxqbmxtdedzjoghw.supabase.co sb_publishable_Ma29Syo4LkbtLLxIP4s9EA_8UIef3EL "Oplaa (prod)"       establishments 1
+          ping https://iuzmerktgvgskhsojdha.supabase.co sb_publishable_7Hjw8Xk3E2dzUsPRAvPpkA_XYT-LIMt "Restostock (prod)"  companies      1
+          ping https://rourjugjspqppjhrizxw.supabase.co sb_publishable_0YHzUC53GjuvekVfb8Azvg_Ze3fSUOF "Oplaa (test)"       establishments 0
+          if [ "$FAIL" = "1" ]; then echo "::error::Un projet de PRODUCTION ne répond pas — vérifier sur supabase.com (en pause ?)"; exit 1; fi
