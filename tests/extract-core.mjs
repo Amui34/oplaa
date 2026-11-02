@@ -13,13 +13,21 @@ export const CORE_FUNCTIONS = [
   'easterDate','frHolidays','isHoliday',
 ];
 
+// Fonctions pures MULTI-LIGNES (moteur de paie) : extraites de `function nom(` jusqu'à la première ligne `}` en colonne 0.
+export const CORE_BLOCKS = ['hcrTiers','payWeekSplit','payContractSup','payPeriod','splitName','dailyContractHours'];
+
 let src = '';
 for (const name of CORE_FUNCTIONS) {
   const m = html.match(new RegExp('^function ' + name + '\\(.*$', 'm'));
   if (!m) throw new Error('Fonction pure introuvable dans index.html : ' + name);
   src += m[0] + '\n';
 }
-src += 'return {' + CORE_FUNCTIONS.join(',') + '};';
+for (const name of CORE_BLOCKS) {
+  const m = html.match(new RegExp('^function ' + name + '\\([\\s\\S]*?^\\}', 'm'));
+  if (!m) throw new Error('Bloc pur introuvable dans index.html : ' + name);
+  src += m[0] + '\n';
+}
+src += 'return {' + CORE_FUNCTIONS.concat(CORE_BLOCKS).join(',') + '};';
 
 // eslint-disable-next-line no-new-func
 const core = new Function(src)();

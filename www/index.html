@@ -1512,6 +1512,47 @@ function monthMeals(empId, refWk){ const M=ruleMeal(); if(!M.enabled) return 0; 
 function ruleNight(){ return (state.rules&&state.rules.night)||{enabled:false}; }
 function ruleSunday(){ return (state.rules&&state.rules.sunday)||{enabled:false}; }
 function rulePanier(){ return (state.rules&&state.rules.panier)||{enabled:false}; }
+// ───────── PAIE (export comptable) — fonctions PURES, testées unitairement (tests/unit/paie.test.mjs) ─────────
+// Heures comprises dans ]from, to] réparties en paliers HCR : ]35,t10] → +10 %, ]t10,t20] → +20 %, au-delà → +50 %.
+function hcrTiers(from, to, t10End, t20End){
+  const seg=(a,b)=>Math.max(0, Math.min(to,b)-Math.max(from,a));
+  return { sup10:seg(35,t10End), sup20:seg(t10End,t20End), sup50:seg(t20End,1e9) };
+}
+// Répartition d'UNE semaine. contract = heures hebdo du contrat (0/null = extra sans contrat) ; worked = heures travaillées.
+// Temps plein (≥ 35 h) : au-delà du contrat → paliers HCR. Temps partiel : complémentaires +10 % jusqu'à 1/10 du contrat, +25 % au-delà.
+function payWeekSplit(worked, contract, opt){
+  const o=Object.assign({t10End:39,t20End:43},opt||{});
+  const w=Math.max(0,+worked||0), c=(contract>0)?+contract:0;
+  const r={normales:0,compl10:0,compl25:0,sup10:0,sup20:0,sup50:0,manquantes:0};
+  if(!c){ r.normales=w; return r; }
+  if(w<=c){ r.manquantes=c-w; return r; }
+  const extra=w-c;
+  if(c<35){ const lim10=Math.min(c*0.10, extra); r.compl10=lim10; r.compl25=extra-lim10; return r; }
+  const t=hcrTiers(c, w, o.t10End, o.t20End); r.sup10=t.sup10; r.sup20=t.sup20; r.sup50=t.sup50;
+  return r;
+}
+// Heures sup structurelles « au contrat » par semaine (ex. contrat 39 h → 4 h à +10 %).
+function payContractSup(contract, opt){
+  const o=Object.assign({t10End:39,t20End:43},opt||{}); const c=(contract>0)?+contract:0;
+  if(c<=35) return {sup10:0,sup20:0,sup50:0};
+  return hcrTiers(35, c, o.t10End, o.t20End);
+}
+// Agrégat sur plusieurs semaines (tableau des heures travaillées par semaine).
+function payPeriod(weeklyWorked, contract, opt){
+  const tot={normales:0,compl10:0,compl25:0,sup10:0,sup20:0,sup50:0,manquantes:0};
+  (weeklyWorked||[]).forEach(w=>{ const r=payWeekSplit(w, contract, opt); Object.keys(tot).forEach(k=>tot[k]+=r[k]); });
+  return tot;
+}
+// « Camille Durand » → {prenom:'Camille', nom:'DURAND'} · « DURAND Camille » → idem · un seul mot → prénom.
+function splitName(full){
+  const parts=String(full||'').trim().split(/\s+/).filter(Boolean); if(!parts.length) return {prenom:'',nom:''};
+  if(parts.length===1) return {prenom:parts[0],nom:''};
+  const isUpper=w=>w.length>1 && w===w.toUpperCase() && /[A-ZÀ-Ý]/.test(w);
+  if(isUpper(parts[0]) && !isUpper(parts[parts.length-1])) return {prenom:parts.slice(1).join(' '), nom:parts[0]};
+  return {prenom:parts[0], nom:parts.slice(1).join(' ').toUpperCase()};
+}
+// Journée « contrat » moyenne (pour valoriser une absence en heures quand rien n'était planifié).
+function dailyContractHours(contract, daysPerWeek){ return (contract>0) ? (+contract)/(daysPerWeek||5) : 0; }
 function rulePay(){ const d={mealType:'nature',t10End:39,t20End:43,daysPerWeek:5}; return Object.assign(d,(state.rules&&state.rules.pay)||{}); }
 // Jours fériés français (fixes + basés sur Pâques), mis en cache par année
 function easterDate(y){ const a=y%19,b=Math.floor(y/100),c=y%100,d=Math.floor(b/4),e=b%4,f=Math.floor((b+8)/25),g=Math.floor((b-f+1)/3),h=(19*a+b-d-g+15)%30,i=Math.floor(c/4),k=c%4,l=(32+2*e+2*i-h-k)%7,m=Math.floor((a+11*h+22*l)/451),mo=Math.floor((h+l-7*m+114)/31),da=((h+l-7*m+114)%31)+1; return new Date(y,mo-1,da); }
