@@ -27,7 +27,9 @@
   "dependencies": {
     "@capacitor/cli": "^8.5.1",
     "@capacitor/core": "^8.5.1",
+    "@capacitor/filesystem": "^8.1.5",
     "@capacitor/ios": "^8.5.1",
+    "@capacitor/share": "^8.0.3",
     "xlsx": "^0.18.5"
   },
   "devDependencies": {

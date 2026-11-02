@@ -4058,11 +4058,27 @@ function exportSuiviCSV(){
   // Manager invité : on retire les colonnes salaire (Taux / Coût réel / Salaire estimé = index 14,15,16)
   if(!canSeeSalaries()){ const SAL=[14,15,16]; for(let i=0;i<rows.length;i++){ rows[i]=rows[i].filter((_,idx)=>!SAL.includes(idx)); } }
   const csv=rows.map(r=>r.map(c=>{ c=String(c); return /[";\n]/.test(c)?'"'+c.replace(/"/g,'""')+'"':c; }).join(';')).join('\r\n');
-  const blob=new Blob(['﻿'+csv],{type:'text/csv;charset=utf-8'}); const a=document.createElement('a');
-  a.href=URL.createObjectURL(blob); a.download=`oplaa-paie-${suiviScope}-${isoDay(parseLocalDate(state.weekStart))}.csv`; a.click(); URL.revokeObjectURL(a.href);
+  saveOrShareFile(`oplaa-paie-${suiviScope}-${isoDay(parseLocalDate(state.weekStart))}.csv`, new TextEncoder().encode('﻿'+csv), 'text/csv;charset=utf-8');
   toast('Export paie téléchargé ⬇︎');
 }
 document.getElementById('btnSuiviCSV').addEventListener('click', exportSuiviCSV);
+
+
+// ── Enregistrer / partager un fichier : feuille de partage iOS dans l'app native (AirDrop, Mail, Fichiers…), téléchargement sur le web
+async function saveOrShareFile(name, bytes, mime){
+  const P=(window.Capacitor&&window.Capacitor.Plugins)||{};
+  if(_isNativeApp && P.Filesystem && P.Share){
+    try{
+      const u8 = bytes instanceof Uint8Array ? bytes : new Uint8Array(bytes);
+      let bin=''; for(let i=0;i<u8.length;i+=0x8000) bin+=String.fromCharCode.apply(null, u8.subarray(i,i+0x8000));
+      const w=await P.Filesystem.writeFile({ path:name, data:btoa(bin), directory:'CACHE' });
+      await P.Share.share({ title:name, url:w.uri, dialogTitle:'Enregistrer ou envoyer le fichier' });
+      return true;
+    }catch(e){ if(String(e&&e.message||e).toLowerCase().includes('cancel')) return false; toast('Partage impossible : '+(e.message||e)); return false; }
+  }
+  const blob=new Blob([bytes],{type:mime}); const a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download=name; a.click(); setTimeout(()=>URL.revokeObjectURL(a.href), 2000);
+  return true;
+}
 
 /* ============ EXPORT COMPTABLE (format Combo : 3 feuilles, 72 colonnes) ============ */
 // En-têtes exacts de la feuille « Synthèse » (sections / colonnes), repris de l'export Combo.
@@ -4148,7 +4164,8 @@ async function exportComptaXlsx(){
   XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(d.evp), 'Éléments Variables de Paie');
   XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(d.absRows), 'Absences');
   const name=`${(state.restaurant||'Oplaa').replace(/[^\w\- ]+/g,'').trim()} - export comptable - ${d.from} - ${d.to}.xlsx`;
-  XLSX.writeFile(wb, name);
+  const out=XLSX.write(wb, {bookType:'xlsx', type:'array'});
+  await saveOrShareFile(name, out, 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
   logAccess('export_compta');
 }
 document.getElementById('btnSuiviXlsx').addEventListener('click', exportComptaXlsx);
