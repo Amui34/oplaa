@@ -12,6 +12,7 @@ Application iOS (App Store) + web de planification d'équipe pour restaurants, c
 | Supabase | base, comptes (e-mail + mot de passe, confirmation par e-mail via SMTP Resend), temps réel | projet `kldkqxqbmxtdedzjoghw`, org Amui studio |
 | Capacitor (`ios/`) | enveloppe iOS, bundle `com.oplaa.app` | ce dépôt |
 | `appstore/` | génération des captures App Store (DA Bricolage Grotesque) | ce dépôt |
+| `site-public/` | vitrine oplaa.pro + pages légales : `confidentialite.html`, `cgu.html` (CGU/CGV), `dpa.html` (sous-traitance RGPD art. 28), `mentions-legales.html`, `assistance.html`. Servies par `docker/Caddyfile` (matcher `@legal`), déployées par `deploy.yml` à chaque push sur `main`. Les champs `<mark class="todo">` (raison sociale, SIREN, adresse, médiateur) sont à compléter avant publication | ce dépôt |
 
 ## Rôles (cloud)
 

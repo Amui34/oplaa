@@ -1,0 +1,182 @@
+<!doctype html><html lang="fr"><head><meta charset="utf-8">
+<title>Sous-traitance RGPD — Oplaa</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="description" content="Contrat de sous-traitance des données personnelles (article 28 RGPD) entre les établissements utilisateurs d'Oplaa et l'éditeur.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,700;12..96,800&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --terre:#C4562F; --craie:#FBF6F1; --ink:#2A1D16; --muted:#6E655C; --line:#E7DBCE;
+    --page:#F6ECE2; --card:#fff; --todo:#FFF1B8;
+    --disp:'Bricolage Grotesque',system-ui,sans-serif;
+    --ui:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;
+  }
+  @media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--page:#1B120C;--card:#241A13;--ink:#F6ECE2;--muted:#B8A797;--line:#3A2A20;--todo:#5A4A12}}
+  :root[data-theme="dark"]{--page:#1B120C;--card:#241A13;--ink:#F6ECE2;--muted:#B8A797;--line:#3A2A20;--todo:#5A4A12}
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--page);color:var(--ink);font-family:var(--ui);line-height:1.65}
+  .wrap{max-width:720px;margin:0 auto;padding:44px 22px 72px}
+  .brand{display:flex;align-items:center;gap:12px;margin-bottom:30px}
+  .brand svg{width:44px;height:44px;filter:drop-shadow(0 5px 14px rgba(196,86,47,.25))}
+  .brand .wm{font-family:var(--disp);font-weight:800;font-size:28px;letter-spacing:-.045em;color:var(--terre);line-height:1}
+  .brand .sub{font-size:12px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--muted)}
+  h1{font-family:var(--disp);font-weight:800;font-size:clamp(28px,5vw,38px);letter-spacing:-.02em;margin:6px 0 4px;text-wrap:balance}
+  .date{color:var(--muted);font-size:14px;margin-bottom:28px}
+  h2{font-family:var(--disp);font-weight:700;font-size:20px;letter-spacing:-.01em;margin:34px 0 8px}
+  h3{font-size:16px;font-weight:700;margin:20px 0 6px}
+  p,li{font-size:16px;color:var(--ink)}
+  p{margin:10px 0}
+  ul,ol{margin:10px 0;padding-left:22px}
+  li{margin:6px 0}
+  a{color:var(--terre);font-weight:600}
+  strong{font-weight:700}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:18px 20px;margin:22px 0}
+  .lead{font-size:17px;color:var(--muted)}
+  mark.todo{background:var(--todo);color:inherit;padding:0 4px;border-radius:4px;font-weight:700}
+  table{width:100%;border-collapse:collapse;font-size:15px;margin:12px 0}
+  th,td{text-align:left;padding:8px 10px;border-bottom:1px solid var(--line);vertical-align:top}
+  th{font-size:12px;text-transform:uppercase;letter-spacing:.08em;color:var(--muted)}
+  .annex{margin-top:48px;padding-top:8px;border-top:2px solid var(--line)}
+  footer{margin-top:44px;padding-top:18px;border-top:1px solid var(--line);color:var(--muted);font-size:13px}
+  footer a{margin-right:12px}
+</style>
+</head><body>
+<div class="wrap">
+  <div class="brand">
+    <svg viewBox="0 0 128 128" role="img" aria-label="Oplaa"><rect width="128" height="128" rx="30" fill="#C4562F"/><circle cx="64" cy="64" r="33" fill="none" stroke="#FBF6F1" stroke-width="8"/><circle cx="64" cy="64" r="29" fill="#FBF6F1"/><path d="M64 64 L44.14 85.14 A29 29 0 0 1 64 35 Z" fill="#C4562F"/></svg>
+    <div><div class="wm">oplaa</div><div class="sub">Sous-traitance des données</div></div>
+  </div>
+
+  <h1>Contrat de sous-traitance des données personnelles</h1>
+  <p class="date">Article 28 du RGPD — version du 2 novembre 2026</p>
+
+  <p class="lead">Quand un établissement saisit dans Oplaa les données de ses salariés, il en reste responsable ; Oplaa les traite pour son compte. Ce contrat fixe les engagements de chacun. Il s'applique automatiquement à tout établissement utilisant Oplaa avec un compte et complète les <a href="./cgu.html">CGU/CGV</a>.</p>
+
+  <div class="card">
+    <strong>Les parties.</strong><br>
+    <strong>Le Responsable de traitement</strong> : l'Établissement (l'employeur) qui a créé un espace dans Oplaa, représenté par son ou ses Admins.<br>
+    <strong>Le Sous-traitant</strong> : l'éditeur d'Oplaa, identifié dans les <a href="./mentions-legales.html">mentions légales</a> (« Oplaa »).
+  </div>
+
+  <h2>1. Objet</h2>
+  <p>Le présent contrat (« <strong>DPA</strong> ») encadre les traitements de données personnelles qu'Oplaa réalise pour le compte de l'Établissement dans le cadre de la fourniture de l'application Oplaa (le « Service »), conformément à l'article 28 du Règlement (UE) 2016/679 (« RGPD ») et à la loi Informatique et Libertés.</p>
+  <p>Il ne couvre pas les données pour lesquelles Oplaa est lui-même responsable de traitement (comptes utilisateurs, connexion, support), décrites dans la <a href="./confidentialite.html">politique de confidentialité</a>.</p>
+
+  <h2>2. Description du traitement</h2>
+  <p>La description détaillée (nature, finalités, données, personnes concernées, durée) figure en <a href="#annexe1">Annexe 1</a>. En résumé : Oplaa héberge, synchronise, affiche et exporte les données d'équipe et de planning saisies par l'Établissement, pour que celui-ci organise le travail de ses salariés et prépare sa paie.</p>
+
+  <h2>3. Durée</h2>
+  <p>Le DPA s'applique à compter de la création de l'espace Établissement et jusqu'à la suppression de cet espace ou la fin du Service, puis le temps nécessaire à l'effacement prévu à l'article 11.</p>
+
+  <h2>4. Obligations de l'Établissement (responsable de traitement)</h2>
+  <p>L'Établissement s'engage à :</p>
+  <ul>
+    <li>disposer d'une <strong>base légale</strong> pour chaque traitement (en pratique : exécution du contrat de travail et obligations légales de l'employeur) ;</li>
+    <li><strong>informer ses salariés</strong>, par exemple via une note d'information ou le règlement intérieur, du traitement de leurs données dans Oplaa et de l'identité du sous-traitant ;</li>
+    <li>ne saisir que des données <strong>exactes, pertinentes et limitées</strong> au nécessaire ; ne pas enregistrer de motif médical ou de données sensibles au sens de l'article 9 du RGPD ;</li>
+    <li>gérer les <strong>accès</strong> (codes d'invitation, rôles Admin/Manager/Employé) et les retirer lors d'un départ ;</li>
+    <li>tenir son <strong>registre des traitements</strong> et répondre aux demandes d'exercice de droits de ses salariés ;</li>
+    <li>donner à Oplaa des instructions conformes au droit applicable.</li>
+  </ul>
+
+  <h2>5. Obligations d'Oplaa (sous-traitant)</h2>
+  <h3>5.1 Instructions</h3>
+  <p>Oplaa traite les données <strong>uniquement sur instruction documentée</strong> de l'Établissement. Les instructions sont constituées par le présent DPA, les CGU/CGV et l'utilisation des fonctionnalités du Service par les utilisateurs autorisés de l'Établissement. Oplaa n'utilise pas les données de l'Établissement à ses propres fins, ne les revend pas, ne les exploite pas à des fins publicitaires ou d'entraînement de modèles. Si Oplaa estime qu'une instruction viole le RGPD, il en informe l'Établissement sans délai.</p>
+  <h3>5.2 Confidentialité</h3>
+  <p>Les personnes autorisées à traiter les données (l'équipe d'Oplaa) sont soumises à une obligation de confidentialité. Oplaa n'accède au contenu d'un Établissement qu'en cas de nécessité technique (incident, support à la demande de l'Établissement) et dans la mesure strictement nécessaire.</p>
+  <h3>5.3 Sécurité</h3>
+  <p>Oplaa met en œuvre les mesures techniques et organisationnelles décrites en <a href="#annexe2">Annexe 2</a>, adaptées au risque, et les fait évoluer avec l'état de l'art.</p>
+  <h3>5.4 Sous-traitants ultérieurs</h3>
+  <p>L'Établissement autorise de manière générale Oplaa à recourir aux sous-traitants ultérieurs listés en <a href="#annexe3">Annexe 3</a>. Oplaa impose à chacun des obligations équivalentes à celles du présent DPA et demeure pleinement responsable de leur exécution. Tout ajout ou remplacement est annoncé <strong>au moins 30 jours à l'avance</strong> par mise à jour de l'Annexe 3 et notification dans l'application ou par e-mail ; l'Établissement peut s'y opposer par écrit pendant ce délai et, à défaut de solution, résilier le Service sans frais, avec restitution de ses données.</p>
+  <h3>5.5 Transferts hors de l'Union européenne</h3>
+  <p>Les données du Service sont <strong>hébergées dans l'Union européenne</strong>. Lorsqu'un sous-traitant ultérieur est établi hors de l'Union (voir Annexe 3), le transfert est encadré par une décision d'adéquation ou par les clauses contractuelles types de la Commission européenne, assorties des mesures complémentaires nécessaires.</p>
+  <h3>5.6 Assistance pour les droits des personnes</h3>
+  <p>Le Service permet à l'Établissement de répondre lui-même à la plupart des demandes (consultation, rectification, suppression d'un employé, export). Si une demande parvient directement à Oplaa, celui-ci la transmet à l'Établissement sans y répondre lui-même, sauf obligation légale, et lui apporte une assistance raisonnable, dans la limite des fonctionnalités du Service.</p>
+  <h3>5.7 Assistance pour la conformité</h3>
+  <p>Oplaa assiste l'Établissement, compte tenu des informations dont il dispose, pour ses obligations de sécurité, de notification de violations, et pour toute analyse d'impact ou consultation préalable de la CNIL que l'Établissement jugerait nécessaire.</p>
+  <h3>5.8 Notification des violations de données</h3>
+  <p>Oplaa notifie à l'Établissement toute violation de données personnelles le concernant <strong>sans retard injustifié et au plus tard 48 heures</strong> après en avoir pris connaissance, par e-mail aux Admins de l'Établissement, en précisant dans la mesure du possible la nature de la violation, les catégories et le nombre approximatif de personnes et d'enregistrements concernés, les conséquences probables et les mesures prises ou proposées. Il appartient à l'Établissement de notifier la CNIL et, le cas échéant, les personnes concernées.</p>
+  <h3>5.9 Documentation et audit</h3>
+  <p>Oplaa met à disposition les informations nécessaires pour démontrer le respect du présent DPA (le présent document et ses annexes, la documentation de sécurité des sous-traitants ultérieurs, des réponses écrites aux questionnaires raisonnables). L'Établissement peut, au plus une fois par an et avec un préavis de 30 jours, ou sans délai après une violation avérée, faire réaliser un audit, à ses frais, par un auditeur indépendant soumis à confidentialité, pendant les heures ouvrées et sans perturber le Service ni accéder aux données d'autres établissements.</p>
+
+  <h2>6. Durée de conservation</h2>
+  <p>Oplaa conserve les données tant que l'espace Établissement existe. L'Établissement est responsable de la purge des données devenues inutiles (par exemple la suppression de la fiche d'un ancien salarié à l'issue des délais de conservation qui s'imposent à lui en matière de droit du travail et de paie, généralement 5 ans pour les éléments de temps de travail).</p>
+
+  <h2>7. Responsabilité</h2>
+  <p>Chaque partie est responsable des dommages causés par un traitement effectué en violation du RGPD qui lui est imputable, dans les conditions de l'article 82 du RGPD. Entre les parties, la responsabilité d'Oplaa est soumise aux limitations prévues dans les <a href="./cgu.html#art12">CGU/CGV</a>, sans préjudice des droits des personnes concernées.</p>
+
+  <h2>8. Point de contact</h2>
+  <p>Pour toute question relative au présent DPA, aux données ou pour signaler un incident : l'adresse e-mail indiquée dans les <a href="./mentions-legales.html">mentions légales</a>, objet « RGPD ». Oplaa accuse réception sous 5 jours ouvrés.</p>
+
+  <h2>9. Hiérarchie et modifications</h2>
+  <p>En cas de contradiction entre le présent DPA et les CGU/CGV, le DPA prévaut pour tout ce qui concerne les données personnelles. Oplaa peut mettre à jour le DPA pour suivre l'évolution du droit ou du Service ; toute modification réduisant les garanties est annoncée 30 jours à l'avance, dans les mêmes conditions qu'à l'article 5.4.</p>
+
+  <h2>10. Droit applicable</h2>
+  <p>Le présent DPA est soumis au droit français. L'autorité de contrôle compétente est la <strong>CNIL</strong> (cnil.fr).</p>
+
+  <h2>11. Fin du contrat et sort des données</h2>
+  <ul>
+    <li><strong>Pendant le Service</strong>, l'Établissement peut à tout moment exporter ses données (exports CSV / Excel, impression) et supprimer un employé, une absence ou tout autre contenu.</li>
+    <li><strong>À la fin du Service</strong> (suppression de l'espace Établissement par son dernier Admin, résiliation ou arrêt du Service), Oplaa supprime l'ensemble des données de l'Établissement de la base de production. Les copies de sauvegarde sont écrasées par rotation dans un délai maximal de <strong>30 jours</strong>.</li>
+    <li>Oplaa peut conserver les seules données dont la loi impose la conservation (par exemple des journaux techniques ou des éléments de facturation), pour la durée légale, de manière isolée.</li>
+    <li>Sur demande écrite avant la suppression, Oplaa fournit un export complet des données de l'Établissement dans un format courant (CSV / Excel / JSON).</li>
+  </ul>
+
+  <div class="annex" id="annexe1">
+    <h2>Annexe 1 — Description du traitement</h2>
+    <table>
+      <tr><th>Élément</th><th>Détail</th></tr>
+      <tr><td>Nature des opérations</td><td>Collecte (saisie par l'Établissement), enregistrement, hébergement, synchronisation entre appareils, affichage selon le rôle, calcul (heures, majorations, coûts indicatifs), export, suppression.</td></tr>
+      <tr><td>Finalités</td><td>Organisation des horaires de travail et des services ; gestion des absences et congés ; suivi du temps de travail et des documents de conformité ; préparation des éléments variables de paie ; communication du planning à chaque salarié.</td></tr>
+      <tr><td>Personnes concernées</td><td>Salariés, extras et apprentis de l'Établissement ; Admins et Managers de l'Établissement.</td></tr>
+      <tr><td>Catégories de données</td><td>
+        <strong>Identité</strong> : nom, prénom, matricule interne, poste.<br>
+        <strong>Coordonnées</strong> : téléphone, e-mail (si saisis).<br>
+        <strong>Contrat</strong> : type de contrat, heures contractuelles, dates d'entrée et de sortie, jours de congés acquis, mutuelle (adhésion oui/non), et, visible des seuls Admins, taux horaire ou salaire de base.<br>
+        <strong>Temps de travail</strong> : horaires planifiés, pauses, heures travaillées, absences par type (congés, maladie, formation, etc. — sans motif médical), demandes de congés.<br>
+        <strong>Conformité</strong> : échéances de documents (visite médicale, titre de séjour, etc. — présence et date, sans copie du document).<br>
+        <strong>Notes</strong> : notes libres de l'Établissement sur un jour ou un service.
+      </td></tr>
+      <tr><td>Données sensibles</td><td>Aucune n'est requise. L'Établissement s'interdit de saisir des motifs médicaux ou d'autres données de l'article 9 du RGPD dans les champs libres.</td></tr>
+      <tr><td>Durée</td><td>Pendant toute la durée d'utilisation du Service, puis effacement selon l'article 11.</td></tr>
+      <tr><td>Lieu</td><td>Union européenne (Irlande) pour l'hébergement des données ; voir Annexe 3.</td></tr>
+    </table>
+  </div>
+
+  <div class="annex" id="annexe2">
+    <h2>Annexe 2 — Mesures de sécurité</h2>
+    <ul>
+      <li><strong>Chiffrement</strong> : toutes les communications sont chiffrées (TLS/HTTPS) ; les données sont chiffrées au repos chez l'hébergeur (AES-256) ; les mots de passe sont hachés (bcrypt) et jamais stockés en clair.</li>
+      <li><strong>Cloisonnement par établissement et par rôle</strong> : des règles de sécurité appliquées par la base de données elle-même (<em>Row Level Security</em>) garantissent qu'un utilisateur ne peut lire ou modifier que les données de son Établissement et selon son rôle : un Employé ne voit que son propre planning ; un Manager ne reçoit jamais les salaires ; seuls les Admins y accèdent.</li>
+      <li><strong>Authentification</strong> : comptes individuels par e-mail et mot de passe, confirmation de l'adresse e-mail, jetons de session à durée limitée, possibilité de révoquer un accès à tout moment (retrait d'un membre).</li>
+      <li><strong>Journalisation</strong> : journal des actions sensibles (accès, modifications de rôle) consultable par les Admins ; journaux techniques de l'hébergeur.</li>
+      <li><strong>Sauvegardes</strong> : sauvegardes quotidiennes automatiques chez l'hébergeur, conservées 7 jours, dans la même région (UE).</li>
+      <li><strong>Minimisation</strong> : pas de collecte de position, de contacts, de pisteurs publicitaires ni de données non nécessaires au Service.</li>
+      <li><strong>Développement</strong> : schéma de base de données versionné et revu, tests automatisés (unitaires, intégration, bout en bout) avant chaque mise en production, dépendances mises à jour.</li>
+      <li><strong>Accès de l'équipe</strong> : accès administrateur à l'infrastructure limité aux personnes nécessaires, protégé par mot de passe fort et double authentification ; clés secrètes jamais embarquées dans l'application cliente.</li>
+      <li><strong>Supervision</strong> : vérification quotidienne automatique de la disponibilité du service avec alerte.</li>
+    </ul>
+  </div>
+
+  <div class="annex" id="annexe3">
+    <h2>Annexe 3 — Sous-traitants ultérieurs autorisés</h2>
+    <table>
+      <tr><th>Prestataire</th><th>Rôle</th><th>Lieu des données</th><th>Encadrement</th></tr>
+      <tr><td><strong>Supabase, Inc.</strong></td><td>Base de données, authentification, API, sauvegardes (hébergement de l'application cloud)</td><td>Union européenne — Irlande (région eu-west-1)</td><td>DPA Supabase, clauses contractuelles types pour le support depuis les États-Unis</td></tr>
+      <tr><td><strong>OVH SAS</strong></td><td>Hébergement du site oplaa.pro et de l'application web (fichiers statiques, pas de données d'établissement stockées)</td><td>France / Union européenne</td><td>Conditions OVHcloud, prestataire européen</td></tr>
+      <tr><td><strong>Resend, Inc.</strong></td><td>Envoi des e-mails transactionnels (confirmation d'adresse, réinitialisation de mot de passe). Données : adresse e-mail et contenu du message, conservés brièvement à des fins de délivrabilité</td><td>États-Unis</td><td>DPA Resend, clauses contractuelles types de la Commission européenne</td></tr>
+      <tr><td><strong>Apple Distribution International Ltd.</strong></td><td>Distribution de l'application iOS et gestion des achats intégrés. Apple ne reçoit aucune donnée d'Établissement ; la relation d'achat est régie par les conditions Apple</td><td>Irlande / États-Unis</td><td>Conditions Apple Media Services, DPF / clauses contractuelles types</td></tr>
+    </table>
+    <p>Aucun autre tiers n'a accès aux données des Établissements. Les données saisies sans compte restent uniquement sur l'appareil de l'utilisateur et ne transitent par aucun prestataire.</p>
+  </div>
+
+  <footer>
+    <a href="./mentions-legales.html">Mentions légales</a>
+    <a href="./cgu.html">CGU/CGV</a>
+    <a href="./confidentialite.html">Confidentialité</a>
+    <a href="./assistance.html">Assistance</a><br><br>
+    Oplaa — © 2026. Ce contrat est accepté par l'Établissement lors de la création de son espace dans Oplaa. Une version signée peut être demandée par e-mail. Ce document ne constitue pas un conseil juridique.
+  </footer>
+</div>
+</body></html>

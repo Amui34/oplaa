@@ -10,10 +10,10 @@
 	encode zstd gzip
 
 	# Assistance & Confidentialité : servies depuis la vitrine (/srv/site)
-	@legal path /assistance.html /confidentialite.html /assistance /confidentialite
+	@legal path /assistance.html /confidentialite.html /cgu.html /dpa.html /mentions-legales.html /assistance /confidentialite /cgu /dpa /mentions-legales
 	handle @legal {
 		root * /srv/site
-		@lhtml path *.html /assistance /confidentialite
+		@lhtml path *.html /assistance /confidentialite /cgu /dpa /mentions-legales
 		header @lhtml Cache-Control "no-cache"
 		try_files {path} {path}.html
 		file_server

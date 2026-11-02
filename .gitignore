@@ -25,3 +25,4 @@ docs/exemples/*.xlsx
 
 # Supabase CLI (temporaire)
 supabase/.temp/
+.claude/launch.json
