@@ -22,3 +22,6 @@ playwright-report/
 
 # Exports réels (données de paie) — jamais versionnés
 docs/exemples/*.xlsx
+
+# Supabase CLI (temporaire)
+supabase/.temp/
