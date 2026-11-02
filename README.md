@@ -35,6 +35,13 @@ Pour voir l'app : `python3 -m http.server 8795` dans `www/` → http://localhost
 ### Tests d'intégration
 `tests/integration/backend.test.mjs` frappe un **projet Supabase de test** (`rourjugjspqppjhrizxw`, « Confirm email » désactivé — indispensable : le signup doit renvoyer un token). Ne jamais les pointer sur la prod : ils créent des comptes et consommeraient le quota d'e-mails.
 
+## Export comptable & import (format Combo)
+
+- **Suivi → Export comptable (Excel)** (admins) : fichier `.xlsx` à 3 feuilles au format de l'export comptable Combo — `Synthèse` (72 colonnes, sections identiques, ligne TOTAL en formules), `Éléments Variables de Paie`, `Absences` — pour la période affichée (semaine ou mois). Calculs HCR : heures sup au contrat / hors contrat par paliers (+10 % / +20 % / +50 %, seuils réglables), complémentaires temps partiel (+10 % / +25 %), heures manquantes, jours fériés travaillés, absences valorisées (saisie > planifié > journée contrat moyenne), entrée/sortie, repas (avantage en nature / titre / indemnité) et paniers. Réglages → « Paie & export comptable » (SIRET, type de repas, paliers, jours/semaine).
+- **Équipe → Importer (Combo)** (admins) : lit un export comptable Combo (`Synthèse` → fiches employés/contrats : matricule, contrat, dates, poste, mutuelle, heures, salaire de base, taux ; `Absences` → absences datées) avec aperçu avant import. Rapprochement par matricule puis par nom. Le planning n'est pas dans cet export (non importable).
+- Moteur de calcul : fonctions pures `hcrTiers`, `payWeekSplit`, `payContractSup`, `payPeriod`, `splitName`, `dailyContractHours` (tests : `tests/unit/paie.test.mjs`). Bibliothèque Excel : SheetJS CE 0.18.5 (`www/vendor/xlsx.full.min.js`, chargée à la demande).
+- Un fichier d'exemple réel peut être posé dans `docs/exemples/` (ignoré par git : données de paie).
+
 ## Base de données
 
 Toute modification passe par `supabase/schema.sql` (jamais de SQL « à la volée » non versionné), puis : Supabase → SQL Editor → coller le fichier → Run. Le fichier est idempotent ; Supabase affiche « Potential issue detected » à cause des `drop policy if exists` → *Run query*.

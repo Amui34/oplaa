@@ -238,3 +238,26 @@ test('planning : ruban de jours continu (dimanche → lundi suivant, sans coupur
   const laterWeek = await page.locator('#gridBody td[data-add-week]').nth(7).getAttribute('data-add-week');
   expect(laterWeek).not.toBe(firstWeek);
 });
+
+test('export comptable : 3 feuilles au format Combo (72 colonnes, TOTAL en formules)', async ({ page }) => {
+  await page.locator('#welcomeDemo').click();
+  await page.waitForTimeout(200);
+  const r = await page.evaluate(() => {
+    const d = buildComptaExport(weeksOfScope());
+    const sections = d.synth[0].filter(Boolean);
+    const total = d.synth[d.synth.length - 1];
+    return { cols: d.synth[1].length, sections: sections.length, firstCol: d.synth[1][0], lastCol: d.synth[1][71], rows: d.synth.length - 3,
+      totalLabel: total[1], totalIsFormula: typeof total[9] === 'object' && /^SUM\(/.test(total[9].f), evpHead: d.evp[0].length, absHead: d.absRows[0].length,
+      buttons: !!document.getElementById('btnSuiviXlsx') && !!document.getElementById('btnImportCombo') };
+  });
+  expect(r.cols).toBe(72);
+  expect(r.sections).toBe(7);
+  expect(r.firstCol).toBe('Nom');
+  expect(r.lastCol).toBe('Avance sur salaire ');
+  expect(r.rows).toBeGreaterThan(0);
+  expect(r.totalLabel).toBe('TOTAL');
+  expect(r.totalIsFormula).toBe(true);
+  expect(r.evpHead).toBe(7);
+  expect(r.absHead).toBe(9);
+  expect(r.buttons).toBe(true);
+});

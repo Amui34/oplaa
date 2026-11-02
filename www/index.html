@@ -315,6 +315,8 @@
   <section id="view-equipe" class="hidden">
     <div class="no-print flex flex-wrap items-center gap-3 mb-4">
       <h2 class="text-lg font-extrabold text-slate-900">Équipe</h2>
+      <button type="button" id="btnImportCombo" class="owner-only px-3 py-2 rounded-lg bg-white border border-slate-300 font-semibold hover:bg-slate-50 text-sm" title="Importer un export Combo (Synthèse + Absences) pour créer / mettre à jour les fiches">📥 Importer (Combo)</button>
+      <input type="file" id="importComboFile" accept=".xlsx" class="hidden" />
       <input type="search" id="empSearch" placeholder="🔍 Rechercher un employé…" class="ml-auto w-full sm:w-64 border border-slate-300 rounded-lg px-3 py-2 text-sm" />
     </div>
     <div id="manageBanner" class="no-print manager-only rounded-2xl border border-teal-200 bg-teal-50 px-4 py-3 mb-4 flex flex-wrap items-center gap-3">
@@ -1022,6 +1024,23 @@
   </div>
 </div>
 
+<!-- ============ MODALE IMPORT COMBO ============ -->
+<div id="importModal" class="no-print fixed inset-0 bg-black/50 z-[60] hidden items-center justify-center p-4">
+  <div class="bg-white rounded-2xl shadow-xl w-full max-w-lg p-5 max-h-[90vh] overflow-y-auto">
+    <div class="flex items-center justify-between mb-1">
+      <h3 class="text-lg font-bold">📥 Importer un export Combo</h3>
+      <button class="closeImport text-slate-400 hover:text-slate-600 text-2xl leading-none">&times;</button>
+    </div>
+    <p class="text-sm text-slate-500 mb-3">Aperçu de ce qui sera créé ou mis à jour. Rien n'est modifié avant « Importer ».</p>
+    <div id="importSummary" class="space-y-2 text-sm"></div>
+    <div id="importWarn" class="hidden mt-3 rounded-lg bg-amber-50 border border-amber-200 text-amber-800 text-xs px-3 py-2"></div>
+    <div class="flex items-center gap-2 pt-4">
+      <button type="button" class="closeImport ml-auto px-4 py-2 rounded-lg border border-slate-300 font-semibold">Annuler</button>
+      <button type="button" id="importGo" class="px-4 py-2 rounded-lg bg-teal-600 text-white font-semibold hover:bg-teal-700">Importer</button>
+    </div>
+  </div>
+</div>
+
 <!-- ============ MODALE ACCÈS & RÔLES ============ -->
 <div id="accessModal" class="no-print fixed inset-0 bg-black/50 z-[60] hidden items-center justify-center p-4">
   <div class="bg-white rounded-2xl shadow-xl w-full max-w-lg p-5 max-h-[90vh] overflow-y-auto">
@@ -1355,6 +1374,7 @@ const ABSENCE_TYPES = [
   {key:'sans_solde',       label:'Congé sans solde',            emoji:'💤', color:'#6E655C', unit:'h', pay:'non', combo:'Congé sans solde (h)'},
   {key:'injustifiee',      label:'Absence injustifiée',         emoji:'❓', color:'#8A3B2B', unit:'h', pay:'non', combo:'Absence injustifiée - Non payé (h)'},
   {key:'justifiee_np',     label:'Absence justifiée non payée', emoji:'📄', color:'#8A7C6E', unit:'h', pay:'non', combo:'Absence justifiée - Non payé (h)'},
+  {key:'justifiee_payee',  label:'Absence justifiée payée',     emoji:'✅', color:'#3F6B4A', unit:'h', pay:'rem', combo:'Absence justifiée - Payé (h)'},
   {key:'retard',           label:'Retard',                      emoji:'⏰', color:'#A8471F', unit:'h', pay:'non', combo:'Retard (h)', partial:true},   // partiel : la journée reste travaillée
 ];
 const absenceType = k => ABSENCE_TYPES.find(t=>t.key===k) || ABSENCE_TYPES[0];
@@ -4132,6 +4152,92 @@ async function exportComptaXlsx(){
   logAccess('export_compta');
 }
 document.getElementById('btnSuiviXlsx').addEventListener('click', exportComptaXlsx);
+
+/* ============ IMPORT COMBO (Synthèse → employés / contrats · Absences → absences datées) ============ */
+const importModal=document.getElementById('importModal');
+function closeImport(){ importModal.classList.add('hidden'); importModal.classList.remove('flex'); _importPlan=null; }
+document.querySelectorAll('.closeImport').forEach(b=>b.addEventListener('click', closeImport));
+importModal.addEventListener('click', e=>{ if(e.target===importModal) closeImport(); });
+let _importPlan=null;
+const normName = s => String(s||'').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g,'').replace(/[^a-z\s-]/g,' ').split(/[\s-]+/).filter(Boolean).sort().join(' ');
+const titleCase = s => String(s||'').toLowerCase().replace(/(^|[\s-])([a-zà-ÿ])/g, (m,p,c)=>p+c.toUpperCase());
+function parseFrDate(v){ if(v instanceof Date && !isNaN(v)) return isoDay(v); const m=String(v||'').trim().match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/); if(m) return `${m[3]}-${m[2].padStart(2,'0')}-${m[1].padStart(2,'0')}`; const m2=String(v||'').match(/^(\d{4})-(\d{2})-(\d{2})/); return m2?m2[0]:''; }
+const numOr = (v,d=0) => { const n=parseFloat(String(v==null?'':v).replace(',','.')); return isNaN(n)?d:n; };
+// Code Combo → type d'absence Oplaa (préfixe, sans accents ni casse)
+const normText = s => String(s||'').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[^a-z0-9\s]/g,' ').replace(/\s+/g,' ').trim();
+function comboAbsType(code){
+  const c=normText(code);
+  if(!c || /^entree sortie$/.test(c)) return null;                       // calculé, pas une absence saisie
+  const exact=ABSENCE_TYPES.find(t=>t.combo && normText(t.combo.replace(/ \((h|j)\)$/,''))===c); if(exact) return exact.key;
+  if(c.startsWith('formation')) return 'formation'; if(c.startsWith('arret maladie')) return 'maladie'; if(c.startsWith('conge paye')) return 'conge';
+  if(c.startsWith('evenement familial')) return 'evt_familial'; if(c.startsWith('accident du travail')) return 'accident_travail';
+  if(c.startsWith('conge maternite')) return 'maternite'; if(c.startsWith('conge paternite')) return 'paternite'; if(c.startsWith('conge sans solde')) return 'sans_solde';
+  if(c.startsWith('absence injustifiee')) return 'injustifiee'; if(c.startsWith('absence justifiee') && c.includes('non paye')) return 'justifiee_np'; if(c.startsWith('absence justifiee')) return 'justifiee_payee';
+  if(c.startsWith('retard')) return 'retard'; if(c.startsWith('visite medicale')) return 'visite_med'; if(c.startsWith('rtt')) return 'rtt'; if(c.startsWith('jours feries chomes')||c.startsWith('jour ferie chome')) return 'ferie_chome';
+  return null;
+}
+function sheetRows(wb, nameLike){ const n=wb.SheetNames.find(x=>normName(x).includes(normName(nameLike))); if(!n) return null; return XLSX.utils.sheet_to_json(wb.Sheets[n], {header:1, defval:'', raw:true}); }
+function headerIndex(rows, mustHave){ const i=rows.findIndex(r=>mustHave.every(h=>r.some(c=>String(c).trim()===h))); if(i<0) return null; const map={}; rows[i].forEach((h,j)=>{ const k=String(h).trim(); if(k && map[k]==null) map[k]=j; }); return {i, map}; }
+async function analyseComboFile(file){
+  await loadXlsxLib();
+  const wb=XLSX.read(await file.arrayBuffer(), {type:'array', cellDates:true});
+  const plan={ create:[], update:[], absences:[], warnings:[], siret:'' };
+  const syn=sheetRows(wb,'synthese'); if(!syn) throw new Error('Feuille « Synthèse » introuvable : est-ce bien un export comptable Combo ?');
+  const H=headerIndex(syn,['Nom','Prénom','Matricule']); if(!H) throw new Error('En-têtes « Nom / Prénom / Matricule » introuvables dans la Synthèse.');
+  const g=(r,name)=>{ const j=H.map[name]; return j==null?'':r[j]; };
+  const teamByLabel={}; state.teams.forEach(t=>teamByLabel[normName(t.label)]=t.key);
+  for(const r of syn.slice(H.i+1)){
+    const nom=String(g(r,'Nom')).trim(), prenom=String(g(r,'Prénom')).trim(); if(!nom && !prenom) continue; if(/^total$/i.test(prenom)||/^total$/i.test(nom)) continue;
+    const matricule=String(g(r,'Matricule')).trim(); const siret=String(g(r,'SIRET Établissement')).trim(); if(siret && !plan.siret) plan.siret=siret;
+    const name=`${titleCase(prenom)} ${titleCase(nom)}`.trim();
+    const hebdo=numOr(g(r,'Heures contrat hebdo.'),null), mensuel=numOr(g(r,'Heures contrat mensuel'),0), base=numOr(g(r,'Salaire de base'),0), extraRate=numOr(g(r,'Salaire horaire brut (extra)'),0);
+    const poste=String(g(r,'Poste')).trim(); const role=teamByLabel[normName(poste)]||null;
+    const fields={ name, matricule, contractType:String(g(r,'Contrat')).trim()||'', startDate:parseFrDate(g(r,"Date d'entrée")), endDate:parseFrDate(g(r,'Date de sortie')), jobTitle:poste, mutuelle:/^oui$/i.test(String(g(r,'Mutuelle')).trim()) };
+    if(hebdo!=null && hebdo>0){ fields.hours=hebdo; fields.hoursUnit='semaine'; } if(base>0) fields.baseSalary=base;
+    const rate = extraRate>0 ? extraRate : (base>0 && mensuel>0 ? Math.round(base/mensuel*100)/100 : 0); if(rate>0) fields.rate=rate;
+    if(role) fields.role=role;
+    const existing = state.employees.find(e=> (matricule && e.matricule===matricule)) || state.employees.find(e=>normName(e.name)===normName(name));
+    if(existing) plan.update.push({ emp:existing, fields }); else plan.create.push({ fields });
+  }
+  const abs=sheetRows(wb,'absences');
+  if(abs){ const A=headerIndex(abs,['Code','Date début','Date fin']); if(A){ const ga=(r,n)=>{ const j=A.map[n]; return j==null?'':r[j]; }; const skipped={};
+    for(const r of abs.slice(A.i+1)){ const nom=String(ga(r,'Nom')).trim(), prenom=String(ga(r,'Prénom')).trim(); if(!nom&&!prenom) continue;
+      const code=String(ga(r,'Code')).trim(); const type=comboAbsType(code); const from=parseFrDate(ga(r,'Date début')), to=parseFrDate(ga(r,'Date fin'))||from;
+      if(!type){ if(code && !/^entr/i.test(code)) skipped[code]=(skipped[code]||0)+1; continue; } if(!from) continue;
+      const unit=String(ga(r,'Unité')).trim().toLowerCase(); const val=numOr(ga(r,'Valeur'),0);
+      const days=[]; for(let d=parseLocalDate(from); isoDay(d)<=to && days.length<62; d=addDays(isoDay(d),1)) days.push(isoDay(d));
+      const perDay = (unit.startsWith('h') && val>0 && days.length) ? val/days.length : null;
+      plan.absences.push({ nom, prenom, matricule:String(ga(r,'Matricule')).trim(), type, days, hours: absenceType(type).unit==='h' ? perDay : null });
+    }
+    Object.keys(skipped).forEach(c=>plan.warnings.push(`Code d'absence non reconnu, ignoré : « ${c} » (${skipped[c]})`)); } }
+  if(plan.siret && state.siret && plan.siret!==state.siret) plan.warnings.push(`SIRET du fichier (${plan.siret}) différent de celui de l'établissement (${state.siret}) — vérifie que c'est le bon établissement.`);
+  return plan;
+}
+function renderImportPlan(plan){
+  const box=document.getElementById('importSummary'); const li=(n,t)=>`<div class="flex items-center gap-2"><span class="w-8 text-right font-extrabold text-teal-700">${n}</span><span>${t}</span></div>`;
+  box.innerHTML = li(plan.create.length,'employé(s) à <b>créer</b>'+(plan.create.length?` <span class="text-slate-400">— ${plan.create.slice(0,6).map(c=>c.fields.name).join(', ')}${plan.create.length>6?'…':''}</span>`:''))
+    + li(plan.update.length,'fiche(s) à <b>mettre à jour</b> (matricule, contrat, dates, poste, heures, salaire)')
+    + li(plan.absences.reduce((t,a)=>t+a.days.length,0),'jour(s) d\'absence à importer (congés, maladie, formation…)')
+    + (plan.siret && !state.siret ? li('ℹ️',`SIRET <b>${plan.siret}</b> sera enregistré pour l'établissement`) : '');
+  const w=document.getElementById('importWarn'); if(plan.warnings.length){ w.innerHTML=plan.warnings.map(x=>'⚠️ '+x).join('<br>'); w.classList.remove('hidden'); } else w.classList.add('hidden');
+}
+function applyImportPlan(plan){
+  const defaultRole=(state.teams[0]||{}).key||'';
+  plan.create.forEach(c=>{ const e=Object.assign({ id:uid(), name:'', role:defaultRole, contract:'', rate:0, phone:'', email:'', archived:false, compliance:emptyCompliance(), congesAllowance:25 }, c.fields); e.contract=[e.contractType,(e.hours?fmtNum(e.hours)+' h/sem':null)].filter(Boolean).join(' · ')||e.contractType||''; state.employees.push(e); });
+  plan.update.forEach(u=>{ Object.assign(u.emp, u.fields); u.emp.contract=[u.emp.contractType,(u.emp.hours?fmtNum(u.emp.hours)+' h/'+(u.emp.hoursUnit==='mois'?'mois':'sem'):null)].filter(Boolean).join(' · ')||u.emp.contractType||''; });
+  if(plan.siret && !state.siret) state.siret=plan.siret;
+  let nAbs=0;
+  plan.absences.forEach(a=>{ const emp = state.employees.find(e=>a.matricule && e.matricule===a.matricule) || state.employees.find(e=>normName(e.name)===normName(`${a.prenom} ${a.nom}`)); if(!emp) return;
+    a.days.forEach(iso=>{ const d=parseLocalDate(iso); const wk=isoDay(mondayOf(d)), day=(d.getDay()+6)%7; if(state.absences.some(x=>x.empId===emp.id && x.week===wk && x.day===day)) return; const rec={ id:uid(), week:wk, day, empId:emp.id, type:a.type }; if(a.hours>0) rec.hours=Math.round(a.hours*100)/100; state.absences.push(rec); nAbs++; }); });
+  save(); renderAll(); toast(`Import terminé ✓ — ${plan.create.length} créé(s), ${plan.update.length} mis à jour, ${nAbs} jour(s) d'absence`);
+}
+document.getElementById('btnImportCombo').addEventListener('click', ()=>{ if(!canSeeSalaries()){ toast('Import réservé aux admins.'); return; } document.getElementById('importComboFile').value=''; document.getElementById('importComboFile').click(); });
+document.getElementById('importComboFile').addEventListener('change', async e=>{
+  const f=e.target.files&&e.target.files[0]; if(!f) return;
+  try{ _importPlan=await analyseComboFile(f); }catch(err){ toast(err.message||'Fichier illisible'); return; }
+  renderImportPlan(_importPlan); importModal.classList.remove('hidden'); importModal.classList.add('flex');
+});
+document.getElementById('importGo').addEventListener('click', ()=>{ if(_importPlan){ applyImportPlan(_importPlan); closeImport(); } });
 
 document.getElementById('btnExport').addEventListener('click',()=>{
   const blob=new Blob([JSON.stringify(state,null,2)],{type:'application/json'});
