@@ -639,6 +639,17 @@
         <input type="number" id="empConges" min="0" step="1" placeholder="25" class="mt-1 w-full sm:w-44 border border-slate-300 rounded-lg px-3 py-2" />
         <span class="text-[11px] text-slate-400 block mt-0.5">Sert à calculer le solde de congés restant (25 j/an par défaut).</span>
       </div>
+      <details class="rounded-lg border border-slate-200">
+        <summary class="px-3 py-2 cursor-pointer text-sm font-semibold text-slate-600 select-none">Infos paie (export comptable)</summary>
+        <div class="px-3 pb-3 grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <div><label class="text-sm font-semibold text-slate-600">Matricule</label><input type="text" id="empMatricule" placeholder="Ex : B0143" class="mt-1 w-full border border-slate-300 rounded-lg px-3 py-2" /></div>
+          <div><label class="text-sm font-semibold text-slate-600">Poste (intitulé)</label><input type="text" id="empJobTitle" placeholder="Ex : Serveur·se" class="mt-1 w-full border border-slate-300 rounded-lg px-3 py-2" /></div>
+          <div><label class="text-sm font-semibold text-slate-600">Date d'entrée</label><input type="date" id="empStart" class="mt-1 w-full border border-slate-300 rounded-lg px-3 py-2" /></div>
+          <div><label class="text-sm font-semibold text-slate-600">Date de sortie</label><input type="date" id="empEnd" class="mt-1 w-full border border-slate-300 rounded-lg px-3 py-2" /></div>
+          <label class="flex items-center gap-2 text-sm text-slate-700 sm:col-span-1"><input type="checkbox" id="empMutuelle"> Mutuelle d'entreprise</label>
+          <div class="cost-col"><label class="text-sm font-semibold text-slate-600">Salaire de base mensuel brut (€)</label><input type="number" id="empBaseSalary" min="0" step="1" inputmode="decimal" placeholder="Ex : 2150" class="mt-1 w-full border border-slate-300 rounded-lg px-3 py-2" /></div>
+        </div>
+      </details>
       <div class="flex items-center gap-2 pt-2 flex-wrap">
         <button type="button" id="archiveEmpBtn" class="mr-auto text-sm text-slate-500 font-semibold hover:underline hidden">🗂️ Archiver</button>
         <button type="button" id="deleteEmpBtn" class="text-sm text-red-600 font-semibold hover:underline hidden">Supprimer</button>
@@ -799,6 +810,8 @@
     <div class="flex flex-wrap items-center gap-2 mb-4">
       <span class="text-xs font-semibold text-slate-500">Type à poser :</span>
       <div id="absTypePicker" class="flex flex-wrap gap-1.5"></div>
+      <select id="absTypeMore" class="border border-slate-300 rounded-lg px-2 h-8 text-xs bg-white"><option value="">Autre type (paie)…</option></select>
+      <label class="inline-flex items-center gap-1 text-xs text-slate-500">Heures <input type="number" id="absHours" min="0" step="0.25" placeholder="auto" class="w-16 border border-slate-300 rounded-lg px-2 h-8 text-xs"></label>
     </div>
     <div class="overflow-x-auto">
       <table class="w-full text-sm border-collapse min-w-[560px]">
@@ -1236,6 +1249,19 @@
               </select>.</span></span>
         </label>
       </div>
+      <div>
+        <span class="text-xs font-bold uppercase tracking-wide text-slate-400">Paie &amp; export comptable</span>
+        <p class="text-xs text-slate-400 mt-1 mb-2">Utilisé par l'export comptable (format Combo). Convention HCR par défaut.</p>
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <div><label class="text-sm font-semibold text-slate-600">SIRET de l'établissement</label><input type="text" id="setSiret" inputmode="numeric" placeholder="14 chiffres" class="mt-1 w-full border border-slate-300 rounded-lg px-3 py-2 text-sm" /></div>
+          <div><label class="text-sm font-semibold text-slate-600">Repas déclarés en paie comme</label>
+            <select id="setMealType" class="mt-1 w-full border border-slate-300 rounded-lg px-2 py-2 text-sm bg-white"><option value="nature">Avantage en nature</option><option value="titre">Titre restaurant</option><option value="indemnite">Indemnité repas</option></select></div>
+          <div><label class="text-sm font-semibold text-slate-600">Heures sup +10 % jusqu'à (h/sem)</label><input type="number" id="setT10" min="35" max="48" step="1" class="mt-1 w-full border border-slate-300 rounded-lg px-3 py-2 text-sm" /></div>
+          <div><label class="text-sm font-semibold text-slate-600">Heures sup +20 % jusqu'à (h/sem)</label><input type="number" id="setT20" min="35" max="48" step="1" class="mt-1 w-full border border-slate-300 rounded-lg px-3 py-2 text-sm" /></div>
+          <div><label class="text-sm font-semibold text-slate-600">Jours travaillés par semaine (journée moyenne)</label><input type="number" id="setDaysPerWeek" min="1" max="7" step="1" class="mt-1 w-full border border-slate-300 rounded-lg px-3 py-2 text-sm" /></div>
+        </div>
+        <p class="text-xs text-slate-400 mt-1">HCR : 36-39 h +10 %, 40-43 h +20 %, au-delà +50 %. Temps partiel : heures complémentaires +10 % jusqu'à 1/10 du contrat, +25 % au-delà.</p>
+      </div>
       <p id="setErr" class="text-sm text-red-600 hidden"></p>
       <div class="flex items-center gap-2 pt-1">
         <button type="button" class="closeSettings ml-auto px-4 py-2 rounded-lg border border-slate-300 font-semibold">Annuler</button>
@@ -1311,16 +1337,30 @@ const RC_ENTITLEMENT_ID = 'pro';                    // identifiant d'entitlement
 const RC_IOS_API_KEY = 'appl_XXXXXXXXXXXXXXXX';     // clé API publique iOS RevenueCat (à remplir en v1.1)
 const PRO_PRICE_LABEL = '4,99 €/mois';
 const ABSENCE_TYPES = [
-  {key:'conge',   label:'Congé',   emoji:'🌴', color:'#3F6B4A'},
-  {key:'maladie', label:'Maladie', emoji:'🤒', color:'#9E2B2B'},
-  {key:'repos',   label:'Repos',   emoji:'😴', color:'#8A6516'},
-  {key:'indispo', label:'Indispo', emoji:'⛔', color:'#544A42'},
+  // Types « classiques » (boutons rapides). unit : 'j' = jours, 'h' = heures · pay : rem = rémunérée, ind = indemnisée, non = non rémunérée
+  {key:'conge',   label:'Congé payé', emoji:'🌴', color:'#3F6B4A', unit:'j', pay:'rem', combo:'Congé payé (j)'},
+  {key:'maladie', label:'Maladie',    emoji:'🤒', color:'#9E2B2B', unit:'h', pay:'ind', combo:'Arrêt maladie (h)'},
+  {key:'repos',   label:'Repos',      emoji:'😴', color:'#8A6516'},    // repos hebdomadaire : pas une absence pour la paie
+  {key:'indispo', label:'Indispo',    emoji:'⛔', color:'#544A42'},    // indisponibilité : pas une absence pour la paie
+  // Types « paie » (liste déroulante) — alignés sur les rubriques des exports comptables (Combo…)
+  {key:'ferie_chome',      label:'Jour férié chômé',            emoji:'🎉', color:'#6B4E9B', unit:'h', pay:'rem', combo:'Jours fériés chômés (h)'},
+  {key:'rtt',              label:'RTT',                         emoji:'🧘', color:'#2F6F83', unit:'j', pay:'rem', combo:'RTT'},
+  {key:'evt_familial',     label:'Évènement familial',          emoji:'🕊️', color:'#7A4EA3', unit:'j', pay:'rem', combo:'Évènement familial (j)'},
+  {key:'formation',        label:'Formation',                   emoji:'🎓', color:'#1F6F8B', unit:'h', pay:'rem', combo:'Formation (h)'},
+  {key:'visite_med',       label:'Visite médicale',             emoji:'🩺', color:'#4C5BAF', unit:'h', pay:'rem', combo:'Visite médicale (h)'},
+  {key:'accident_travail', label:'Accident du travail',         emoji:'🚑', color:'#B23A48', unit:'h', pay:'ind', combo:'Accident du travail (h)'},
+  {key:'maternite',        label:'Congé maternité',             emoji:'🤰', color:'#C98A3A', unit:'h', pay:'ind', combo:'Congé maternité (h)'},
+  {key:'paternite',        label:'Congé paternité',             emoji:'👶', color:'#C98A3A', unit:'h', pay:'ind', combo:'Congé paternité (h)'},
+  {key:'sans_solde',       label:'Congé sans solde',            emoji:'💤', color:'#6E655C', unit:'h', pay:'non', combo:'Congé sans solde (h)'},
+  {key:'injustifiee',      label:'Absence injustifiée',         emoji:'❓', color:'#8A3B2B', unit:'h', pay:'non', combo:'Absence injustifiée - Non payé (h)'},
+  {key:'justifiee_np',     label:'Absence justifiée non payée', emoji:'📄', color:'#8A7C6E', unit:'h', pay:'non', combo:'Absence justifiée - Non payé (h)'},
+  {key:'retard',           label:'Retard',                      emoji:'⏰', color:'#A8471F', unit:'h', pay:'non', combo:'Retard (h)', partial:true},   // partiel : la journée reste travaillée
 ];
 const absenceType = k => ABSENCE_TYPES.find(t=>t.key===k) || ABSENCE_TYPES[0];
 const weekAbsences = wk => state.absences.filter(a=>a.week===wk);
 const absenceOf = (empId,day) => state.absences.find(a=>a.week===state.weekStart && a.empId===empId && a.day===day);
 // Un employé est-il absent (congé/maladie/repos/indispo) ce jour-là ?
-const isAbsentDay = (empId, wk, day) => state.absences.some(a=>a.week===wk && a.empId===empId && a.day===day);
+const isAbsentDay = (empId, wk, day) => state.absences.some(a=>a.week===wk && a.empId===empId && a.day===day && !absenceType(a.type).partial);   // un retard ne vide pas la journée
 // Comptage des jours d'absence d'un employé sur un ensemble de semaines, par type (un jour = 1, même si plusieurs absences).
 function absenceBreakdown(empId, weeks){
   const by={}, seen=new Set(); let total=0;
@@ -1472,6 +1512,7 @@ function monthMeals(empId, refWk){ const M=ruleMeal(); if(!M.enabled) return 0; 
 function ruleNight(){ return (state.rules&&state.rules.night)||{enabled:false}; }
 function ruleSunday(){ return (state.rules&&state.rules.sunday)||{enabled:false}; }
 function rulePanier(){ return (state.rules&&state.rules.panier)||{enabled:false}; }
+function rulePay(){ const d={mealType:'nature',t10End:39,t20End:43,daysPerWeek:5}; return Object.assign(d,(state.rules&&state.rules.pay)||{}); }
 // Jours fériés français (fixes + basés sur Pâques), mis en cache par année
 function easterDate(y){ const a=y%19,b=Math.floor(y/100),c=y%100,d=Math.floor(b/4),e=b%4,f=Math.floor((b+8)/25),g=Math.floor((b-f+1)/3),h=(19*a+b-d-g+15)%30,i=Math.floor(c/4),k=c%4,l=(32+2*e+2*i-h-k)%7,m=Math.floor((a+11*h+22*l)/451),mo=Math.floor((h+l-7*m+114)/31),da=((h+l-7*m+114)%31)+1; return new Date(y,mo-1,da); }
 function frHolidays(y){ const p=n=>String(n).padStart(2,'0'); const set=new Set([`${y}-01-01`,`${y}-05-01`,`${y}-05-08`,`${y}-07-14`,`${y}-08-15`,`${y}-11-01`,`${y}-11-11`,`${y}-12-25`]); const E=easterDate(y); [1,39,50].forEach(off=>{ const d=new Date(E); d.setDate(d.getDate()+off); set.add(`${d.getFullYear()}-${p(d.getMonth()+1)}-${p(d.getDate())}`); }); return set; }
@@ -1746,6 +1787,8 @@ function migrate(s){
   if(!s.rules.night  || typeof s.rules.night!=='object')  s.rules.night ={ enabled:false, start:'21:00', end:'06:00', pct:0 };   // heures de nuit
   if(!s.rules.sunday || typeof s.rules.sunday!=='object') s.rules.sunday={ enabled:false, pct:0 };                               // dimanche & jours fériés
   if(!s.rules.panier || typeof s.rules.panier!=='object') s.rules.panier={ enabled:false, amount:0, cond:'nuit' };              // prime panier (€/jour qualifiant)
+  if(!s.rules.pay || typeof s.rules.pay!=='object') s.rules.pay={ mealType:'nature', t10End:39, t20End:43, daysPerWeek:5 };   // paie / export comptable
+  if(typeof s.siret!=='string') s.siret='';
   // Les anciens shifts (sans semaine) sont rattachés à la semaine enregistrée = "semaine-type" existante
   s.shifts = (s.shifts||[]).map(sh=>({ ...sh, week: sh.week || s.weekStart, realStart: sh.realStart||'', realEnd: sh.realEnd||'', breaks: Array.isArray(sh.breaks)?sh.breaks:[] }));
   s.notes = (s.notes||[]).map(n=>({ level:'info', ...n }));
@@ -2591,12 +2634,14 @@ function openEmpModal(emp){
     document.getElementById('empHoursUnit').value=(emp.hoursUnit==='mois')?'mois':'semaine';
     document.getElementById('empRate').value=emp.rate||'';
     document.getElementById('empConges').value=(emp.congesAllowance!=null?emp.congesAllowance:25);
+    document.getElementById('empMatricule').value=emp.matricule||''; document.getElementById('empJobTitle').value=emp.jobTitle||''; document.getElementById('empStart').value=emp.startDate||''; document.getElementById('empEnd').value=emp.endDate||''; document.getElementById('empMutuelle').checked=!!emp.mutuelle; document.getElementById('empBaseSalary').value=emp.baseSalary||'';
     del.classList.remove('hidden'); arch.classList.remove('hidden');
   } else {
     document.getElementById('empModalTitle').textContent='Ajouter un employé';
     document.getElementById('empId').value='';
     ['empName','empEmail','empPhone','empRate','empHours'].forEach(id=>document.getElementById(id).value='');
     document.getElementById('empConges').value='25';
+    ['empMatricule','empJobTitle','empStart','empEnd','empBaseSalary'].forEach(id=>document.getElementById(id).value=''); document.getElementById('empMutuelle').checked=false;
     document.getElementById('empRole').value='salle';
     document.getElementById('empType').value='CDI';
     document.getElementById('empHoursUnit').value='semaine';
@@ -2637,10 +2682,13 @@ document.getElementById('empForm').addEventListener('submit', ev=>{
     contractType, hours, hoursUnit,
     rate:parseFloat(String(document.getElementById('empRate').value).replace(',','.'))||0,
     congesAllowance:(function(){ const cv=document.getElementById('empConges').value.trim(); return cv===''?25:Math.max(0,parseInt(cv,10)||0); })(),
+    matricule:document.getElementById('empMatricule').value.trim(), jobTitle:document.getElementById('empJobTitle').value.trim(), startDate:document.getElementById('empStart').value||'', endDate:document.getElementById('empEnd').value||'', mutuelle:document.getElementById('empMutuelle').checked,
+    baseSalary:(canSeeSalaries()?(parseFloat(String(document.getElementById('empBaseSalary').value).replace(',','.'))||0):undefined),
   };
   // Libellé texte conservé pour la rétrocompatibilité d'affichage/cloud
   data.contract = [contractType, (hours!=null?fmtNum(hours)+' h/'+(hoursUnit==='mois'?'mois':'sem'):null)].filter(Boolean).join(' · ') || contractType;
   if(!data.name) return;
+  if(data.baseSalary===undefined) delete data.baseSalary;   // manager : ne jamais écraser le salaire de base (champ masqué)
   if(id){ Object.assign(state.employees.find(x=>x.id===id), data); }
   else { state.employees.push({ id:uid(), ...data }); }
   save(); renderAll(); closeEmpModal(); toast('Employé enregistré ✓');
@@ -2727,8 +2775,13 @@ function openAbsModal(){
 }
 function closeAbsModal(){ absModal.classList.add('hidden'); absModal.classList.remove('flex'); }
 function renderAbsPicker(){
-  document.getElementById('absTypePicker').innerHTML = ABSENCE_TYPES.map(t=>
-    `<button type="button" data-abt="${t.key}" class="abs-type px-2.5 h-8 rounded-lg border text-xs font-bold ${t.key===absTypeSel?'text-white':'bg-white text-slate-600 border-slate-300 hover:bg-slate-50'}" ${t.key===absTypeSel?`style="background:${t.color};border-color:${t.color}"`:''}>${t.emoji} ${t.label}</button>`).join('');
+  const quick=ABSENCE_TYPES.slice(0,4), more=ABSENCE_TYPES.slice(4);
+  document.getElementById('absTypePicker').innerHTML = quick.map(t=>
+    `<button type="button" data-abt="${t.key}" class="abs-type px-2.5 h-8 rounded-lg border text-xs font-bold ${t.key===absTypeSel?'text-white':'bg-white text-slate-600 border-slate-300 hover:bg-slate-50'}" style="${t.key===absTypeSel?`background:${t.color};border-color:${t.color}`:''}">${t.emoji} ${t.label}</button>`).join('');
+  const sel=document.getElementById('absTypeMore');
+  sel.innerHTML='<option value="">Autre type (paie)…</option>'+more.map(t=>`<option value="${t.key}" ${t.key===absTypeSel?'selected':''}>${t.emoji} ${t.label}${t.unit==='h'?' (h)':' (j)'}</option>`).join('');
+  sel.style.borderColor = more.some(t=>t.key===absTypeSel) ? absenceType(absTypeSel).color : '';
+  const hrs=document.getElementById('absHours'); const t=absenceType(absTypeSel); hrs.disabled = t.unit!=='h'; hrs.placeholder = t.unit==='h' ? 'auto' : '—';
 }
 function renderAbsTable(){
   document.getElementById('absHead').innerHTML =
@@ -2748,12 +2801,13 @@ document.getElementById('btnAbsences').addEventListener('click', ()=>{ document.
 document.querySelectorAll('.closeAbs').forEach(b=>b.addEventListener('click',closeAbsModal));
 absModal.addEventListener('click',e=>{ if(e.target===absModal) closeAbsModal(); });
 document.getElementById('absTypePicker').addEventListener('click',e=>{ const b=e.target.closest('.abs-type'); if(b){ absTypeSel=b.dataset.abt; renderAbsPicker(); } });
+document.getElementById('absTypeMore').addEventListener('change',e=>{ if(e.target.value){ absTypeSel=e.target.value; renderAbsPicker(); } });
 document.getElementById('absBody').addEventListener('click',e=>{
   const b=e.target.closest('.abs-cell'); if(!b) return;
   const empId=b.dataset.emp, day=parseInt(b.dataset.day,10), cur=absenceOf(empId,day);
   if(cur && cur.type===absTypeSel){ state.absences=state.absences.filter(a=>a!==cur); }          // même type → on retire
   else if(cur){ cur.type=absTypeSel; }                                                             // autre type → on remplace
-  else { state.absences.push({ id:uid(), week:state.weekStart, empId, day, type:absTypeSel }); }   // sinon on pose
+  else { const h=parseFloat(String(document.getElementById('absHours').value).replace(',','.')); const rec={ id:uid(), week:state.weekStart, empId, day, type:absTypeSel }; if(absenceType(absTypeSel).unit==='h' && h>0) rec.hours=h; state.absences.push(rec); }   // sinon on pose
   save(); renderAbsTable(); renderGrid(); if(document.getElementById('view-employe')) renderEmploye();
 });
 
@@ -3754,6 +3808,7 @@ function openSettings(){
   document.getElementById('setPanierOn').checked=!!PN.enabled;
   document.getElementById('setPanierAmt').value=PN.amount||0;
   document.getElementById('setPanierCond').value=PN.cond||'nuit';
+  const PY=rulePay(); document.getElementById('setSiret').value=state.siret||''; document.getElementById('setMealType').value=PY.mealType||'nature'; document.getElementById('setT10').value=PY.t10End; document.getElementById('setT20').value=PY.t20End; document.getElementById('setDaysPerWeek').value=PY.daysPerWeek;
   refreshLogoPreview();
   document.getElementById('setErr').classList.add('hidden');
   settingsModal.classList.remove('hidden'); settingsModal.classList.add('flex');
@@ -3848,6 +3903,8 @@ document.getElementById('settingsForm').addEventListener('submit',ev=>{
   state.rules.night = { enabled: document.getElementById('setNightOn').checked, start: document.getElementById('setNightStart').value||'21:00', end: document.getElementById('setNightEnd').value||'06:00', pct: parseFloat(document.getElementById('setNightPct').value)||0 };
   state.rules.sunday = { enabled: document.getElementById('setSunOn').checked, pct: parseFloat(document.getElementById('setSunPct').value)||0 };
   state.rules.panier = { enabled: document.getElementById('setPanierOn').checked, amount: parseFloat(document.getElementById('setPanierAmt').value)||0, cond: document.getElementById('setPanierCond').value||'nuit' };
+  state.siret=(document.getElementById('setSiret').value||'').replace(/\s/g,'');
+  state.rules.pay = { mealType: document.getElementById('setMealType').value||'nature', t10End: parseInt(document.getElementById('setT10').value,10)||39, t20End: parseInt(document.getElementById('setT20').value,10)||43, daysPerWeek: Math.min(7,Math.max(1,parseInt(document.getElementById('setDaysPerWeek').value,10)||5)) };
   syncGlobals(); save(); renderAll(); closeSettings(); toast('Réglages enregistrés ✓');
 });
 document.querySelectorAll('.closeSettings').forEach(b=>b.addEventListener('click',closeSettings));
@@ -4146,17 +4203,17 @@ async function pushToCloud(){
   if(!sb || !cloudMembership || !['owner','manager'].includes(cloudMembership.role)) return {error:'Connecte-toi en patron d’abord.'};
   const est = cloudMembership.establishment_id;
   try{
-    const estUpd = await sb.from('establishments').update({ name:state.restaurant, teams:state.teams, periods:state.periods, compliance:state.complianceItems, team_word:state.teamWord, accent:state.accent, logo:state.logo||null, emp_scope:state.empScope, profile:state.profile }).eq('id', est);
+    const estUpd = await sb.from('establishments').update({ name:state.restaurant, teams:state.teams, periods:state.periods, compliance:state.complianceItems, team_word:state.teamWord, accent:state.accent, logo:state.logo||null, emp_scope:state.empScope, profile:state.profile, siret:state.siret||null, rules:state.rules||{} }).eq('id', est);
     if(estUpd.error) return {error:'Réglages non synchronisés : '+estUpd.error.message};
-    const emps = state.employees.map(e=>{ const o={ establishment_id:est, local_id:e.id, name:e.name, role:e.role||'', contract:String(e.contract||''), phone:e.phone||'', email:e.email||'', archived:!!e.archived, compliance:e.compliance||{}, conges_allowance:(e.congesAllowance!=null?e.congesAllowance:25), hours:(e.hours!=null&&e.hours!==''&&!isNaN(parseFloat(e.hours))?parseFloat(e.hours):null), hours_unit:(e.hoursUnit==='mois'?'mois':'semaine'), contract_type:e.contractType||null };
-      if(canSeeSalaries()) o.rate=e.rate||0;   // un manager n'envoie JAMAIS le taux → ne peut pas écraser les salaires
+    const emps = state.employees.map(e=>{ const o={ establishment_id:est, local_id:e.id, name:e.name, role:e.role||'', contract:String(e.contract||''), phone:e.phone||'', email:e.email||'', archived:!!e.archived, compliance:e.compliance||{}, conges_allowance:(e.congesAllowance!=null?e.congesAllowance:25), hours:(e.hours!=null&&e.hours!==''&&!isNaN(parseFloat(e.hours))?parseFloat(e.hours):null), hours_unit:(e.hoursUnit==='mois'?'mois':'semaine'), contract_type:e.contractType||null, matricule:e.matricule||null, job_title:e.jobTitle||null, start_date:e.startDate||null, end_date:e.endDate||null, mutuelle:!!e.mutuelle };
+      if(canSeeSalaries()){ o.rate=e.rate||0; o.base_salary=e.baseSalary||0; }   // un manager n'envoie JAMAIS le taux → ne peut pas écraser les salaires
       return o; });
     if(emps.length){ const {error}=await sb.from('employees').upsert(emps,{onConflict:'establishment_id,local_id'}); if(error) return {error:error.message}; }
     const { data:remEmps } = await sb.from('employees').select('id,local_id').eq('establishment_id', est);
     const map={}; (remEmps||[]).forEach(r=>{ if(r.local_id) map[r.local_id]=r.id; });
     const shifts = state.shifts.map(s=>({ establishment_id:est, local_id:s.id, employee_id: s.empId?(map[s.empId]||null):null, extra_name:s.extraName||null, week:s.week, day:s.day, team:s.team, period:s.period, start_t:s.start, end_t:s.end, real_start:s.realStart||null, real_end:s.realEnd||null, breaks:s.breaks||[], note:s.note||null }));
     if(shifts.length){ const {error}=await sb.from('shifts').upsert(shifts,{onConflict:'establishment_id,local_id'}); if(error) return {error:error.message}; }
-    const abs = state.absences.map(a=>({ establishment_id:est, local_id:a.id, employee_id: map[a.empId]||null, week:a.week, day:a.day, type:a.type })).filter(a=>a.employee_id);
+    const abs = state.absences.map(a=>({ establishment_id:est, local_id:a.id, employee_id: map[a.empId]||null, week:a.week, day:a.day, type:a.type, hours:(a.hours||null) })).filter(a=>a.employee_id);
     if(abs.length){ await sb.from('absences').upsert(abs,{onConflict:'establishment_id,local_id'}); }
     const notes = state.notes.map(n=>({ establishment_id:est, local_id:n.id, week:n.week, day:(n.day==null?null:n.day), text:n.text, level:n.level||'info' }));
     if(notes.length){ await sb.from('notes').upsert(notes,{onConflict:'establishment_id,local_id'}); }
@@ -4186,13 +4243,13 @@ async function pullForEmployee(){
   if(!sb || !cloudMembership) return;
   const est = cloudMembership.establishment_id, myId = cloudMembership.employee_id;
   const { data:e } = await sb.from('establishments').select('*').eq('id', est).maybeSingle();
-  if(e){ state.restaurant=e.name||state.restaurant; if(e.teams&&e.teams.length)state.teams=e.teams; if(e.periods&&e.periods.length)state.periods=e.periods; if(e.compliance)state.complianceItems=e.compliance; state.teamWord=e.team_word||state.teamWord; state.accent=e.accent||state.accent; state.logo=e.logo||''; state.empScope=e.emp_scope||'all'; state.profile=e.profile||state.profile; state.proUntil=e.pro_until||null; state.proSource=e.pro_source||null; syncGlobals(); setAccent(state.accent); applyLogo(); }
+  if(e){ state.restaurant=e.name||state.restaurant; if(e.teams&&e.teams.length)state.teams=e.teams; if(e.periods&&e.periods.length)state.periods=e.periods; if(e.compliance)state.complianceItems=e.compliance; state.teamWord=e.team_word||state.teamWord; state.accent=e.accent||state.accent; state.logo=e.logo||''; state.empScope=e.emp_scope||'all'; state.profile=e.profile||state.profile; state.proUntil=e.pro_until||null; state.proSource=e.pro_source||null; state.siret=e.siret||state.siret||''; if(e.rules&&typeof e.rules==='object'&&Object.keys(e.rules).length) state.rules=Object.assign({}, state.rules||{}, e.rules); syncGlobals(); setAccent(state.accent); applyLogo(); }
   const { data:team } = await sb.from('team_members_public').select('*').eq('establishment_id', est);
   state.employees = (team||[]).map(t=>({ id:t.id, name:t.name, role:t.role, contract:'', rate:0, phone:'', email:'', archived:!!t.archived, compliance:{} }));
   const { data:shifts } = await sb.from('shifts').select('*').eq('establishment_id', est);
   state.shifts = (shifts||[]).map(s=>({ id:s.id, week:s.week, day:s.day, team:s.team, period:s.period, start:s.start_t, end:s.end_t, empId:s.employee_id||'', extraName:s.extra_name||'', realStart:s.real_start||'', realEnd:s.real_end||'', breaks:s.breaks||[], note:s.note||'' }));
   const { data:abs } = await sb.from('absences').select('*').eq('establishment_id', est);
-  state.absences = (abs||[]).map(a=>({ id:a.id, week:a.week, day:a.day, empId:a.employee_id, type:a.type }));
+  state.absences = (abs||[]).map(a=>({ id:a.id, week:a.week, day:a.day, empId:a.employee_id, type:a.type, hours:(a.hours||undefined) }));
   const { data:notes } = await sb.from('notes').select('*').eq('establishment_id', est);
   state.notes = (notes||[]).map(n=>({ id:n.id, week:n.week, day:n.day, text:n.text, level:n.level||'info' }));
   if(myId && state.employees.some(x=>x.id===myId)) empViewSel = myId;
@@ -4205,18 +4262,18 @@ async function pullForOwner(){
   const est = cloudMembership.establishment_id;
   try{
     const { data:e } = await sb.from('establishments').select('*').eq('id', est).maybeSingle();
-    if(e){ state.restaurant=e.name||state.restaurant; if(e.teams&&e.teams.length)state.teams=e.teams; if(e.periods&&e.periods.length)state.periods=e.periods; if(e.compliance&&e.compliance.length)state.complianceItems=e.compliance; state.teamWord=e.team_word||state.teamWord; state.accent=e.accent||state.accent; state.logo=e.logo||''; state.empScope=e.emp_scope||'all'; state.profile=e.profile||state.profile; state.proUntil=e.pro_until||null; state.proSource=e.pro_source||null; }
+    if(e){ state.restaurant=e.name||state.restaurant; if(e.teams&&e.teams.length)state.teams=e.teams; if(e.periods&&e.periods.length)state.periods=e.periods; if(e.compliance&&e.compliance.length)state.complianceItems=e.compliance; state.teamWord=e.team_word||state.teamWord; state.accent=e.accent||state.accent; state.logo=e.logo||''; state.empScope=e.emp_scope||'all'; state.profile=e.profile||state.profile; state.proUntil=e.pro_until||null; state.proSource=e.pro_source||null; state.siret=e.siret||state.siret||''; if(e.rules&&typeof e.rules==='object'&&Object.keys(e.rules).length) state.rules=Object.assign({}, state.rules||{}, e.rules); }
     syncGlobals();
     const remoteToLocal={};
     // Manager : on ne récupère PAS la colonne « rate » (taux) → les salaires ne quittent pas le serveur
-    const empCols = canSeeSalaries() ? '*' : 'id,local_id,name,role,contract,phone,email,archived,compliance,conges_allowance,hours,hours_unit,contract_type';
+    const empCols = canSeeSalaries() ? '*' : 'id,local_id,name,role,contract,phone,email,archived,compliance,conges_allowance,hours,hours_unit,contract_type,matricule,job_title,start_date,end_date,mutuelle';
     const { data:emps } = await sb.from('employees').select(empCols).eq('establishment_id', est);
-    state.employees = (emps||[]).map(r=>{ const lid=r.local_id||r.id; remoteToLocal[r.id]=lid; return { id:lid, name:r.name, role:r.role||'', contract:r.contract||'', rate:r.rate||0, phone:r.phone||'', email:r.email||'', archived:!!r.archived, compliance:Object.assign(emptyCompliance(), r.compliance||{}), congesAllowance:(r.conges_allowance!=null?r.conges_allowance:25), hours:(r.hours!=null?r.hours:undefined), hoursUnit:(r.hours_unit==='mois'?'mois':'semaine'), contractType:r.contract_type||'' }; });
+    state.employees = (emps||[]).map(r=>{ const lid=r.local_id||r.id; remoteToLocal[r.id]=lid; return { id:lid, name:r.name, role:r.role||'', contract:r.contract||'', rate:r.rate||0, phone:r.phone||'', email:r.email||'', archived:!!r.archived, compliance:Object.assign(emptyCompliance(), r.compliance||{}), congesAllowance:(r.conges_allowance!=null?r.conges_allowance:25), hours:(r.hours!=null?r.hours:undefined), hoursUnit:(r.hours_unit==='mois'?'mois':'semaine'), contractType:r.contract_type||'', matricule:r.matricule||'', jobTitle:r.job_title||'', startDate:r.start_date||'', endDate:r.end_date||'', mutuelle:!!r.mutuelle, baseSalary:(r.base_salary!=null?r.base_salary:0) }; });
     const { data:shifts } = await sb.from('shifts').select('*').eq('establishment_id', est);
     state.shifts = (shifts||[]).map(s=>({ id:s.local_id||s.id, week:s.week, day:s.day, team:s.team, period:s.period, start:s.start_t, end:s.end_t, empId: s.employee_id?(remoteToLocal[s.employee_id]||''):'', extraName:s.extra_name||'', realStart:s.real_start||'', realEnd:s.real_end||'', breaks:Array.isArray(s.breaks)?s.breaks:[], note:s.note||'' }));
     _knownShiftLocalIds = new Set((shifts||[]).map(s=>s.local_id||s.id));   // ce qu'on a VU du cloud (co-édition)
     const { data:abs } = await sb.from('absences').select('*').eq('establishment_id', est);
-    state.absences = (abs||[]).map(a=>({ id:a.local_id||a.id, week:a.week, day:a.day, empId:remoteToLocal[a.employee_id]||'', type:a.type })).filter(a=>a.empId);
+    state.absences = (abs||[]).map(a=>({ id:a.local_id||a.id, week:a.week, day:a.day, empId:remoteToLocal[a.employee_id]||'', type:a.type, hours:(a.hours||undefined) })).filter(a=>a.empId);
     const { data:notes } = await sb.from('notes').select('*').eq('establishment_id', est);
     state.notes = (notes||[]).map(n=>({ id:n.local_id||n.id, week:n.week, day:n.day, text:n.text, level:n.level||'info' }));
     migrate(state); syncGlobals(); setAccent(state.accent); applyLogo();

@@ -168,6 +168,18 @@ alter table employees add column if not exists hours            numeric;
 alter table employees add column if not exists hours_unit       text default 'semaine' check (hours_unit in ('semaine','mois'));
 alter table employees add column if not exists contract_type    text;
 
+-- Paie / export comptable (2026-11-02) : identité paie des employés, SIRET + règles de l'établissement,
+-- heures d'une absence (types « paie » en heures), partagés entre admins/managers.
+alter table employees add column if not exists matricule   text;
+alter table employees add column if not exists job_title   text;
+alter table employees add column if not exists start_date  date;
+alter table employees add column if not exists end_date    date;
+alter table employees add column if not exists mutuelle    boolean not null default false;
+alter table employees add column if not exists base_salary numeric default 0;   -- SENSIBLE (admins seulement côté app)
+alter table establishments add column if not exists siret text;
+alter table establishments add column if not exists rules jsonb not null default '{}';   -- pauses, repas, nuit, dimanche, panier, paie
+alter table absences add column if not exists hours numeric;                            -- null = journée contrat moyenne
+
 -- Accès & rôles (2026-10-21) : un code d'invitation peut aussi donner le rôle admin ('owner')
 alter table invite_codes drop constraint if exists invite_codes_role_check;
 alter table invite_codes add constraint invite_codes_role_check check (role in ('owner','manager','employee'));
