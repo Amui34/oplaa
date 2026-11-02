@@ -360,6 +360,7 @@
       </div>
       <button id="btnSheet" class="px-3 py-2 rounded-lg bg-teal-600 text-white font-semibold hover:bg-teal-700 text-sm">📋 Feuille d'heures à valider</button>
       <button id="btnSuiviCSV" class="px-3 py-2 rounded-lg bg-white border border-slate-300 font-semibold hover:bg-slate-50 text-sm">⬇︎ Export paie (CSV)</button>
+      <button id="btnSuiviXlsx" class="owner-only px-3 py-2 rounded-lg bg-teal-600 text-white font-semibold hover:bg-teal-700 text-sm" title="Fichier Excel au format Combo (3 feuilles), pour le comptable">📒 Export comptable (Excel)</button>
     </div>
     <p class="no-print text-sm text-slate-500 mb-2" id="suiviPeriod"></p>
     <div id="suiviSummary" class="no-print flex flex-wrap gap-2 text-sm mb-4"></div>
@@ -4042,6 +4043,95 @@ function exportSuiviCSV(){
   toast('Export paie téléchargé ⬇︎');
 }
 document.getElementById('btnSuiviCSV').addEventListener('click', exportSuiviCSV);
+
+/* ============ EXPORT COMPTABLE (format Combo : 3 feuilles, 72 colonnes) ============ */
+// En-têtes exacts de la feuille « Synthèse » (sections / colonnes), repris de l'export Combo.
+const COMBO_SECTIONS = [
+  ['Données collaborateurs', ['Nom','Prénom','Matricule','SIRET Établissement','Contrat',"Date d'entrée",'Date de sortie','Poste','Mutuelle','Heures contrat hebdo.','Heures contrat mensuel','Dont heures supp. 10.0% (au contrat)','Dont heures supp. 20.0% (au contrat)','Dont heures supp. 50.0% (au contrat)','Nouveau solde Repos Compensateur','Nouveau solde Récup. Jours Fériés','Solde RTT à la fin de la période','Salaire de base','Salaire horaire brut (extra)','Note transport']],
+  ['Total heures', ['Heures planifiées de travail','Heures travaillées','Total jours travaillés','Heures manquantes au contrat']],
+  ['Détail heures hors contrat', ['Heures normales','Heures complém. 10.0%','Heures complém. 25.0%','Heures supp. 10.0% (hors contrat)','Heures supp. 20.0% (hors contrat)','Heures supp. 50.0% (hors contrat)','Heures travaillées majorées (jours fériés)','Solde de modulation']],
+  ['Absences rémunérées', ['Jours fériés chômés (h)','Congé payé (j)','RTT','Repos compensateur (h)','Repos compensateur planifiés à venir (h)','Repos Compensateur à payer','Récupération jours féries (h)','Repos compensateur de nuit',"Repos compensateur d'habillement",'Évènement familial (j)','Formation (h)','Visite médicale (h)']],
+  ['Absences indemnisées', ['Arrêt maladie (h)','Accident du travail (h)','Accident de trajet (h)','Maladie professionnelle (h)','Congé maternité (h)','Congé paternité (h)','Congé parental (h)','Congé supplémentaire de naissance (h)','Chômage partiel (h)']],
+  ['Absences non rémunérées', ['Entrée / Sortie (h)','Retard (h)','Absence injustifiée - Non payé (h)','Absence justifiée - Non payé (h)','Mise à pied conservatoire (h)','Mise à pied disciplinaire (h)','Jours fériés chômés (h)','Congé sans solde (h)']],
+  ['Autres éléments variables', ['Repas: avantage en nature','Repas: indemnité','Repas: titre restaurant','Repas: prime panier','Prime exceptionnelle','Prime transport','Prime blanchissage ','Prime 4','Prime 5','Prime 6','Avance sur salaire ']],
+];
+const COMBO_COLS = COMBO_SECTIONS.flatMap(([,cols])=>cols);
+const comboCol = name => COMBO_COLS.indexOf(name);          // première occurrence (ex. « Jours fériés chômés (h) » = rémunérée)
+const frDate = iso => { const d=parseLocalDate(iso); return `${String(d.getDate()).padStart(2,'0')}/${String(d.getMonth()+1).padStart(2,'0')}/${d.getFullYear()}`; };
+const r2 = n => Math.round(n*100)/100;
+// Heures d'une absence (type en heures) : saisie manuelle, sinon services planifiés ce jour-là, sinon journée contrat moyenne.
+function absenceHoursOf(a, emp){
+  if(a.hours>0) return +a.hours;
+  const planned=state.shifts.filter(s=>s.week===a.week && s.day===a.day && s.empId===emp.id).reduce((t,s)=>t+shiftHours(s),0);
+  return planned>0 ? planned : dailyContractHours(contractHours(emp), rulePay().daysPerWeek);
+}
+// Construit les 3 feuilles (tableaux de lignes) pour les semaines données.
+function buildComptaExport(weeks){
+  const PY=rulePay(), opt={t10End:PY.t10End, t20End:PY.t20End};
+  const from=weeks[0], to=isoDay(addDays(weeks[weeks.length-1], 6));
+  const mealCode = ({nature:'Repas: avantage en nature', titre:'Repas: titre restaurant', indemnite:'Repas: indemnité'})[PY.mealType]||'Repas: avantage en nature';
+  const head1 = COMBO_COLS.map(()=>''); let k=0; COMBO_SECTIONS.forEach(([sec,cols])=>{ head1[k]=sec; k+=cols.length; });
+  const synth=[head1, COMBO_COLS.slice()], evp=[['Nom','Prénom','Matricule','Code','Valeur','Date début','Date fin']], absRows=[['Nom','Prénom','Matricule','Code','Rang','Date début','Date fin','Valeur','Unité']];
+  const emps = state.employees.filter(e=>!e.archived || state.shifts.some(s=>s.empId===e.id && weeks.includes(s.week)));
+  emps.forEach(e=>{
+    const {prenom,nom}=splitName(e.name); const ch=contractHours(e); const monthly=ch!=null?ch*52/12:null;
+    const row=COMBO_COLS.map(()=>''); const set=(name,v)=>{ const i=comboCol(name); if(i>=0 && v!==''&&v!=null) row[i]=v; };
+    set('Nom',nom||prenom); set('Prénom',nom?prenom:''); set('Matricule',e.matricule||''); set('SIRET Établissement',state.siret||''); set('Contrat',e.contractType||'');
+    set("Date d'entrée", e.startDate?frDate(e.startDate):''); set('Date de sortie', e.endDate?frDate(e.endDate):''); set('Poste', e.jobTitle||teamOf(e.role).label||''); set('Mutuelle', e.mutuelle?'Oui':'Non');
+    if(ch!=null){ set('Heures contrat hebdo.', r2(ch)); set('Heures contrat mensuel', r2(monthly)); const cs=payContractSup(ch,opt); if(cs.sup10) set('Dont heures supp. 10.0% (au contrat)', r2(cs.sup10*52/12)); if(cs.sup20) set('Dont heures supp. 20.0% (au contrat)', r2(cs.sup20*52/12)); if(cs.sup50) set('Dont heures supp. 50.0% (au contrat)', r2(cs.sup50*52/12)); }
+    if(e.baseSalary>0) set('Salaire de base', r2(e.baseSalary)); if(!(ch>0) && e.rate>0) set('Salaire horaire brut (extra)', r2(e.rate));
+    // Heures par semaine
+    const weekly=weeks.map(wk=>empHours(e.id,[wk]).reel); const H=empHours(e.id,weeks); const pp=payPeriod(weekly, ch||0, opt);
+    const workedDays=new Set(state.shifts.filter(s=>s.empId===e.id && weeks.includes(s.week) && !isAbsentDay(e.id,s.week,s.day)).map(s=>s.week+'|'+s.day)).size;
+    set('Heures planifiées de travail', r2(H.prevu)); set('Heures travaillées', r2(H.reel)); set('Total jours travaillés', workedDays); if(pp.manquantes) set('Heures manquantes au contrat', r2(pp.manquantes));
+    const evpPush=(code,val)=>{ if(val>0){ evp.push([nom||prenom, nom?prenom:'', e.matricule||'', code, r2(val), frDate(from), frDate(to)]); } };
+    if(pp.normales){ set('Heures normales', r2(pp.normales)); evpPush('Heures normales', pp.normales); }
+    if(pp.compl10){ set('Heures complém. 10.0%', r2(pp.compl10)); evpPush('Heures complém. 10.0%', pp.compl10); }
+    if(pp.compl25){ set('Heures complém. 25.0%', r2(pp.compl25)); evpPush('Heures complém. 25.0%', pp.compl25); }
+    if(pp.sup10){ set('Heures supp. 10.0% (hors contrat)', r2(pp.sup10)); evpPush('Heures supp. 10.0% (hors contrat)', pp.sup10); }
+    if(pp.sup20){ set('Heures supp. 20.0% (hors contrat)', r2(pp.sup20)); evpPush('Heures supp. 20.0% (hors contrat)', pp.sup20); }
+    if(pp.sup50){ set('Heures supp. 50.0% (hors contrat)', r2(pp.sup50)); evpPush('Heures supp. 50.0% (hors contrat)', pp.sup50); }
+    // Jours fériés travaillés (hors dimanche simple)
+    const jf=state.shifts.filter(s=>s.empId===e.id && weeks.includes(s.week) && !isAbsentDay(e.id,s.week,s.day) && isHoliday(addDays(s.week,s.day))).reduce((t,s)=>t+realHours(s),0);
+    if(jf){ set('Heures travaillées majorées (jours fériés)', r2(jf)); evpPush('Heures travaillées majorées (jours fériés)', jf); }
+    // Absences (par type) + feuille « Absences » (épisodes consécutifs)
+    const mine=state.absences.filter(a=>a.empId===e.id && weeks.includes(a.week) && absenceType(a.type).pay).map(a=>({a, t:absenceType(a.type), date:isoDay(addDays(a.week,a.day))})).sort((x,y)=>x.date<y.date?-1:1);
+    const totals={}; const episodes=[];
+    mine.forEach(({a,t,date})=>{ const v = t.unit==='h' ? absenceHoursOf(a,e) : 1; totals[t.combo]=(totals[t.combo]||0)+v;
+      const last=episodes[episodes.length-1]; if(last && last.type===a.type && isoDay(addDays(last.to,1))===date){ last.to=date; last.val+=v; } else episodes.push({type:a.type, t, from:date, to:date, val:v}); });
+    Object.keys(totals).forEach(c=>set(c, r2(totals[c])));
+    episodes.forEach((ep,i)=>absRows.push([nom||prenom, nom?prenom:'', e.matricule||'', ep.t.combo.replace(/ \((h|j)\)$/,''), i+1, frDate(ep.from), frDate(ep.to), r2(ep.val), ep.t.unit==='h'?'heures':'jours']));
+    // Entrée / sortie dans la période : jours ouvrés non couverts × journée contrat
+    if(ch>0 && (e.startDate||e.endDate)){ let miss=0; const dh=dailyContractHours(ch, PY.daysPerWeek); for(let d=parseLocalDate(from); isoDay(d)<=to; d=addDays(isoDay(d),1)){ const iso=isoDay(d), dow=(d.getDay()+6)%7; if(dow>=PY.daysPerWeek) continue; if((e.startDate && iso<e.startDate)||(e.endDate && iso>e.endDate)) miss+=dh; } if(miss) set('Entrée / Sortie (h)', r2(miss)); }
+    // Repas & paniers
+    let meals=0, panier=0; weeks.forEach(wk=>{ const byDay={}; state.shifts.filter(s=>s.week===wk && s.empId===e.id && !isAbsentDay(e.id,wk,s.day)).forEach(s=>(byDay[s.day]=byDay[s.day]||[]).push(s)); Object.values(byDay).forEach(l=>meals+=mealsForDayShifts(l)); panier+=weekExtra(e.id,wk).panierN||0; });
+    if(meals){ set(mealCode, meals); evpPush(mealCode, meals); } if(panier){ set('Repas: prime panier', panier); evpPush('Repas: prime panier', panier); }
+    synth.push(row);
+  });
+  // Ligne TOTAL : formules SUM sur les colonnes numériques (à partir de « Heures contrat hebdo. »)
+  const first=3, last=synth.length, tot=COMBO_COLS.map(()=>''); tot[1]='TOTAL';
+  const colLetter=i=>{ let n=i+1, s=''; while(n>0){ const m=(n-1)%26; s=String.fromCharCode(65+m)+s; n=Math.floor((n-1)/26); } return s; };
+  for(let i=comboCol('Heures contrat hebdo.'); i<COMBO_COLS.length; i++){ if(last>=first) tot[i]={f:`SUM(${colLetter(i)}${first}:${colLetter(i)}${last})`}; }
+  synth.push(tot);
+  return { synth, evp, absRows, from, to };
+}
+let _xlsxLoading=null;
+function loadXlsxLib(){ if(window.XLSX) return Promise.resolve(); if(_xlsxLoading) return _xlsxLoading; _xlsxLoading=new Promise((res,rej)=>{ const sc=document.createElement('script'); sc.src='vendor/xlsx.full.min.js'; sc.onload=()=>res(); sc.onerror=()=>rej(new Error('Bibliothèque Excel introuvable')); document.head.appendChild(sc); }); return _xlsxLoading; }
+async function exportComptaXlsx(){
+  if(!canSeeSalaries()){ toast('Export comptable réservé aux admins.'); return; }
+  const weeks=weeksOfScope(); if(!weeks.length) return;
+  try{ await loadXlsxLib(); }catch(e){ toast(e.message); return; }
+  const d=buildComptaExport(weeks);
+  const wb=XLSX.utils.book_new();
+  const ws1=XLSX.utils.aoa_to_sheet(d.synth); ws1['!cols']=COMBO_COLS.map(c=>({wch:Math.min(28,Math.max(10,c.length))}));
+  XLSX.utils.book_append_sheet(wb, ws1, 'Synthèse');
+  XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(d.evp), 'Éléments Variables de Paie');
+  XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(d.absRows), 'Absences');
+  const name=`${(state.restaurant||'Oplaa').replace(/[^\w\- ]+/g,'').trim()} - export comptable - ${d.from} - ${d.to}.xlsx`;
+  XLSX.writeFile(wb, name);
+  logAccess('export_compta');
+}
+document.getElementById('btnSuiviXlsx').addEventListener('click', exportComptaXlsx);
 
 document.getElementById('btnExport').addEventListener('click',()=>{
   const blob=new Blob([JSON.stringify(state,null,2)],{type:'application/json'});

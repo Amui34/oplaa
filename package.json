@@ -12,7 +12,14 @@
     "test:int": "TZ=UTC vitest run tests/integration",
     "test:e2e": "playwright test"
   },
-  "keywords": ["planning", "restaurant", "équipe", "shift", "capacitor", "ios"],
+  "keywords": [
+    "planning",
+    "restaurant",
+    "équipe",
+    "shift",
+    "capacitor",
+    "ios"
+  ],
   "author": "Noa Madar",
   "license": "UNLICENSED",
   "private": true,
@@ -20,7 +27,8 @@
   "dependencies": {
     "@capacitor/cli": "^8.5.1",
     "@capacitor/core": "^8.5.1",
-    "@capacitor/ios": "^8.5.1"
+    "@capacitor/ios": "^8.5.1",
+    "xlsx": "^0.18.5"
   },
   "devDependencies": {
     "@capacitor/assets": "^3.0.5",
