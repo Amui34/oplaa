@@ -19,3 +19,6 @@ build/
 test-results/
 playwright-report/
 .vitest/
+
+# Exports réels (données de paie) — jamais versionnés
+docs/exemples/*.xlsx
