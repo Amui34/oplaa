@@ -1,6 +1,6 @@
 # Oplaa Pro — activer l'abonnement (v1.1)
 
-Modèle : **1 mois d'essai gratuit, puis 4,99 €/mois**, 1 abonnement = 1 compte patron.
+Modèle : **1 mois d'essai gratuit, puis 4,99 €/mois**, 1 abonnement = **1 établissement** (prix par établissement ; une entreprise multi-sites paie un abonnement par site). Éditeur / vendeur : SAS NOMAD.
 Employés = gratuits. La consultation reste gratuite ; créer/modifier un planning devient Pro.
 
 ⚠️ À faire **seulement après** la validation de la v1.0 (gratuite) par Apple.

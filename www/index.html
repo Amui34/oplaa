@@ -7,7 +7,7 @@
   ██████  ██      ███████ ██   ██ ██   ██
 
   Oplaa — Planning d'équipe multi-secteurs
-  © 2026 Noa Madar. Tous droits réservés.
+  © 2026 SAS NOMAD. Tous droits réservés.
   Conçu et développé par Noa Madar.
 -->
 <html lang="fr">
@@ -216,7 +216,7 @@
         <button id="btnSettings" class="mi w-full text-left px-4 py-2 hover:bg-slate-50"><span class="ic" data-ic="settings"></span>Réglages &amp; plus…</button>
         <button id="btnGuide" class="mi w-full text-left px-4 py-2 hover:bg-slate-50"><span class="ic" data-ic="bulb"></span>Aide (guide de démarrage)</button>
         <div class="mi px-4 py-1.5 text-[10px] text-emerald-600 leading-snug"><span class="ic" data-ic="cloud" data-ic-size="13" style="align-self:flex-start;margin-top:1px"></span><span>Tout est enregistré et synchronisé automatiquement.</span></div>
-        <div class="px-4 pt-0.5 pb-1.5 text-[10px] text-slate-300">Oplaa v1.0 · © 2026 Noa Madar</div>
+        <div class="px-4 pt-0.5 pb-1.5 text-[10px] text-slate-300">Oplaa v1.0 · © 2026 SAS NOMAD</div>
       </div>
       <input type="file" id="importFile" accept="application/json" class="hidden" />
     </div>
@@ -897,7 +897,7 @@
         <button class="closePaywall text-white/80 hover:text-white text-2xl leading-none">&times;</button>
       </div>
       <h3 class="text-2xl font-extrabold mt-3">Passez à Oplaa Pro</h3>
-      <p id="paywallTrial" class="text-white/90 text-sm mt-1">1 mois offert, puis 4,99 €/mois.</p>
+      <p id="paywallTrial" class="text-white/90 text-sm mt-1">1 mois offert, puis 4,99 €/mois par établissement.</p>
     </div>
     <div class="p-6">
       <ul class="space-y-3 text-sm text-slate-700">
@@ -908,7 +908,7 @@
       </ul>
       <div class="mt-5 rounded-xl border border-slate-200 p-4 text-center">
         <div class="text-2xl font-extrabold text-slate-800">4,99 €<span class="text-base font-semibold text-slate-500">/mois</span></div>
-        <div class="text-xs text-slate-500 mt-1">1er mois gratuit · sans engagement · résiliable à tout moment</div>
+        <div class="text-xs text-slate-500 mt-1">par établissement · 1er mois gratuit · sans engagement · résiliable à tout moment</div>
       </div>
       <button id="paywallBuy" class="mt-4 w-full py-3 rounded-xl bg-teal-600 text-white font-bold hover:bg-teal-700">Commencer l'essai gratuit</button>
       <button id="paywallRestore" class="mt-2 w-full py-2 text-sm text-slate-500 font-semibold hover:text-slate-700">Restaurer mes achats</button>
@@ -1357,7 +1357,7 @@ const SUBSCRIPTION_ENABLED = false;                 // ← passer à true pour l
 const TRIAL_DAYS = 30;                              // essai gratuit
 const RC_ENTITLEMENT_ID = 'pro';                    // identifiant d'entitlement dans RevenueCat
 const RC_IOS_API_KEY = 'appl_XXXXXXXXXXXXXXXX';     // clé API publique iOS RevenueCat (à remplir en v1.1)
-const PRO_PRICE_LABEL = '4,99 €/mois';
+const PRO_PRICE_LABEL = '4,99 €/mois par établissement';
 const ABSENCE_TYPES = [
   // Types « classiques » (boutons rapides). unit : 'j' = jours, 'h' = heures · pay : rem = rémunérée, ind = indemnisée, non = non rémunérée
   {key:'conge',   label:'Congé payé', emoji:'🌴', color:'#3F6B4A', unit:'j', pay:'rem', combo:'Congé payé (j)'},
