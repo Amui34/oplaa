@@ -19,9 +19,11 @@ jobs:
           set -u
           ping() {  # url clé nom table critique(1/0)
             code=$(curl -s -o /dev/null -w "%{http_code}" --max-time 30 \
-              "$1/rest/v1/$4?select=id&limit=1" -H "apikey: $2" -H "Authorization: Bearer $2" || echo 000)
+              "$1/rest/v1/$4?select=id&limit=1" -H "apikey: $2" -H "Authorization: Bearer $2") || code=000
             if [ "$code" = "200" ]; then echo "✓ $3 → HTTP $code"
-            else echo "✗ $3 → HTTP $code"; [ "$5" = "1" ] && FAIL=1; fi
+            elif [ "$5" = "1" ]; then echo "✗ $3 → HTTP $code (PRODUCTION)"; FAIL=1
+            else echo "⚠ $3 → HTTP $code (projet de test, non bloquant)"; fi
+            return 0
           }
           FAIL=0
           ping https://kldkqxqbmxtdedzjoghw.supabase.co sb_publishable_Ma29Syo4LkbtLLxIP4s9EA_8UIef3EL "Oplaa (prod)"       establishments 1
