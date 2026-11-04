@@ -1892,13 +1892,15 @@ function migrate(s){
   if(s.planningSent&&typeof s.planningSent==='object'){ Object.values(s.planningSent).forEach(p=>{ if(p&&p.week) p.week=_fixWk(p.week); }); }
   return s;
 }
-function saveQuiet(s=state){ try { localStorage.setItem(STORAGE_KEY, JSON.stringify(s)); } catch(e){} }
-function save(s=state){ saveQuiet(s); recordVersion(s); wsTouchMeta(); if(typeof scheduleAutoPush==='function') scheduleAutoPush(); }   // sauvegarde + historique + sync cloud auto
+// Tant que firstRun est vrai (écran d'accueil, aucun choix fait), rien n'est écrit sur l'appareil :
+// les parcours qui créent des données (assistant, démo, récupération cloud) passent firstRun à false AVANT de sauvegarder.
+function saveQuiet(s=state){ if(firstRun) return; try { localStorage.setItem(STORAGE_KEY, JSON.stringify(s)); } catch(e){} }
+function save(s=state){ if(firstRun) return; saveQuiet(s); recordVersion(s); wsTouchMeta(); if(typeof scheduleAutoPush==='function') scheduleAutoPush(); }   // sauvegarde + historique + sync cloud auto
 
 /* ---- Multi-établissements : bascule, création, suppression ---- */
 function profileName(k){ return (PROFILE_PRESETS[k]||{}).name || 'Personnalisé'; }
 function profileIcon(k){ return (PROFILE_PRESETS[k]||{}).icon || '🏢'; }
-function wsTouchMeta(){ try{ if(typeof state!=='object'||!state) return; const id=wsActiveId(), idx=wsIndex(), it=idx.find(e=>e.id===id); if(it){ it.name=state.restaurant||it.name||'Établissement'; it.profile=state.profile||it.profile||''; it.icon=profileIcon(state.profile); wsSaveIndex(idx); } }catch(e){} }
+function wsTouchMeta(){ try{ if(typeof state!=='object'||!state||firstRun) return; const id=wsActiveId(), idx=wsIndex(), it=idx.find(e=>e.id===id); if(it){ it.name=state.restaurant||it.name||'Établissement'; it.profile=state.profile||it.profile||''; it.icon=profileIcon(state.profile); wsSaveIndex(idx); } }catch(e){} }
 function freshEstablishment(key, name){
   const P = PROFILE_PRESETS[key] || PROFILE_PRESETS.custom;
   return migrate({ profile:key, teamWord:P.teamWord, restaurant:(name||P.org||'Nouvel établissement'),
@@ -1937,7 +1939,7 @@ let HKEY = STORAGE_KEY + '_history';
 const HIST_MAX = 25;
 let versions = []; try { versions = JSON.parse(localStorage.getItem(HKEY)||'[]'); } catch(e){ versions=[]; }
 let restoringVersion = false;
-function persistVersions(){ try { localStorage.setItem(HKEY, JSON.stringify(versions)); } catch(e){} }
+function persistVersions(){ if(firstRun) return; try { localStorage.setItem(HKEY, JSON.stringify(versions)); } catch(e){} }   // rien n'est écrit avant le 1er choix
 function recordVersion(s=state){
   if(restoringVersion) return;
   const data = JSON.stringify(s);
@@ -3777,8 +3779,8 @@ function finishWizard(){
       st.employees.push({ id:uid(), name:nm, role:t.key, contract:'35h', email:'', phone:'', rate:0 });
     }
   });
-  state=st; migrate(state); syncGlobals(); save();
-  firstRun=false; confUnlocked=false; teamFilter='all';
+  state=st; migrate(state); syncGlobals(); firstRun=false; save();
+  confUnlocked=false; teamFilter='all';
   setView('planning'); setMode('semaine'); renderAll(); applyMode();
   closeWizard();
   document.getElementById('coachHint').classList.remove('hidden');
@@ -4561,7 +4563,7 @@ async function pullForEmployee(){
   const { data:notes } = await sb.from('notes').select('*').eq('establishment_id', est);
   state.notes = (notes||[]).map(n=>({ id:n.id, week:n.week, day:n.day, text:n.text, level:n.level||'info' }));
   if(myId && state.employees.some(x=>x.id===myId)) empViewSel = myId;
-  saveQuiet(); renderAll(); if(!document.getElementById('view-employe').classList.contains('hidden')) renderEmploye();
+  firstRun=false; saveQuiet(); renderAll(); if(!document.getElementById('view-employe').classList.contains('hidden')) renderEmploye();
   logAccess('pull_employee');
 }
 // PATRON : récupère TOUTES ses données depuis le cloud (employés + salaires + planning + absences + notes)
@@ -4585,7 +4587,7 @@ async function pullForOwner(){
     const { data:notes } = await sb.from('notes').select('*').eq('establishment_id', est);
     state.notes = (notes||[]).map(n=>({ id:n.local_id||n.id, week:n.week, day:n.day, text:n.text, level:n.level||'info' }));
     migrate(state); syncGlobals(); setAccent(state.accent); applyLogo();
-    _applyingRemote=true; save(); _applyingRemote=false;   // on vient de tirer du cloud → pas de re-push
+    firstRun=false; _applyingRemote=true; save(); _applyingRemote=false;   // on vient de tirer du cloud → pas de re-push
     renderAll();
     logAccess('pull_owner');
     return {ok:true, count: state.employees.length};

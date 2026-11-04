@@ -27,6 +27,14 @@ test('accueil : recharger la page sans avoir choisi ramène toujours l’accueil
   await page.reload();
   await expect(page.locator('#welcome')).toBeVisible();
   await expect(page.locator('#welcomePatron')).toBeVisible();
+  // Même après avoir ouvert puis fermé la modale compte sans se connecter
+  await page.locator('#welcomePatron').click();
+  await expect(page.locator('#cloudModal')).toBeVisible();
+  await page.locator('.closeCloud').first().click();
+  await page.reload();
+  await expect(page.locator('#welcome')).toBeVisible();
+  const keys = await page.evaluate(() => Object.keys(localStorage).filter(k => k.startsWith('planning_resto')));
+  expect(keys).toEqual([]);   // rien n'a été écrit sur l'appareil
 });
 
 test('mode démo : charge le planning de démonstration', async ({ page }) => {
