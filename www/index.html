@@ -186,9 +186,10 @@
   <div class="w-full max-w-xs flex flex-col gap-3">
     <button id="welcomePatron" class="w-full inline-flex items-center justify-center gap-2 px-5 py-4 rounded-2xl bg-teal-600 text-white font-bold text-lg hover:bg-teal-700"><span class="ic" data-ic="store" data-ic-size="22"></span>Je gère mon établissement</button>
     <button id="welcomeEmploye" class="w-full inline-flex items-center justify-center gap-2 px-5 py-4 rounded-2xl bg-white border border-slate-300 text-slate-800 font-bold text-lg hover:bg-slate-50"><span class="ic" data-ic="user" data-ic-size="22"></span>Je suis employé — j'ai un code</button>
+    <button id="welcomeLogin" class="w-full inline-flex items-center justify-center gap-2 px-5 py-3 rounded-2xl bg-white border border-teal-600 text-teal-700 font-bold hover:bg-teal-50"><span class="ic" data-ic="cloud" data-ic-size="20"></span>J'ai déjà un compte — me connecter</button>
     <button id="welcomeDemo" hidden class="w-full inline-flex items-center justify-center gap-2 px-5 py-3 rounded-2xl text-slate-500 font-semibold hover:bg-slate-50 border border-dashed border-slate-300"><span class="ic" data-ic="bulb" data-ic-size="18"></span>Voir une démo (données d'exemple)</button>
   </div>
-  <p class="text-slate-400 text-xs mt-6 max-w-xs">Tu pourras te connecter à ton compte à tout moment depuis « ⋯ Menu ».</p>
+  <p class="text-slate-400 text-xs mt-6 max-w-xs">Déjà un établissement sur Oplaa ? Connecte-toi : ton planning et ton équipe sont récupérés automatiquement.</p>
 </div>
 
 <!-- ============ BANDEAU MODE DÉMO ============ -->
@@ -4407,6 +4408,10 @@ async function refreshCloud(){
     await pullForOwner();
   }
   if(cloudMembership) startRealtime();   // temps réel
+  if(typeof _welcomeLogin!=='undefined' && _welcomeLogin && cloudMembership){
+    _welcomeLogin=false; firstRun=false; closeCloud();
+    toast(cloudMembership.role==='employee' ? 'Bienvenue ! Voici ton planning ✓' : 'Bienvenue ! Établissement récupéré ✓');
+  }
   _membersCache=null; if(typeof renderManageBanner==='function') renderManageBanner();
   if(typeof renderProBox==='function') renderProBox();
   setSyncStatus(canAutoPush() ? 'ok' : null);   // indicateur d'en-tête : « Synchronisé ✓ » pour le patron connecté
@@ -4859,6 +4864,8 @@ function showWelcome(){ document.getElementById('welcome').classList.add('show')
 function hideWelcome(){ document.getElementById('welcome').classList.remove('show'); }
 document.getElementById('welcomePatron').addEventListener('click', ()=>{ hideWelcome(); openWizard(); });
 document.getElementById('welcomeEmploye').addEventListener('click', ()=>{ hideWelcome(); openCloud(); });
+let _welcomeLogin=false;   // connexion lancée depuis l'accueil → on ferme la modale dès que l'établissement est récupéré
+document.getElementById('welcomeLogin').addEventListener('click', ()=>{ _welcomeLogin=true; hideWelcome(); openCloud(); setTimeout(()=>{ const e=document.getElementById('cloudEmail'); if(e && !e.value) e.focus(); }, 300); });
 // « Voir une démo » : visible partout (web ET app iOS) — permet notamment à la vérification Apple de tester l'app sans compte
 const _isNativeApp = !!(window.Capacitor && (typeof window.Capacitor.isNativePlatform==='function' ? window.Capacitor.isNativePlatform() : window.Capacitor.isNative));
 /* App native : on verrouille le zoom (pincer / double-tap) comme une vraie app iOS.

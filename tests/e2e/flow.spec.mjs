@@ -11,6 +11,13 @@ test.beforeEach(async ({ page }) => {
 test("écran d'accueil : choix patron / employé + démo (web)", async ({ page }) => {
   await expect(page.locator('#welcomePatron')).toBeVisible();
   await expect(page.locator('#welcomeEmploye')).toBeVisible();
+  await expect(page.locator('#welcomeLogin')).toBeVisible();
+  // Connexion depuis l'accueil : ouvre la modale compte avec le formulaire e-mail / mot de passe
+  await page.locator('#welcomeLogin').click();
+  await expect(page.locator('#welcome')).not.toBeVisible();
+  await expect(page.locator('#cloudModal')).toBeVisible();
+  await page.locator('.closeCloud').first().click();
+  await expect(page.locator('#welcome')).toBeVisible();   // fermé sans connexion → retour à l'accueil
   // Le bouton démo n'est visible que sur le web (pas dans l'app native)
   await expect(page.locator('#welcomeDemo')).toBeVisible();
 });
