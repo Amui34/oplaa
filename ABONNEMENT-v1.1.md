@@ -1,6 +1,6 @@
 # Oplaa Pro — activer l'abonnement (v1.1)
 
-Modèle : **1 mois d'essai gratuit, puis 4,99 €/mois**, 1 abonnement = **1 établissement** (prix par établissement ; une entreprise multi-sites paie un abonnement par site). Éditeur / vendeur : SAS NOMAD.
+Modèle : **1 mois d'essai gratuit, puis 7,99 €/mois** (ou 79,99 €/an, 2 mois offerts — décision Noa 04/11/2026), 1 abonnement = **1 établissement** (prix par établissement ; une entreprise multi-sites paie un abonnement par site). Éditeur / vendeur : SAS NOMAD.
 Employés = gratuits. La consultation reste gratuite ; créer/modifier un planning devient Pro.
 
 ⚠️ À faire **seulement après** la validation de la v1.0 (gratuite) par Apple.
@@ -15,7 +15,7 @@ Le code est déjà prêt dans `www/index.html` (module « OPLAA PRO ») mais **d
 3. Dans le groupe, créer un **abonnement auto-renouvelable** :
    - **ID de produit (Product ID)** : `oplaa_pro_monthly`
    - **Durée** : 1 mois
-   - **Prix** : 4,99 € (choisir le palier France ; les autres pays se remplissent tout seuls)
+   - **Prix** : 7,99 € mensuel (`oplaa_pro_monthly`) + 79,99 € annuel (`oplaa_pro_yearly`) dans le même groupe (choisir le palier France ; les autres pays se remplissent tout seuls)
 4. Ajouter une **offre d'introduction** → **Essai gratuit** → **1 mois**.
 5. Remplir **nom d'affichage** + **description** (localisation FR) + une **capture de l'écran d'abonnement** (le paywall).
 6. (Recommandé) S'inscrire au **App Store Small Business Program** → commission 15 % au lieu de 30 %.
