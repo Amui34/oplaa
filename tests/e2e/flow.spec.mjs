@@ -31,9 +31,15 @@ test('mode démo : charge le planning de démonstration', async ({ page }) => {
   await expect(page.getByText('Camille Durand').first()).toBeAttached();
 });
 
-test('création patron : ouvre l’assistant de configuration', async ({ page }) => {
+test('création patron : demande d’abord un compte (compte obligatoire), puis retour accueil si on ferme', async ({ page }) => {
   await page.locator('#welcomePatron').click();
-  await expect(page.locator('#wizardModal')).toBeVisible();
+  await expect(page.locator('#welcome')).not.toBeVisible();
+  await expect(page.locator('#cloudModal')).toBeVisible();
+  await expect(page.locator('#wizardModal')).toBeHidden();          // l'assistant ne s'ouvre qu'après connexion
+  await expect(page.locator('#cloudAuth')).toBeVisible({ timeout: 15000 });
+  await expect(page.locator('#cloudAuthIntro')).toContainText('Crée ton compte');
+  await page.locator('.closeCloud').first().click();
+  await expect(page.locator('#welcome')).toBeVisible();
 });
 
 test('confidentialité : le filigrane RGPD est inactif hors connexion', async ({ page }) => {

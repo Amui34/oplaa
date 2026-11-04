@@ -189,7 +189,7 @@
     <button id="welcomeLogin" class="w-full inline-flex items-center justify-center gap-2 px-5 py-3 rounded-2xl bg-white border border-teal-600 text-teal-700 font-bold hover:bg-teal-50"><span class="ic" data-ic="cloud" data-ic-size="20"></span>J'ai déjà un compte — me connecter</button>
     <button id="welcomeDemo" hidden class="w-full inline-flex items-center justify-center gap-2 px-5 py-3 rounded-2xl text-slate-500 font-semibold hover:bg-slate-50 border border-dashed border-slate-300"><span class="ic" data-ic="bulb" data-ic-size="18"></span>Voir une démo (données d'exemple)</button>
   </div>
-  <p class="text-slate-400 text-xs mt-6 max-w-xs">Déjà un établissement sur Oplaa ? Connecte-toi : ton planning et ton équipe sont récupérés automatiquement.</p>
+  <p class="text-slate-400 text-xs mt-6 max-w-xs">Un compte gratuit est nécessaire pour créer ou rejoindre un établissement : tes données sont sauvegardées et partagées avec ton équipe. Pour essayer sans compte, regarde la démo.</p>
 </div>
 
 <!-- ============ BANDEAU MODE DÉMO ============ -->
@@ -698,7 +698,7 @@
 
     <!-- Non connecté : se connecter / créer un compte -->
     <div id="cloudAuth" hidden>
-      <p class="text-sm text-slate-500 mb-4">Connecte-toi pour synchroniser et partager tes plannings, ou crée ton compte.</p>
+      <p id="cloudAuthIntro" class="text-sm text-slate-500 mb-4">Connecte-toi pour synchroniser et partager tes plannings, ou crée ton compte.</p>
       <label class="text-sm font-semibold text-slate-600">Email</label>
       <input type="email" id="cloudEmail" autocomplete="email" class="mt-1 mb-3 w-full border border-slate-300 rounded-lg px-3 py-2" placeholder="ton@email.com" />
       <label class="text-sm font-semibold text-slate-600">Mot de passe</label>
@@ -3780,7 +3780,18 @@ function finishWizard(){
   setView('planning'); setMode('semaine'); renderAll(); applyMode();
   closeWizard();
   document.getElementById('coachHint').classList.remove('hidden');
-  toast('Planning créé ✓ À toi de jouer !');
+  if(sb && cloudSession && !cloudMembership){
+    // Compte connecté sans établissement : on le crée dans le cloud puis on envoie l'équipe saisie dans l'assistant
+    toast('Création de ton établissement…');
+    sb.rpc('create_establishment', { p_name: state.restaurant }).then(async ({ error })=>{
+      if(error){ toast('Établissement créé sur cet appareil, mais pas encore sauvegardé : '+traduireErreur(error.message)+' — réessaie depuis ⋯ Menu → Mon compte.'); return; }
+      await refreshCloud();
+      try{ await pushToCloud(); }catch(e){}
+      toast('Établissement créé et sauvegardé ✓ À toi de jouer !');
+    });
+  } else {
+    toast('Planning créé ✓ À toi de jouer !');
+  }
   maybeOnboard();
 }
 document.getElementById('coachClose').addEventListener('click',()=>document.getElementById('coachHint').classList.add('hidden'));
@@ -4388,7 +4399,13 @@ async function refreshCloud(){
   catch(e){ showCloudState('cloudAuth'); cloudMsg('cloudAuthMsg','Connexion impossible (réseau). Réessaie.', false); return; }
   cloudSession = session;
   updateCloudMenuLabel();
-  if(!session){ showCloudState('cloudAuth'); return; }
+  if(!session){
+    const intro=document.getElementById('cloudAuthIntro');
+    if(intro) intro.textContent = _welcomeIntent==='patron' ? 'Crée ton compte (ou connecte-toi) : ton établissement sera sauvegardé et partageable avec ton équipe.'
+      : _welcomeIntent==='employe' ? 'Crée ton compte (ou connecte-toi), puis entre le code reçu de ton patron.'
+      : 'Connecte-toi pour retrouver ton établissement, ou crée ton compte.';
+    showCloudState('cloudAuth'); return;
+  }
   await loadMembership();
   if(cloudMembership){
     document.getElementById('cloudMemEmail').textContent = session.user.email;
@@ -4408,9 +4425,13 @@ async function refreshCloud(){
     await pullForOwner();
   }
   if(cloudMembership) startRealtime();   // temps réel
-  if(typeof _welcomeLogin!=='undefined' && _welcomeLogin && cloudMembership){
-    _welcomeLogin=false; firstRun=false; closeCloud();
+  if(_welcomeIntent && cloudMembership){
+    // Venu de l'accueil et déjà rattaché à un établissement → on affiche directement le planning
+    _welcomeIntent=null; firstRun=false; closeCloud();
     toast(cloudMembership.role==='employee' ? 'Bienvenue ! Voici ton planning ✓' : 'Bienvenue ! Établissement récupéré ✓');
+  } else if(_welcomeIntent==='patron' && !cloudMembership){
+    // Patron connecté sans établissement → assistant de création (l'établissement sera créé dans le cloud à la fin)
+    _welcomeIntent=null; closeCloud(); openWizard();
   }
   _membersCache=null; if(typeof renderManageBanner==='function') renderManageBanner();
   if(typeof renderProBox==='function') renderProBox();
@@ -4772,7 +4793,7 @@ const _btnHome=document.getElementById('btnHome'); if(_btnHome) _btnHome.addEven
 });
 
 function openCloud(){ cloudModal.classList.remove('hidden'); cloudModal.classList.add('flex'); refreshCloud(); }
-function closeCloud(){ cloudModal.classList.add('hidden'); cloudModal.classList.remove('flex'); if(firstRun && !cloudSession) showWelcome(); }   // onboarding employé fermé sans connexion → retour accueil
+function closeCloud(){ cloudModal.classList.add('hidden'); cloudModal.classList.remove('flex'); if(firstRun && !cloudSession){ _welcomeIntent=null; showWelcome(); } }   // onboarding employé fermé sans connexion → retour accueil
 document.getElementById('btnCloud').addEventListener('click', ()=>{ dataMenu.classList.add('hidden'); openCloud(); });
 document.querySelectorAll('.closeCloud').forEach(b=>b.addEventListener('click',closeCloud));
 cloudModal.addEventListener('click',e=>{ if(e.target===cloudModal) closeCloud(); });
@@ -4814,6 +4835,9 @@ document.getElementById('cloudDeleteAcc').addEventListener('click', cloudDeleteA
 document.getElementById('cloudDeleteAcc2').addEventListener('click', cloudDeleteAccount);
 
 document.getElementById('cloudCreateEst').addEventListener('click', async ()=>{
+  // Appareil vierge (1er lancement) → l'assistant de configuration crée l'établissement dans le cloud à la fin
+  if(firstRun || (!state.employees.length && !state.shifts.length)){ closeCloud(); openWizard(); return; }
+  // Sinon (données locales déjà présentes, ex. ancien utilisateur) : on crée l'établissement avec le nom existant
   // On demande le nom seulement s'il n'existe pas déjà (évite « Mon établissement » par défaut)
   let nom = (state.restaurant && state.restaurant.trim() && state.restaurant.trim()!=='Mon établissement') ? state.restaurant.trim() : '';
   if(!nom){
@@ -4862,10 +4886,14 @@ setView('planning'); setMode(state.viewMode||'semaine'); setScope('semaine'); te
 // Écran d'accueil au 1er lancement : choisir patron ou employé
 function showWelcome(){ document.getElementById('welcome').classList.add('show'); }
 function hideWelcome(){ document.getElementById('welcome').classList.remove('show'); }
-document.getElementById('welcomePatron').addEventListener('click', ()=>{ hideWelcome(); openWizard(); });
-document.getElementById('welcomeEmploye').addEventListener('click', ()=>{ hideWelcome(); openCloud(); });
-let _welcomeLogin=false;   // connexion lancée depuis l'accueil → on ferme la modale dès que l'établissement est récupéré
-document.getElementById('welcomeLogin').addEventListener('click', ()=>{ _welcomeLogin=true; hideWelcome(); openCloud(); setTimeout(()=>{ const e=document.getElementById('cloudEmail'); if(e && !e.value) e.focus(); }, 300); });
+// Compte obligatoire (depuis la 1.0.9) : créer ou rejoindre un établissement passe d'abord par la connexion.
+// _welcomeIntent mémorise d'où vient l'utilisateur : 'patron' → assistant de création après connexion,
+// 'employe' → saisie du code, 'login' → simple récupération. La démo reste accessible sans compte.
+let _welcomeIntent=null;
+function welcomeGo(intent){ _welcomeIntent=intent; hideWelcome(); openCloud(); setTimeout(()=>{ const e=document.getElementById('cloudEmail'); if(e && !e.value && !e.closest('[hidden]')) e.focus(); }, 300); }
+document.getElementById('welcomePatron').addEventListener('click', ()=>welcomeGo('patron'));
+document.getElementById('welcomeEmploye').addEventListener('click', ()=>welcomeGo('employe'));
+document.getElementById('welcomeLogin').addEventListener('click', ()=>welcomeGo('login'));
 // « Voir une démo » : visible partout (web ET app iOS) — permet notamment à la vérification Apple de tester l'app sans compte
 const _isNativeApp = !!(window.Capacitor && (typeof window.Capacitor.isNativePlatform==='function' ? window.Capacitor.isNativePlatform() : window.Capacitor.isNative));
 /* App native : on verrouille le zoom (pincer / double-tap) comme une vraie app iOS.

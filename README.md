@@ -16,6 +16,8 @@ Application iOS (App Store) + web de planification d'équipe pour restaurants, c
 
 ## Rôles (cloud)
 
+**Compte obligatoire** (depuis le 04/11/2026, décision Noa) : créer ou rejoindre un établissement passe d'abord par la connexion (écran d'accueil → modale compte → assistant → `create_establishment` + push). Seule la démo fonctionne sans compte. Les anciens utilisateurs avec des données locales gardent la passerelle « Je suis le patron — créer mon établissement » (création + envoi des données existantes).
+
 - **Admin** (`owner`) : tout, y compris salaires et gestion des accès. Plusieurs admins possibles.
 - **Manager** : planning, congés, équipe, réglages — pas les salaires, n'invite que des employés.
 - **Employé** : son planning, ses demandes de congés.
