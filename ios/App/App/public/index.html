@@ -7,14 +7,31 @@
   ██████  ██      ███████ ██   ██ ██   ██
 
   Oplaa — Planning d'équipe multi-secteurs
-  © 2026 Noa Madar. Tous droits réservés.
+  © 2026 SAS NOMAD. Tous droits réservés.
   Conçu et développé par Noa Madar.
 -->
 <html lang="fr">
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-<title>Oplaa</title>
+<title>Oplaa — Le planning d'équipe, simplifié</title>
+<meta name="description" content="Oplaa : créez, partagez et suivez les plannings de votre équipe. Restauration, café, commerce, hôtellerie. Heures, congés, absences, export comptable. Chaque employé voit son planning." />
+<link rel="canonical" href="https://oplaa.pro/" />
+<meta name="robots" content="index, follow" />
+
+<!-- Aperçus de partage (Messages, WhatsApp, LinkedIn, Google) -->
+<meta property="og:type" content="website" />
+<meta property="og:site_name" content="Oplaa" />
+<meta property="og:title" content="Oplaa — Le planning d'équipe, simplifié" />
+<meta property="og:description" content="Créez, partagez et suivez les plannings de votre équipe. Restauration, commerce, hôtellerie. Chaque employé consulte son planning." />
+<meta property="og:url" content="https://oplaa.pro/" />
+<meta property="og:image" content="https://oplaa.pro/og-image.png" />
+<meta property="og:image:width" content="1200" />
+<meta property="og:image:height" content="630" />
+<meta property="og:locale" content="fr_FR" />
+<meta name="twitter:card" content="summary_large_image" />
+<meta name="twitter:title" content="Oplaa — Le planning d'équipe, simplifié" />
+<meta name="twitter:image" content="https://oplaa.pro/og-image.png" />
 
 <!-- App-like / installable sur l'écran d'accueil -->
 <meta name="theme-color" content="#C4562F" />
@@ -22,10 +39,10 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
 <meta name="apple-mobile-web-app-title" content="Oplaa" />
 <meta name="referrer" content="no-referrer" />
-<meta name="robots" content="noindex, nofollow" />
-<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 128 128'%3E%3Crect width='128' height='128' rx='28' fill='%23C4562F'/%3E%3Ccircle cx='64' cy='64' r='33' fill='none' stroke='%23FBF6F1' stroke-width='8'/%3E%3Ccircle cx='64' cy='64' r='29' fill='%23FBF6F1'/%3E%3Cpath d='M64 64 L44.14 85.14 A29 29 0 0 1 64 35 Z' fill='%23C4562F'/%3E%3C/svg%3E" />
-<link rel="apple-touch-icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 180 180'%3E%3Crect width='180' height='180' fill='%23C4562F'/%3E%3Ccircle cx='90' cy='90' r='46' fill='none' stroke='%23FBF6F1' stroke-width='11'/%3E%3Ccircle cx='90' cy='90' r='40.5' fill='%23FBF6F1'/%3E%3Cpath d='M90 90 L62.7 119 A40.5 40.5 0 0 1 90 49.5 Z' fill='%23C4562F'/%3E%3C/svg%3E" />
-<link rel="manifest" href="data:application/json,%7B%22name%22%3A%22Oplaa%22%2C%22short_name%22%3A%22Oplaa%22%2C%22display%22%3A%22standalone%22%2C%22background_color%22%3A%22%23FBF6F1%22%2C%22theme_color%22%3A%22%23C4562F%22%2C%22icons%22%3A%5B%7B%22src%22%3A%22data%3Aimage%2Fsvg%2Bxml%2C%253Csvg%2520xmlns%253D%2527http%253A%252F%252Fwww.w3.org%252F2000%252Fsvg%2527%2520width%253D%2527192%2527%2520height%253D%2527192%2527%253E%253Crect%2520width%253D%2527192%2527%2520height%253D%2527192%2527%2520rx%253D%252742%2527%2520fill%253D%2527%25230f766e%2527%252F%253E%253Ctext%2520x%253D%252750%2525%2527%2520y%253D%252754%2525%2527%2520font-size%253D%2527104%2527%2520text-anchor%253D%2527middle%2527%2520dominant-baseline%253D%2527middle%2527%253E%25F0%259F%258D%25BD%25EF%25B8%258F%253C%252Ftext%253E%253C%252Fsvg%253E%22%2C%22sizes%22%3A%22192x192%22%2C%22type%22%3A%22image%2Fsvg%2Bxml%22%7D%5D%7D" />
+<link rel="icon" href="/favicon.ico" sizes="any" />
+<link rel="icon" type="image/png" sizes="32x32" href="/favicon-32.png" />
+<link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
+<link rel="manifest" href="/manifest.json" />
 
 <link rel="stylesheet" href="tailwind.css" />
 <script src="supabase.js"></script>
@@ -144,6 +161,9 @@
   .ic-btn{ align-items:center; gap:.45rem; }
   .ic-btn:not(.hidden){ display:inline-flex; }
 </style>
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"SoftwareApplication","name":"Oplaa","url":"https://oplaa.pro/","applicationCategory":"BusinessApplication","operatingSystem":"iOS, Web","description":"Planning d'équipe pour la restauration, le commerce et l'hôtellerie : horaires, heures, congés, absences, export comptable.","image":"https://oplaa.pro/og-image.png","offers":{"@type":"Offer","price":"0","priceCurrency":"EUR"},"author":{"@type":"Person","name":"Noa Madar"},"publisher":{"@type":"Organization","name":"SAS NOMAD","url":"https://oplaa.pro/mentions-legales.html"}}
+</script>
 </head>
 <body class="bg-slate-50 text-slate-800 min-h-screen">
 
@@ -166,9 +186,10 @@
   <div class="w-full max-w-xs flex flex-col gap-3">
     <button id="welcomePatron" class="w-full inline-flex items-center justify-center gap-2 px-5 py-4 rounded-2xl bg-teal-600 text-white font-bold text-lg hover:bg-teal-700"><span class="ic" data-ic="store" data-ic-size="22"></span>Je gère mon établissement</button>
     <button id="welcomeEmploye" class="w-full inline-flex items-center justify-center gap-2 px-5 py-4 rounded-2xl bg-white border border-slate-300 text-slate-800 font-bold text-lg hover:bg-slate-50"><span class="ic" data-ic="user" data-ic-size="22"></span>Je suis employé — j'ai un code</button>
+    <button id="welcomeLogin" class="w-full inline-flex items-center justify-center gap-2 px-5 py-3 rounded-2xl bg-white border border-teal-600 text-teal-700 font-bold hover:bg-teal-50"><span class="ic" data-ic="cloud" data-ic-size="20"></span>J'ai déjà un compte — me connecter</button>
     <button id="welcomeDemo" hidden class="w-full inline-flex items-center justify-center gap-2 px-5 py-3 rounded-2xl text-slate-500 font-semibold hover:bg-slate-50 border border-dashed border-slate-300"><span class="ic" data-ic="bulb" data-ic-size="18"></span>Voir une démo (données d'exemple)</button>
   </div>
-  <p class="text-slate-400 text-xs mt-6 max-w-xs">Tu pourras te connecter à ton compte à tout moment depuis « ⋯ Menu ».</p>
+  <p class="text-slate-400 text-xs mt-6 max-w-xs">Un compte gratuit est nécessaire pour créer ou rejoindre un établissement : tes données sont sauvegardées et partagées avec ton équipe. Pour essayer sans compte, regarde la démo.</p>
 </div>
 
 <!-- ============ BANDEAU MODE DÉMO ============ -->
@@ -216,7 +237,7 @@
         <button id="btnSettings" class="mi w-full text-left px-4 py-2 hover:bg-slate-50"><span class="ic" data-ic="settings"></span>Réglages &amp; plus…</button>
         <button id="btnGuide" class="mi w-full text-left px-4 py-2 hover:bg-slate-50"><span class="ic" data-ic="bulb"></span>Aide (guide de démarrage)</button>
         <div class="mi px-4 py-1.5 text-[10px] text-emerald-600 leading-snug"><span class="ic" data-ic="cloud" data-ic-size="13" style="align-self:flex-start;margin-top:1px"></span><span>Tout est enregistré et synchronisé automatiquement.</span></div>
-        <div class="px-4 pt-0.5 pb-1.5 text-[10px] text-slate-300">Oplaa v1.0 · © 2026 Noa Madar</div>
+        <div class="px-4 pt-0.5 pb-1.5 text-[10px] text-slate-300">Oplaa v1.0 · © 2026 SAS NOMAD · Conçu et développé par Noa Madar</div>
       </div>
       <input type="file" id="importFile" accept="application/json" class="hidden" />
     </div>
@@ -677,7 +698,7 @@
 
     <!-- Non connecté : se connecter / créer un compte -->
     <div id="cloudAuth" hidden>
-      <p class="text-sm text-slate-500 mb-4">Connecte-toi pour synchroniser et partager tes plannings, ou crée ton compte.</p>
+      <p id="cloudAuthIntro" class="text-sm text-slate-500 mb-4">Connecte-toi pour synchroniser et partager tes plannings, ou crée ton compte.</p>
       <label class="text-sm font-semibold text-slate-600">Email</label>
       <input type="email" id="cloudEmail" autocomplete="email" class="mt-1 mb-3 w-full border border-slate-300 rounded-lg px-3 py-2" placeholder="ton@email.com" />
       <label class="text-sm font-semibold text-slate-600">Mot de passe</label>
@@ -897,7 +918,7 @@
         <button class="closePaywall text-white/80 hover:text-white text-2xl leading-none">&times;</button>
       </div>
       <h3 class="text-2xl font-extrabold mt-3">Passez à Oplaa Pro</h3>
-      <p id="paywallTrial" class="text-white/90 text-sm mt-1">1 mois offert, puis 4,99 €/mois.</p>
+      <p id="paywallTrial" class="text-white/90 text-sm mt-1">1 mois offert, puis 4,99 €/mois par établissement.</p>
     </div>
     <div class="p-6">
       <ul class="space-y-3 text-sm text-slate-700">
@@ -908,14 +929,15 @@
       </ul>
       <div class="mt-5 rounded-xl border border-slate-200 p-4 text-center">
         <div class="text-2xl font-extrabold text-slate-800">4,99 €<span class="text-base font-semibold text-slate-500">/mois</span></div>
-        <div class="text-xs text-slate-500 mt-1">1er mois gratuit · sans engagement · résiliable à tout moment</div>
+        <div class="text-xs text-slate-500 mt-1">par établissement · 1er mois gratuit · sans engagement · résiliable à tout moment</div>
       </div>
       <button id="paywallBuy" class="mt-4 w-full py-3 rounded-xl bg-teal-600 text-white font-bold hover:bg-teal-700">Commencer l'essai gratuit</button>
       <button id="paywallRestore" class="mt-2 w-full py-2 text-sm text-slate-500 font-semibold hover:text-slate-700">Restaurer mes achats</button>
       <p class="mt-3 text-[11px] leading-relaxed text-slate-400 text-center">
         L'abonnement se renouvelle automatiquement sauf résiliation au moins 24 h avant la fin de la période. Gérable dans les réglages de votre compte Apple.
-        <br><a href="https://www.apple.com/legal/internet-services/itunes/dev/stdeula/" target="_blank" class="underline">Conditions d'utilisation</a> ·
-        <a href="https://oplaa.pro/confidentialite.html" target="_blank" class="underline">Confidentialité</a>
+        <br><a href="https://oplaa.pro/cgu.html" target="_blank" class="underline">CGU/CGV</a> ·
+        <a href="https://oplaa.pro/confidentialite.html" target="_blank" class="underline">Confidentialité</a> ·
+        <a href="https://www.apple.com/legal/internet-services/itunes/dev/stdeula/" target="_blank" class="underline">Licence Apple</a>
       </p>
     </div>
   </div>
@@ -1310,6 +1332,7 @@
         <button type="button" id="btnHelp" class="set-act mi w-full text-left px-3 py-2 rounded-lg hover:bg-slate-50"><span class="ic" data-ic="help"></span>Aide / FAQ</button>
         <button type="button" id="btnFeedback" class="set-act mi w-full text-left px-3 py-2 rounded-lg hover:bg-slate-50"><span class="ic" data-ic="bulb"></span>Proposer une amélioration</button>
         <button type="button" id="btnPrivacy" class="set-act mi w-full text-left px-3 py-2 rounded-lg hover:bg-slate-50"><span class="ic" data-ic="lock"></span>Confidentialité &amp; RGPD</button>
+        <button type="button" id="btnTerms" class="set-act mi w-full text-left px-3 py-2 rounded-lg hover:bg-slate-50"><span class="ic" data-ic="folder"></span>CGU/CGV &amp; mentions légales</button>
         <button type="button" id="btnContact" class="set-act mi w-full text-left px-3 py-2 rounded-lg hover:bg-slate-50"><span class="ic" data-ic="mail"></span>Contacter le créateur</button>
         <div class="px-3 py-1.5 text-[10px] text-slate-400 leading-snug flex items-start gap-1.5"><span class="ic" data-ic="shield" data-ic-size="13" style="margin-top:1px"></span><span>Chaque employé ne voit que son planning. Salaires et coordonnées jamais partagés (RGPD).</span></div>
       </div>
@@ -1355,7 +1378,7 @@ const SUBSCRIPTION_ENABLED = false;                 // ← passer à true pour l
 const TRIAL_DAYS = 30;                              // essai gratuit
 const RC_ENTITLEMENT_ID = 'pro';                    // identifiant d'entitlement dans RevenueCat
 const RC_IOS_API_KEY = 'appl_XXXXXXXXXXXXXXXX';     // clé API publique iOS RevenueCat (à remplir en v1.1)
-const PRO_PRICE_LABEL = '4,99 €/mois';
+const PRO_PRICE_LABEL = '4,99 €/mois par établissement';
 const ABSENCE_TYPES = [
   // Types « classiques » (boutons rapides). unit : 'j' = jours, 'h' = heures · pay : rem = rémunérée, ind = indemnisée, non = non rémunérée
   {key:'conge',   label:'Congé payé', emoji:'🌴', color:'#3F6B4A', unit:'j', pay:'rem', combo:'Congé payé (j)'},
@@ -1796,7 +1819,9 @@ wsTouchMeta();
 function load(){
   let s=null;
   try { const raw=localStorage.getItem(STORAGE_KEY); if(raw) s=JSON.parse(raw); } catch(e){}
-  if(!s){ firstRun=true; s=freshEstablishment('restaurant',''); }   // 1re ouverture : établissement VIDE (pas de données d'exemple), on propose le choix
+  // 1re ouverture : établissement VIDE en mémoire seulement — rien n'est enregistré tant que l'utilisateur n'a pas
+  // choisi (compte, assistant, démo). Sinon un simple rechargement ferait disparaître l'écran d'accueil.
+  if(!s){ firstRun=true; return migrate(freshEstablishment('restaurant','')); }
   s=migrate(s); saveQuiet(s); return s;    // pas d'historique pendant l'init (state pas encore prêt)
 }
 function migrate(s){
@@ -1867,13 +1892,15 @@ function migrate(s){
   if(s.planningSent&&typeof s.planningSent==='object'){ Object.values(s.planningSent).forEach(p=>{ if(p&&p.week) p.week=_fixWk(p.week); }); }
   return s;
 }
-function saveQuiet(s=state){ try { localStorage.setItem(STORAGE_KEY, JSON.stringify(s)); } catch(e){} }
-function save(s=state){ saveQuiet(s); recordVersion(s); wsTouchMeta(); if(typeof scheduleAutoPush==='function') scheduleAutoPush(); }   // sauvegarde + historique + sync cloud auto
+// Tant que firstRun est vrai (écran d'accueil, aucun choix fait), rien n'est écrit sur l'appareil :
+// les parcours qui créent des données (assistant, démo, récupération cloud) passent firstRun à false AVANT de sauvegarder.
+function saveQuiet(s=state){ if(firstRun) return; try { localStorage.setItem(STORAGE_KEY, JSON.stringify(s)); } catch(e){} }
+function save(s=state){ if(firstRun) return; saveQuiet(s); recordVersion(s); wsTouchMeta(); if(typeof scheduleAutoPush==='function') scheduleAutoPush(); }   // sauvegarde + historique + sync cloud auto
 
 /* ---- Multi-établissements : bascule, création, suppression ---- */
 function profileName(k){ return (PROFILE_PRESETS[k]||{}).name || 'Personnalisé'; }
 function profileIcon(k){ return (PROFILE_PRESETS[k]||{}).icon || '🏢'; }
-function wsTouchMeta(){ try{ if(typeof state!=='object'||!state) return; const id=wsActiveId(), idx=wsIndex(), it=idx.find(e=>e.id===id); if(it){ it.name=state.restaurant||it.name||'Établissement'; it.profile=state.profile||it.profile||''; it.icon=profileIcon(state.profile); wsSaveIndex(idx); } }catch(e){} }
+function wsTouchMeta(){ try{ if(typeof state!=='object'||!state||firstRun) return; const id=wsActiveId(), idx=wsIndex(), it=idx.find(e=>e.id===id); if(it){ it.name=state.restaurant||it.name||'Établissement'; it.profile=state.profile||it.profile||''; it.icon=profileIcon(state.profile); wsSaveIndex(idx); } }catch(e){} }
 function freshEstablishment(key, name){
   const P = PROFILE_PRESETS[key] || PROFILE_PRESETS.custom;
   return migrate({ profile:key, teamWord:P.teamWord, restaurant:(name||P.org||'Nouvel établissement'),
@@ -1912,7 +1939,7 @@ let HKEY = STORAGE_KEY + '_history';
 const HIST_MAX = 25;
 let versions = []; try { versions = JSON.parse(localStorage.getItem(HKEY)||'[]'); } catch(e){ versions=[]; }
 let restoringVersion = false;
-function persistVersions(){ try { localStorage.setItem(HKEY, JSON.stringify(versions)); } catch(e){} }
+function persistVersions(){ if(firstRun) return; try { localStorage.setItem(HKEY, JSON.stringify(versions)); } catch(e){} }   // rien n'est écrit avant le 1er choix
 function recordVersion(s=state){
   if(restoringVersion) return;
   const data = JSON.stringify(s);
@@ -3752,12 +3779,23 @@ function finishWizard(){
       st.employees.push({ id:uid(), name:nm, role:t.key, contract:'35h', email:'', phone:'', rate:0 });
     }
   });
-  state=st; migrate(state); syncGlobals(); save();
-  firstRun=false; confUnlocked=false; teamFilter='all';
+  state=st; migrate(state); syncGlobals(); firstRun=false; save();
+  confUnlocked=false; teamFilter='all';
   setView('planning'); setMode('semaine'); renderAll(); applyMode();
   closeWizard();
   document.getElementById('coachHint').classList.remove('hidden');
-  toast('Planning créé ✓ À toi de jouer !');
+  if(sb && cloudSession && !cloudMembership){
+    // Compte connecté sans établissement : on le crée dans le cloud puis on envoie l'équipe saisie dans l'assistant
+    toast('Création de ton établissement…');
+    sb.rpc('create_establishment', { p_name: state.restaurant }).then(async ({ error })=>{
+      if(error){ toast('Établissement créé sur cet appareil, mais pas encore sauvegardé : '+traduireErreur(error.message)+' — réessaie depuis ⋯ Menu → Mon compte.'); return; }
+      await refreshCloud();
+      try{ await pushToCloud(); }catch(e){}
+      toast('Établissement créé et sauvegardé ✓ À toi de jouer !');
+    });
+  } else {
+    toast('Planning créé ✓ À toi de jouer !');
+  }
   maybeOnboard();
 }
 document.getElementById('coachClose').addEventListener('click',()=>document.getElementById('coachHint').classList.add('hidden'));
@@ -4293,6 +4331,7 @@ function openMailTo(subject, bodyLines){
 }
 document.getElementById('btnHelp').addEventListener('click',()=>{ dataMenu.classList.add('hidden'); window.open(ASSISTANCE_URL,'_blank'); });
 document.getElementById('btnPrivacy').addEventListener('click',()=>{ dataMenu.classList.add('hidden'); window.open('https://oplaa.pro/confidentialite.html','_blank'); });
+document.getElementById('btnTerms').addEventListener('click',()=>{ dataMenu.classList.add('hidden'); window.open('https://oplaa.pro/cgu.html','_blank'); });
 document.getElementById('btnFeedback').addEventListener('click',()=>{
   dataMenu.classList.add('hidden');
   openMailTo(`💡 Amélioration Oplaa (v${APP_VERSION})`, [
@@ -4364,7 +4403,13 @@ async function refreshCloud(){
   catch(e){ showCloudState('cloudAuth'); cloudMsg('cloudAuthMsg','Connexion impossible (réseau). Réessaie.', false); return; }
   cloudSession = session;
   updateCloudMenuLabel();
-  if(!session){ showCloudState('cloudAuth'); return; }
+  if(!session){
+    const intro=document.getElementById('cloudAuthIntro');
+    if(intro) intro.textContent = _welcomeIntent==='patron' ? 'Crée ton compte (ou connecte-toi) : ton établissement sera sauvegardé et partageable avec ton équipe.'
+      : _welcomeIntent==='employe' ? 'Crée ton compte (ou connecte-toi), puis entre le code reçu de ton patron.'
+      : 'Connecte-toi pour retrouver ton établissement, ou crée ton compte.';
+    showCloudState('cloudAuth'); return;
+  }
   await loadMembership();
   if(cloudMembership){
     document.getElementById('cloudMemEmail').textContent = session.user.email;
@@ -4384,6 +4429,17 @@ async function refreshCloud(){
     await pullForOwner();
   }
   if(cloudMembership) startRealtime();   // temps réel
+  if(_welcomeIntent && cloudMembership){
+    // Venu de l'accueil et déjà rattaché à un établissement → on affiche directement le planning
+    _welcomeIntent=null; firstRun=false; closeCloud();
+    toast(cloudMembership.role==='employee' ? 'Bienvenue ! Voici ton planning ✓' : 'Bienvenue ! Établissement récupéré ✓');
+  } else if(cloudMembership && firstRun && !_welcomeIntent){
+    // Démarrage avec une session déjà ouverte sur un appareil vierge : les données viennent d'être récupérées → planning
+    firstRun=false; hideWelcome();
+  } else if(_welcomeIntent==='patron' && !cloudMembership){
+    // Patron connecté sans établissement → assistant de création (l'établissement sera créé dans le cloud à la fin)
+    _welcomeIntent=null; closeCloud(); openWizard();
+  }
   _membersCache=null; if(typeof renderManageBanner==='function') renderManageBanner();
   if(typeof renderProBox==='function') renderProBox();
   setSyncStatus(canAutoPush() ? 'ok' : null);   // indicateur d'en-tête : « Synchronisé ✓ » pour le patron connecté
@@ -4507,7 +4563,7 @@ async function pullForEmployee(){
   const { data:notes } = await sb.from('notes').select('*').eq('establishment_id', est);
   state.notes = (notes||[]).map(n=>({ id:n.id, week:n.week, day:n.day, text:n.text, level:n.level||'info' }));
   if(myId && state.employees.some(x=>x.id===myId)) empViewSel = myId;
-  saveQuiet(); renderAll(); if(!document.getElementById('view-employe').classList.contains('hidden')) renderEmploye();
+  firstRun=false; saveQuiet(); renderAll(); if(!document.getElementById('view-employe').classList.contains('hidden')) renderEmploye();
   logAccess('pull_employee');
 }
 // PATRON : récupère TOUTES ses données depuis le cloud (employés + salaires + planning + absences + notes)
@@ -4531,7 +4587,7 @@ async function pullForOwner(){
     const { data:notes } = await sb.from('notes').select('*').eq('establishment_id', est);
     state.notes = (notes||[]).map(n=>({ id:n.local_id||n.id, week:n.week, day:n.day, text:n.text, level:n.level||'info' }));
     migrate(state); syncGlobals(); setAccent(state.accent); applyLogo();
-    _applyingRemote=true; save(); _applyingRemote=false;   // on vient de tirer du cloud → pas de re-push
+    firstRun=false; _applyingRemote=true; save(); _applyingRemote=false;   // on vient de tirer du cloud → pas de re-push
     renderAll();
     logAccess('pull_owner');
     return {ok:true, count: state.employees.length};
@@ -4744,7 +4800,7 @@ const _btnHome=document.getElementById('btnHome'); if(_btnHome) _btnHome.addEven
 });
 
 function openCloud(){ cloudModal.classList.remove('hidden'); cloudModal.classList.add('flex'); refreshCloud(); }
-function closeCloud(){ cloudModal.classList.add('hidden'); cloudModal.classList.remove('flex'); if(firstRun && !cloudSession) showWelcome(); }   // onboarding employé fermé sans connexion → retour accueil
+function closeCloud(){ cloudModal.classList.add('hidden'); cloudModal.classList.remove('flex'); if(firstRun && !cloudSession){ _welcomeIntent=null; showWelcome(); } }   // onboarding employé fermé sans connexion → retour accueil
 document.getElementById('btnCloud').addEventListener('click', ()=>{ dataMenu.classList.add('hidden'); openCloud(); });
 document.querySelectorAll('.closeCloud').forEach(b=>b.addEventListener('click',closeCloud));
 cloudModal.addEventListener('click',e=>{ if(e.target===cloudModal) closeCloud(); });
@@ -4786,6 +4842,9 @@ document.getElementById('cloudDeleteAcc').addEventListener('click', cloudDeleteA
 document.getElementById('cloudDeleteAcc2').addEventListener('click', cloudDeleteAccount);
 
 document.getElementById('cloudCreateEst').addEventListener('click', async ()=>{
+  // Appareil vierge (1er lancement) → l'assistant de configuration crée l'établissement dans le cloud à la fin
+  if(firstRun || (!state.employees.length && !state.shifts.length)){ closeCloud(); openWizard(); return; }
+  // Sinon (données locales déjà présentes, ex. ancien utilisateur) : on crée l'établissement avec le nom existant
   // On demande le nom seulement s'il n'existe pas déjà (évite « Mon établissement » par défaut)
   let nom = (state.restaurant && state.restaurant.trim() && state.restaurant.trim()!=='Mon établissement') ? state.restaurant.trim() : '';
   if(!nom){
@@ -4822,8 +4881,8 @@ function traduireErreur(m){
   if(m.includes('password')) return 'Mot de passe trop court (6 caractères min).';
   return m || 'Une erreur est survenue.';
 }
-// Au démarrage : met à jour le libellé du menu selon la session existante
-if(sb){ sb.auth.getSession().then(({data})=>{ cloudSession=data.session; updateCloudMenuLabel(); }); }
+// Au démarrage : session existante → rattachement, récupération si l'appareil est vierge, temps réel, envoi auto
+if(sb){ refreshCloud(); }
 
 /* ============ INIT ============ */
 function renderAll(){ renderTeamFilter(); renderGrid(); renderTeam(); renderSuivi(); }
@@ -4834,8 +4893,14 @@ setView('planning'); setMode(state.viewMode||'semaine'); setScope('semaine'); te
 // Écran d'accueil au 1er lancement : choisir patron ou employé
 function showWelcome(){ document.getElementById('welcome').classList.add('show'); }
 function hideWelcome(){ document.getElementById('welcome').classList.remove('show'); }
-document.getElementById('welcomePatron').addEventListener('click', ()=>{ hideWelcome(); openWizard(); });
-document.getElementById('welcomeEmploye').addEventListener('click', ()=>{ hideWelcome(); openCloud(); });
+// Compte obligatoire (depuis la 1.0.9) : créer ou rejoindre un établissement passe d'abord par la connexion.
+// _welcomeIntent mémorise d'où vient l'utilisateur : 'patron' → assistant de création après connexion,
+// 'employe' → saisie du code, 'login' → simple récupération. La démo reste accessible sans compte.
+let _welcomeIntent=null;
+function welcomeGo(intent){ _welcomeIntent=intent; hideWelcome(); openCloud(); setTimeout(()=>{ const e=document.getElementById('cloudEmail'); if(e && !e.value && !e.closest('[hidden]')) e.focus(); }, 300); }
+document.getElementById('welcomePatron').addEventListener('click', ()=>welcomeGo('patron'));
+document.getElementById('welcomeEmploye').addEventListener('click', ()=>welcomeGo('employe'));
+document.getElementById('welcomeLogin').addEventListener('click', ()=>welcomeGo('login'));
 // « Voir une démo » : visible partout (web ET app iOS) — permet notamment à la vérification Apple de tester l'app sans compte
 const _isNativeApp = !!(window.Capacitor && (typeof window.Capacitor.isNativePlatform==='function' ? window.Capacitor.isNativePlatform() : window.Capacitor.isNative));
 /* App native : on verrouille le zoom (pincer / double-tap) comme une vraie app iOS.
