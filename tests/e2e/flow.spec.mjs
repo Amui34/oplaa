@@ -22,6 +22,13 @@ test("écran d'accueil : choix patron / employé + démo (web)", async ({ page }
   await expect(page.locator('#welcomeDemo')).toBeVisible();
 });
 
+test('accueil : recharger la page sans avoir choisi ramène toujours l’accueil', async ({ page }) => {
+  await expect(page.locator('#welcome')).toBeVisible();
+  await page.reload();
+  await expect(page.locator('#welcome')).toBeVisible();
+  await expect(page.locator('#welcomePatron')).toBeVisible();
+});
+
 test('mode démo : charge le planning de démonstration', async ({ page }) => {
   await page.locator('#welcomeDemo').click();
   // L'écran d'accueil disparaît, le planning s'affiche avec l'établissement de démo

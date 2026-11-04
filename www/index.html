@@ -1819,7 +1819,9 @@ wsTouchMeta();
 function load(){
   let s=null;
   try { const raw=localStorage.getItem(STORAGE_KEY); if(raw) s=JSON.parse(raw); } catch(e){}
-  if(!s){ firstRun=true; s=freshEstablishment('restaurant',''); }   // 1re ouverture : établissement VIDE (pas de données d'exemple), on propose le choix
+  // 1re ouverture : établissement VIDE en mémoire seulement — rien n'est enregistré tant que l'utilisateur n'a pas
+  // choisi (compte, assistant, démo). Sinon un simple rechargement ferait disparaître l'écran d'accueil.
+  if(!s){ firstRun=true; return migrate(freshEstablishment('restaurant','')); }
   s=migrate(s); saveQuiet(s); return s;    // pas d'historique pendant l'init (state pas encore prêt)
 }
 function migrate(s){
@@ -4429,6 +4431,9 @@ async function refreshCloud(){
     // Venu de l'accueil et déjà rattaché à un établissement → on affiche directement le planning
     _welcomeIntent=null; firstRun=false; closeCloud();
     toast(cloudMembership.role==='employee' ? 'Bienvenue ! Voici ton planning ✓' : 'Bienvenue ! Établissement récupéré ✓');
+  } else if(cloudMembership && firstRun && !_welcomeIntent){
+    // Démarrage avec une session déjà ouverte sur un appareil vierge : les données viennent d'être récupérées → planning
+    firstRun=false; hideWelcome();
   } else if(_welcomeIntent==='patron' && !cloudMembership){
     // Patron connecté sans établissement → assistant de création (l'établissement sera créé dans le cloud à la fin)
     _welcomeIntent=null; closeCloud(); openWizard();
@@ -4874,8 +4879,8 @@ function traduireErreur(m){
   if(m.includes('password')) return 'Mot de passe trop court (6 caractères min).';
   return m || 'Une erreur est survenue.';
 }
-// Au démarrage : met à jour le libellé du menu selon la session existante
-if(sb){ sb.auth.getSession().then(({data})=>{ cloudSession=data.session; updateCloudMenuLabel(); }); }
+// Au démarrage : session existante → rattachement, récupération si l'appareil est vierge, temps réel, envoi auto
+if(sb){ refreshCloud(); }
 
 /* ============ INIT ============ */
 function renderAll(){ renderTeamFilter(); renderGrid(); renderTeam(); renderSuivi(); }
