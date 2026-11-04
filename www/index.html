@@ -703,11 +703,23 @@
       <input type="email" id="cloudEmail" autocomplete="email" class="mt-1 mb-3 w-full border border-slate-300 rounded-lg px-3 py-2" placeholder="ton@email.com" />
       <label class="text-sm font-semibold text-slate-600">Mot de passe</label>
       <input type="password" id="cloudPassword" autocomplete="current-password" class="mt-1 mb-1 w-full border border-slate-300 rounded-lg px-3 py-2" placeholder="••••••••" />
+      <div class="text-right"><button type="button" id="cloudForgot" class="text-xs text-slate-500 hover:text-teal-700 underline">Mot de passe oublié ?</button></div>
       <p id="cloudAuthMsg" class="text-sm mb-3 hidden"></p>
       <div class="grid grid-cols-2 gap-2 mt-3">
         <button type="button" id="cloudSignIn" class="px-3 py-3 rounded-xl bg-teal-600 text-white font-semibold hover:bg-teal-700">Se connecter</button>
         <button type="button" id="cloudSignUp" class="px-3 py-3 rounded-xl bg-white border border-slate-300 font-semibold hover:bg-slate-50">Créer un compte</button>
       </div>
+    </div>
+
+    <!-- Retour par le lien « mot de passe oublié » : choisir un nouveau mot de passe -->
+    <div id="cloudRecover" hidden>
+      <p class="text-sm text-slate-600 mb-4">Choisis ton <b>nouveau mot de passe</b> (6 caractères minimum).</p>
+      <label class="text-sm font-semibold text-slate-600">Nouveau mot de passe</label>
+      <input type="password" id="cloudNewPassword" autocomplete="new-password" class="mt-1 mb-3 w-full border border-slate-300 rounded-lg px-3 py-2" placeholder="••••••••" />
+      <label class="text-sm font-semibold text-slate-600">Confirme le mot de passe</label>
+      <input type="password" id="cloudNewPassword2" autocomplete="new-password" class="mt-1 mb-1 w-full border border-slate-300 rounded-lg px-3 py-2" placeholder="••••••••" />
+      <p id="cloudRecoverMsg" class="text-sm mb-3 hidden"></p>
+      <button type="button" id="cloudSetPassword" class="mt-3 w-full px-3 py-3 rounded-xl bg-teal-600 text-white font-semibold hover:bg-teal-700">Enregistrer le nouveau mot de passe</button>
     </div>
 
     <!-- Connecté mais sans établissement : patron ou employé -->
@@ -4361,7 +4373,7 @@ try { if(window.supabase && window.OPLAA_SUPABASE){ sb = window.supabase.createC
 
 const cloudModal = document.getElementById('cloudModal');
 function showCloudState(state){
-  ['cloudLoading','cloudAuth','cloudOnboard','cloudMember'].forEach(id=>{ document.getElementById(id).hidden = (id!==state); });
+  ['cloudLoading','cloudAuth','cloudOnboard','cloudMember','cloudRecover'].forEach(id=>{ document.getElementById(id).hidden = (id!==state); });
 }
 function cloudMsg(id, text, ok){
   const el=document.getElementById(id); if(!el) return;
@@ -4403,6 +4415,7 @@ async function refreshCloud(){
   catch(e){ showCloudState('cloudAuth'); cloudMsg('cloudAuthMsg','Connexion impossible (réseau). Réessaie.', false); return; }
   cloudSession = session;
   updateCloudMenuLabel();
+  if(_pwRecovery && session){ showCloudState('cloudRecover'); return; }   // lien « mot de passe oublié » → nouveau mot de passe d'abord
   if(!session){
     const intro=document.getElementById('cloudAuthIntro');
     if(intro) intro.textContent = _welcomeIntent==='patron' ? 'Crée ton compte (ou connecte-toi) : ton établissement sera sauvegardé et partageable avec ton équipe.'
@@ -4813,6 +4826,33 @@ document.getElementById('cloudSignIn').addEventListener('click', async ()=>{
   if(error){ cloudMsg('cloudAuthMsg', traduireErreur(error.message), false); return; }
   toast('Connecté ✓'); refreshCloud();
 });
+// ── Mot de passe oublié : e-mail de réinitialisation (Supabase) puis, au retour par le lien, nouveau mot de passe
+let _pwRecovery = false;
+document.getElementById('cloudForgot').addEventListener('click', async ()=>{
+  const email=document.getElementById('cloudEmail').value.trim();
+  if(!email){ cloudMsg('cloudAuthMsg','Entre ton email ci-dessus, puis clique sur « Mot de passe oublié ? ».', false); document.getElementById('cloudEmail').focus(); return; }
+  cloudMsg('cloudAuthMsg','Envoi du lien…', true);
+  const { error } = await sb.auth.resetPasswordForEmail(email, { redirectTo: 'https://oplaa.pro/' });
+  if(error){ cloudMsg('cloudAuthMsg', traduireErreur(error.message), false); return; }
+  cloudMsg('cloudAuthMsg','Si un compte existe pour '+email+', un lien vient d’être envoyé. Ouvre-le pour choisir un nouveau mot de passe (regarde aussi les indésirables).', true);
+});
+document.getElementById('cloudSetPassword').addEventListener('click', async ()=>{
+  const p1=document.getElementById('cloudNewPassword').value, p2=document.getElementById('cloudNewPassword2').value;
+  if(p1.length<6){ cloudMsg('cloudRecoverMsg','6 caractères minimum.', false); return; }
+  if(p1!==p2){ cloudMsg('cloudRecoverMsg','Les deux mots de passe ne sont pas identiques.', false); return; }
+  cloudMsg('cloudRecoverMsg','Enregistrement…', true);
+  const { error } = await sb.auth.updateUser({ password: p1 });
+  if(error){ cloudMsg('cloudRecoverMsg', traduireErreur(error.message), false); return; }
+  _pwRecovery=false; document.getElementById('cloudNewPassword').value=''; document.getElementById('cloudNewPassword2').value='';
+  try{ history.replaceState(null, '', location.pathname); }catch(e){}
+  toast('Mot de passe modifié ✓'); _welcomeIntent='login'; refreshCloud();
+});
+if(sb){
+  // Arrivée par le lien de l'e-mail : supabase-js ouvre la session et émet PASSWORD_RECOVERY
+  try{ sb.auth.onAuthStateChange((event)=>{ if(event==='PASSWORD_RECOVERY'){ _pwRecovery=true; hideWelcome(); openCloud(); } }); }catch(e){}
+  // Secours si l'évènement est émis avant notre abonnement : le lien contient type=recovery → on ouvre la modale nous-mêmes
+  if(/type=recovery/.test(location.hash||'') || /type=recovery/.test(location.search||'')){ _pwRecovery=true; setTimeout(()=>{ hideWelcome(); openCloud(); }, 900); }
+}
 document.getElementById('cloudSignUp').addEventListener('click', async ()=>{
   const email=document.getElementById('cloudEmail').value.trim(), pw=document.getElementById('cloudPassword').value;
   if(!email||pw.length<6){ cloudMsg('cloudAuthMsg','Email valide + mot de passe (6 caractères min).', false); return; }

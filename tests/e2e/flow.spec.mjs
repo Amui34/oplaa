@@ -16,6 +16,10 @@ test("écran d'accueil : choix patron / employé + démo (web)", async ({ page }
   await page.locator('#welcomeLogin').click();
   await expect(page.locator('#welcome')).not.toBeVisible();
   await expect(page.locator('#cloudModal')).toBeVisible();
+  // Mot de passe oublié : le lien existe et réclame l'e-mail s'il est vide
+  await expect(page.locator('#cloudForgot')).toBeVisible({ timeout: 15000 });
+  await page.locator('#cloudForgot').click();
+  await expect(page.locator('#cloudAuthMsg')).toContainText('Entre ton email');
   await page.locator('.closeCloud').first().click();
   await expect(page.locator('#welcome')).toBeVisible();   // fermé sans connexion → retour à l'accueil
   // Le bouton démo n'est visible que sur le web (pas dans l'app native)
