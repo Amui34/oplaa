@@ -10,7 +10,8 @@
     "test": "TZ=UTC vitest run",
     "test:unit": "TZ=UTC vitest run tests/unit",
     "test:int": "TZ=UTC vitest run tests/integration",
-    "test:e2e": "playwright test"
+    "test:e2e": "playwright test",
+    "test:a11y": "node tests/a11y/audit.mjs"
   },
   "keywords": [
     "planning",
@@ -35,6 +36,7 @@
   "devDependencies": {
     "@capacitor/assets": "^3.0.5",
     "@playwright/test": "^1.48.0",
+    "axe-core": "^4.14.0",
     "sharp": "^0.35.4",
     "tailwindcss": "^3.4.19",
     "vitest": "^2.1.9"

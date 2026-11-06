@@ -49,16 +49,16 @@
 <script src="supabase-config.js"></script>
 <style>
   :root {
-    --o-50:#FBEFE9; --o-100:#F6E0D6; --o-200:#EBC9BA; --o-300:#E0A98C; --o-400:#D8724A; --o-500:#D0623A; --o-600:#C4562F; --o-700:#A8471F; --o-800:#8A3A19; --o-900:#6E2E14;
+    --o-50:#FBEFE9; --o-100:#F6E0D6; --o-200:#EBC9BA; --o-300:#E0A98C; --o-400:#D8724A; --o-500:#D0623A; --o-600:#BD532E; --o-700:#A8471F; --o-800:#8A3A19; --o-900:#6E2E14;
     /* Échelle neutre (slate) pilotée par variables → thème clair/sombre */
-    --s-50:#FBF6F1; --s-100:#F3E4D9; --s-200:#E5DACC; --s-300:#B8A99B; --s-400:#9A8A7C; --s-500:#6E655C; --s-600:#544A42; --s-700:#443A33; --s-800:#2A1D16; --s-900:#1E140E;
+    --s-50:#FBF6F1; --s-100:#F3E4D9; --s-200:#E5DACC; --s-300:#B8A99B; --s-400:#746559; --s-500:#6E655C; --s-600:#544A42; --s-700:#443A33; --s-800:#2A1D16; --s-900:#1E140E;
     --surface:#ffffff; --scroll-thumb:#cbd5e1; --word:#2A1D16;
     --ink:#2A1D16; --ink-hover:#1E140E;
     color-scheme: light;
   }
   [data-theme="dark"] {
     /* Échelle inversée : les fonds deviennent sombres, les textes clairs */
-    --s-50:#1B120C; --s-100:#241A13; --s-200:#37291E; --s-300:#4E3C2E; --s-400:#8A7A6C; --s-500:#A99A8C; --s-600:#C4B5A7; --s-700:#E0D4C8; --s-800:#F3E9DF; --s-900:#FBF6F1;
+    --s-50:#1B120C; --s-100:#241A13; --s-200:#37291E; --s-300:#4E3C2E; --s-400:#9E9084; --s-500:#A99A8C; --s-600:#C4B5A7; --s-700:#E0D4C8; --s-800:#F3E9DF; --s-900:#FBF6F1;
     --surface:#241A13; --scroll-thumb:#4E3C2E; --word:#FBF6F1;
     --ink:#3A2A20; --ink-hover:#4A382C;
     color-scheme: dark;
@@ -91,7 +91,7 @@
     @page { size: A4 landscape; margin: 10mm; }
     /* Toujours imprimer en clair, même si l'écran est en mode sombre */
     :root, [data-theme="dark"] {
-      --s-50:#FBF6F1; --s-100:#F3E4D9; --s-200:#E5DACC; --s-300:#B8A99B; --s-400:#9A8A7C; --s-500:#6E655C; --s-600:#544A42; --s-700:#443A33; --s-800:#2A1D16; --s-900:#1E140E;
+      --s-50:#FBF6F1; --s-100:#F3E4D9; --s-200:#E5DACC; --s-300:#B8A99B; --s-400:#746559; --s-500:#6E655C; --s-600:#544A42; --s-700:#443A33; --s-800:#2A1D16; --s-900:#1E140E;
       --surface:#ffffff; --word:#2A1D16;
     }
     [data-theme="dark"] .bg-white { background-color:#fff !important; }
@@ -125,6 +125,18 @@
   #welcome { position:fixed; inset:0; z-index:90; display:none; flex-direction:column; align-items:center; justify-content:center;
     padding:32px; text-align:center; background:linear-gradient(165deg,#FBF6F1,#F0DECE); }
   #welcome.show { display:flex; }
+  /* Accessibilité tactile : sur écran tactile, chaque bouton/lien a une zone de toucher d'au moins 44 × 44 pt (recommandation Apple),
+     sans changer la mise en page (zone invisible centrée) ; les champs de saisie font au moins 44 pt de haut. */
+  @media (hover:none), (pointer:coarse) {
+    :where(button, [role="button"], a[href], summary) { position:relative; }
+    :where(button, [role="button"], a[href], summary)::after { content:""; position:absolute; left:50%; top:50%; width:max(100%,44px); height:max(100%,44px); transform:translate(-50%,-50%); }
+    :where(select, textarea, input:not([type="checkbox"]):not([type="radio"]):not([type="color"]):not([type="range"]):not([type="hidden"])) { min-height:44px; }
+    :where(input[type="checkbox"], input[type="radio"]) { min-width:22px; min-height:22px; }
+    :where(input[type="color"]) { min-width:44px; min-height:44px; }
+    :where(label:has(input[type="checkbox"]), label:has(input[type="radio"])) { min-height:44px; }
+  }
+  /* Focus clavier toujours visible */
+  :where(button, a[href], input, select, textarea, summary, [tabindex]):focus-visible { outline:2px solid var(--o-700); outline-offset:2px; }
   /* Première ouverture : la fenêtre compte EST l'écran d'accueil (plein écran, pas de croix) → on arrive directement sur « Créer mon compte » */
   #cloudBrand { display:none; text-align:center; }
   #welcomeDemo { display:none; }
@@ -232,7 +244,7 @@
         <button id="btnSettings" class="mi w-full text-left px-4 py-2 hover:bg-slate-50"><span class="ic" data-ic="settings"></span>Réglages &amp; plus…</button>
         <button id="btnGuide" class="mi w-full text-left px-4 py-2 hover:bg-slate-50"><span class="ic" data-ic="bulb"></span>Aide (guide de démarrage)</button>
         <div class="mi px-4 py-1.5 text-[10px] text-emerald-600 leading-snug"><span class="ic" data-ic="cloud" data-ic-size="13" style="align-self:flex-start;margin-top:1px"></span><span>Tout est enregistré et synchronisé automatiquement.</span></div>
-        <div class="px-4 pt-0.5 pb-1.5 text-[10px] text-slate-300">Oplaa v1.0.10 · © 2026 SAS NOMAD · Conçu et développé par Noa Madar</div>
+        <div class="px-4 pt-0.5 pb-1.5 text-[10px] text-slate-400">Oplaa v1.0.10 · © 2026 SAS NOMAD · Conçu et développé par Noa Madar</div>
       </div>
       <input type="file" id="importFile" accept="application/json" class="hidden" />
     </div>
@@ -262,11 +274,11 @@
   <section id="view-planning">
     <div class="no-print flex flex-wrap items-center gap-3 mb-3">
       <div class="flex items-center gap-2">
-        <button id="prevWeek" class="w-9 h-9 rounded-lg bg-white border border-slate-300 hover:bg-slate-50 font-bold">‹</button>
+        <button id="prevWeek" aria-label="Semaine précédente" class="w-9 h-9 rounded-lg bg-white border border-slate-300 hover:bg-slate-50 font-bold">‹</button>
         <div class="text-center min-w-[150px]">
           <div id="weekLabel" class="font-bold text-slate-900 text-sm"></div>
         </div>
-        <button id="nextWeek" class="w-9 h-9 rounded-lg bg-white border border-slate-300 hover:bg-slate-50 font-bold">›</button>
+        <button id="nextWeek" aria-label="Semaine suivante" class="w-9 h-9 rounded-lg bg-white border border-slate-300 hover:bg-slate-50 font-bold">›</button>
         <button id="todayBtn" class="px-3 py-2 text-xs rounded-lg bg-teal-50 text-teal-700 font-semibold border border-teal-200 hover:bg-teal-100">Cette semaine</button>
       </div>
     </div>
@@ -286,7 +298,7 @@
       </div>
       <!-- Mettre un employé en évidence -->
       <button id="btnOffInbox" class="hidden inline-flex items-center gap-1.5 border border-rose-200 bg-rose-50 text-rose-700 rounded-lg px-3 py-1.5 text-sm font-semibold hover:bg-rose-100">🌴 Demandes de congés<span id="offBadge" class="hidden text-[11px] font-bold bg-rose-500 text-white rounded-full px-2 py-0.5 leading-none">0</span></button>
-      <select id="empFocus" class="ml-auto border border-slate-300 rounded-lg px-2 py-1.5 text-sm bg-white max-w-[180px]"><option value="">👤 Voir un employé…</option></select>
+      <select id="empFocus" aria-label="Afficher le planning d’un employé" class="ml-auto border border-slate-300 rounded-lg px-2 py-1.5 text-sm bg-white max-w-[180px]"><option value="">👤 Voir un employé…</option></select>
     </div>
 
     <!-- Résumé de la semaine : heures, effectif, coût estimé -->
@@ -308,7 +320,7 @@
     <!-- Bannière de conflits -->
     <div id="conflictBanner" class="hidden mb-3 rounded-xl border border-red-200 bg-red-50 text-red-700 text-sm px-4 py-3"></div>
 
-    <div id="gridScroll" class="print-container bg-white rounded-2xl border border-slate-200 overflow-x-auto thin-scroll">
+    <div id="gridScroll" tabindex="0" role="region" aria-label="Planning de la semaine" class="print-container bg-white rounded-2xl border border-slate-200 overflow-x-auto thin-scroll">
       <table class="w-full border-collapse" id="grid">
         <thead id="gridHead"></thead>
         <tbody id="gridBody"></tbody>
@@ -343,7 +355,7 @@
       <button type="button" id="btnInviteTeam" class="px-4 py-2 rounded-xl bg-teal-600 text-white font-semibold text-sm hover:bg-teal-700">＋ Inviter quelqu'un</button>
       <button type="button" id="btnManageAccess" class="px-3 py-2 rounded-xl bg-white border border-teal-300 text-teal-700 font-semibold text-sm hover:bg-teal-50">Gérer les accès</button>
     </div>
-    <div class="print-container bg-white rounded-2xl border border-slate-200 overflow-x-auto thin-scroll">
+    <div tabindex="0" role="region" aria-label="Tableau défilant" class="print-container bg-white rounded-2xl border border-slate-200 overflow-x-auto thin-scroll">
       <table class="w-full text-sm min-w-[320px] sm:min-w-[560px]">
         <thead class="bg-slate-50 text-slate-500 text-xs uppercase tracking-wide">
           <tr>
@@ -382,7 +394,7 @@
     </div>
     <p class="no-print text-sm text-slate-500 mb-2" id="suiviPeriod"></p>
     <div id="suiviSummary" class="no-print flex flex-wrap gap-2 text-sm mb-4"></div>
-    <div class="print-container bg-white rounded-2xl border border-slate-200 overflow-x-auto thin-scroll">
+    <div tabindex="0" role="region" aria-label="Tableau défilant" class="print-container bg-white rounded-2xl border border-slate-200 overflow-x-auto thin-scroll">
       <table class="w-full text-sm min-w-[320px] sm:min-w-[720px]">
         <thead class="bg-slate-50 text-slate-500 text-xs uppercase tracking-wide">
           <tr>
@@ -436,7 +448,7 @@
 
       <!-- Bloc 1 + 2 : certifications & documents par salarié -->
       <h3 class="text-sm font-extrabold text-slate-800 uppercase tracking-wide mb-2">Certifications &amp; documents du personnel</h3>
-      <div class="print-container bg-white rounded-2xl border border-slate-200 overflow-x-auto thin-scroll mb-6">
+      <div tabindex="0" role="region" aria-label="Tableau défilant" class="print-container bg-white rounded-2xl border border-slate-200 overflow-x-auto thin-scroll mb-6">
         <table class="w-full text-sm min-w-[820px]">
           <thead class="bg-slate-50 text-slate-500 text-xs uppercase tracking-wide">
             <tr id="confHead"></tr>
@@ -516,12 +528,12 @@
   <div class="bg-white rounded-2xl shadow-xl w-full max-w-md p-5 max-h-[90vh] overflow-y-auto">
     <div class="flex items-center justify-between mb-4">
       <h3 class="text-lg font-bold" id="shiftModalTitle">Ajouter un service</h3>
-      <button class="closeModal text-slate-400 hover:text-slate-600 text-2xl leading-none">&times;</button>
+      <button class="closeModal text-slate-400 hover:text-slate-600 text-2xl leading-none" aria-label="Fermer">&times;</button>
     </div>
     <form id="shiftForm" class="space-y-3">
       <input type="hidden" id="shiftId" />
       <div>
-        <label class="text-sm font-semibold text-slate-600">Employé</label>
+        <label for="shiftEmployee" class="text-sm font-semibold text-slate-600">Employé</label>
         <select id="shiftEmployee" class="mt-1 w-full border border-slate-300 rounded-lg px-3 py-2"></select>
         <div id="shiftExtraField" class="mt-2 hidden">
           <input type="text" id="shiftExtraName" list="extraNames" autocomplete="off" placeholder="🔎 Rechercher ou nommer un extra (ex : Julie)" class="w-full border border-amber-300 bg-amber-50 rounded-lg px-3 py-2" />
@@ -531,15 +543,15 @@
       </div>
       <div class="grid grid-cols-3 gap-3">
         <div>
-          <label class="text-sm font-semibold text-slate-600">Jour</label>
+          <label for="shiftDay" class="text-sm font-semibold text-slate-600">Jour</label>
           <select id="shiftDay" class="mt-1 w-full border border-slate-300 rounded-lg px-3 py-2"></select>
         </div>
         <div>
-          <label class="text-sm font-semibold text-slate-600">Équipe</label>
+          <label for="shiftTeam" class="text-sm font-semibold text-slate-600">Équipe</label>
           <select id="shiftTeam" class="mt-1 w-full border border-slate-300 rounded-lg px-3 py-2"></select>
         </div>
         <div>
-          <label class="text-sm font-semibold text-slate-600">Période</label>
+          <label for="shiftPeriod" class="text-sm font-semibold text-slate-600">Période</label>
           <select id="shiftPeriod" class="mt-1 w-full border border-slate-300 rounded-lg px-3 py-2"></select>
         </div>
       </div>
@@ -549,11 +561,11 @@
       </div>
       <div class="grid grid-cols-2 gap-3">
         <div>
-          <label class="text-sm font-semibold text-slate-600">Début</label>
+          <label for="shiftStart" class="text-sm font-semibold text-slate-600">Début</label>
           <input type="time" id="shiftStart" required class="mt-1 w-full border border-slate-300 rounded-lg px-3 py-2" />
         </div>
         <div>
-          <label class="text-sm font-semibold text-slate-600">Fin</label>
+          <label for="shiftEnd" class="text-sm font-semibold text-slate-600">Fin</label>
           <input type="time" id="shiftEnd" required class="mt-1 w-full border border-slate-300 rounded-lg px-3 py-2" />
         </div>
       </div>
@@ -561,11 +573,11 @@
         <summary class="text-sm font-semibold text-slate-600 cursor-pointer">Heures réellement effectuées <span class="font-normal text-slate-400">(optionnel)</span></summary>
         <div class="grid grid-cols-2 gap-3 mt-3">
           <div>
-            <label class="text-xs font-semibold text-slate-500">Réel — début</label>
+            <label for="shiftRealStart" class="text-xs font-semibold text-slate-500">Réel — début</label>
             <input type="time" id="shiftRealStart" class="mt-1 w-full border border-slate-300 rounded-lg px-3 py-2" />
           </div>
           <div>
-            <label class="text-xs font-semibold text-slate-500">Réel — fin</label>
+            <label for="shiftRealEnd" class="text-xs font-semibold text-slate-500">Réel — fin</label>
             <input type="time" id="shiftRealEnd" class="mt-1 w-full border border-slate-300 rounded-lg px-3 py-2" />
           </div>
         </div>
@@ -578,7 +590,7 @@
         <p class="text-xs text-slate-400 mt-2">Ex : déjeuner 30 min, cigarette 10 min… Le temps de pause est retiré des heures travaillées.</p>
       </details>
       <div>
-        <label class="text-sm font-semibold text-slate-600">Note sur ce créneau <span class="font-normal text-slate-400">(optionnel)</span></label>
+        <label for="shiftNote" class="text-sm font-semibold text-slate-600">Note sur ce créneau <span class="font-normal text-slate-400">(optionnel)</span></label>
         <input type="text" id="shiftNote" placeholder="Ex : ouverture, inventaire, formation…" class="mt-1 w-full border border-slate-300 rounded-lg px-3 py-2" />
       </div>
       <div id="dupDaysBox" class="hidden rounded-lg border border-teal-200 bg-teal-50/60 p-3">
@@ -604,37 +616,37 @@
   <div class="bg-white rounded-2xl shadow-xl w-full max-w-md p-5 max-h-[90vh] overflow-y-auto">
     <div class="flex items-center justify-between mb-4">
       <h3 class="text-lg font-bold" id="empModalTitle">Ajouter un employé</h3>
-      <button class="closeEmp text-slate-400 hover:text-slate-600 text-2xl leading-none">&times;</button>
+      <button class="closeEmp text-slate-400 hover:text-slate-600 text-2xl leading-none" aria-label="Fermer">&times;</button>
     </div>
     <form id="empForm" class="space-y-3">
       <input type="hidden" id="empId" />
       <div class="grid grid-cols-2 gap-3">
         <div>
-          <label class="text-sm font-semibold text-slate-600">Prénom</label>
+          <label for="empFirstName" class="text-sm font-semibold text-slate-600">Prénom</label>
           <input type="text" id="empFirstName" required autocomplete="off" placeholder="Camille" class="mt-1 w-full border border-slate-300 rounded-lg px-3 py-2" />
         </div>
         <div>
-          <label class="text-sm font-semibold text-slate-600">Nom</label>
+          <label for="empLastName" class="text-sm font-semibold text-slate-600">Nom</label>
           <input type="text" id="empLastName" required autocomplete="off" placeholder="Durand" class="mt-1 w-full border border-slate-300 rounded-lg px-3 py-2" />
         </div>
       </div>
       <div class="grid grid-cols-2 gap-3">
         <div>
-          <label class="text-sm font-semibold text-slate-600">Email</label>
+          <label for="empEmail" class="text-sm font-semibold text-slate-600">Email</label>
           <input type="email" id="empEmail" placeholder="camille@exemple.com" class="mt-1 w-full border border-slate-300 rounded-lg px-3 py-2" />
         </div>
         <div>
-          <label class="text-sm font-semibold text-slate-600">Téléphone</label>
+          <label for="empPhone" class="text-sm font-semibold text-slate-600">Téléphone</label>
           <input type="tel" id="empPhone" placeholder="06 12 34 56 78" class="mt-1 w-full border border-slate-300 rounded-lg px-3 py-2" />
         </div>
       </div>
       <div class="grid grid-cols-2 gap-3">
         <div>
-          <label class="text-sm font-semibold text-slate-600">Équipe</label>
+          <label for="empRole" class="text-sm font-semibold text-slate-600">Équipe</label>
           <select id="empRole" class="mt-1 w-full border border-slate-300 rounded-lg px-3 py-2"></select>
         </div>
         <div>
-          <label class="text-sm font-semibold text-slate-600">Type de contrat</label>
+          <label for="empType" class="text-sm font-semibold text-slate-600">Type de contrat</label>
           <select id="empType" class="mt-1 w-full border border-slate-300 rounded-lg px-3 py-2">
             <option>CDI</option><option>CDD</option><option>Temps partiel</option>
             <option>Extra</option><option>Apprentissage</option><option>Stage</option>
@@ -644,35 +656,35 @@
       </div>
       <div class="grid grid-cols-[1fr_auto] sm:grid-cols-3 gap-3 items-end">
         <div>
-          <label class="text-sm font-semibold text-slate-600">Heures</label>
+          <label for="empHours" class="text-sm font-semibold text-slate-600">Heures</label>
           <input type="number" id="empHours" min="0" step="0.5" inputmode="decimal" placeholder="35" class="mt-1 w-full border border-slate-300 rounded-lg px-3 py-2" />
         </div>
         <div>
-          <label class="text-sm font-semibold text-slate-600">par</label>
+          <label for="empHoursUnit" class="text-sm font-semibold text-slate-600">par</label>
           <select id="empHoursUnit" class="mt-1 w-full border border-slate-300 rounded-lg px-3 py-2">
             <option value="semaine">semaine</option><option value="mois">mois</option>
           </select>
         </div>
         <div class="cost-col">
-          <label class="text-sm font-semibold text-slate-600">Taux €/h (brut)</label>
+          <label for="empRate" class="text-sm font-semibold text-slate-600">Taux €/h (brut)</label>
           <input type="number" id="empRate" min="0" step="0.5" inputmode="decimal" placeholder="12" class="mt-1 w-full border border-slate-300 rounded-lg px-3 py-2" />
         </div>
       </div>
       <div id="empPayEstimate" class="rounded-lg bg-slate-50 border border-slate-200 px-3 py-2 text-sm text-slate-600"></div>
       <div>
-        <label class="text-sm font-semibold text-slate-600">Droit à congés (jours / an)</label>
+        <label for="empConges" class="text-sm font-semibold text-slate-600">Droit à congés (jours / an)</label>
         <input type="number" id="empConges" min="0" step="1" placeholder="25" class="mt-1 w-full sm:w-44 border border-slate-300 rounded-lg px-3 py-2" />
         <span class="text-[11px] text-slate-400 block mt-0.5">Sert à calculer le solde de congés restant (25 j/an par défaut).</span>
       </div>
       <details class="rounded-lg border border-slate-200">
         <summary class="px-3 py-2 cursor-pointer text-sm font-semibold text-slate-600 select-none">Infos paie (export comptable)</summary>
         <div class="px-3 pb-3 grid grid-cols-1 sm:grid-cols-2 gap-3">
-          <div><label class="text-sm font-semibold text-slate-600">Matricule</label><input type="text" id="empMatricule" placeholder="Ex : B0143" class="mt-1 w-full border border-slate-300 rounded-lg px-3 py-2" /></div>
-          <div><label class="text-sm font-semibold text-slate-600">Poste (intitulé)</label><input type="text" id="empJobTitle" placeholder="Ex : Serveur·se" class="mt-1 w-full border border-slate-300 rounded-lg px-3 py-2" /></div>
-          <div><label class="text-sm font-semibold text-slate-600">Date d'entrée</label><input type="date" id="empStart" class="mt-1 w-full border border-slate-300 rounded-lg px-3 py-2" /></div>
-          <div><label class="text-sm font-semibold text-slate-600">Date de sortie</label><input type="date" id="empEnd" class="mt-1 w-full border border-slate-300 rounded-lg px-3 py-2" /></div>
+          <div><label for="empMatricule" class="text-sm font-semibold text-slate-600">Matricule</label><input type="text" id="empMatricule" placeholder="Ex : B0143" class="mt-1 w-full border border-slate-300 rounded-lg px-3 py-2" /></div>
+          <div><label for="empJobTitle" class="text-sm font-semibold text-slate-600">Poste (intitulé)</label><input type="text" id="empJobTitle" placeholder="Ex : Serveur·se" class="mt-1 w-full border border-slate-300 rounded-lg px-3 py-2" /></div>
+          <div><label for="empStart" class="text-sm font-semibold text-slate-600">Date d'entrée</label><input type="date" id="empStart" class="mt-1 w-full border border-slate-300 rounded-lg px-3 py-2" /></div>
+          <div><label for="empEnd" class="text-sm font-semibold text-slate-600">Date de sortie</label><input type="date" id="empEnd" class="mt-1 w-full border border-slate-300 rounded-lg px-3 py-2" /></div>
           <label class="flex items-center gap-2 text-sm text-slate-700 sm:col-span-1"><input type="checkbox" id="empMutuelle"> Mutuelle d'entreprise</label>
-          <div class="cost-col"><label class="text-sm font-semibold text-slate-600">Salaire de base mensuel brut (€)</label><input type="number" id="empBaseSalary" min="0" step="1" inputmode="decimal" placeholder="Ex : 2150" class="mt-1 w-full border border-slate-300 rounded-lg px-3 py-2" /></div>
+          <div class="cost-col"><label for="empBaseSalary" class="text-sm font-semibold text-slate-600">Salaire de base mensuel brut (€)</label><input type="number" id="empBaseSalary" min="0" step="1" inputmode="decimal" placeholder="Ex : 2150" class="mt-1 w-full border border-slate-300 rounded-lg px-3 py-2" /></div>
         </div>
       </details>
       <div class="flex items-center gap-2 pt-2 flex-wrap">
@@ -696,7 +708,7 @@
   <div id="cloudCard" class="bg-white rounded-2xl shadow-xl w-full max-w-md p-5 max-h-[90vh] overflow-y-auto">
     <div id="cloudHead" class="flex items-center justify-between mb-1">
       <h3 class="text-lg font-bold">☁️ Mon compte Oplaa</h3>
-      <button class="closeCloud text-slate-400 hover:text-slate-600 text-2xl leading-none">&times;</button>
+      <button class="closeCloud text-slate-400 hover:text-slate-600 text-2xl leading-none" aria-label="Fermer">&times;</button>
     </div>
 
     <!-- Chargement -->
@@ -705,9 +717,9 @@
     <!-- Non connecté : se connecter / créer un compte -->
     <div id="cloudAuth" hidden>
       <p id="cloudAuthIntro" class="text-sm text-slate-500 mb-4">Connecte-toi pour retrouver ton établissement.</p>
-      <label class="text-sm font-semibold text-slate-600">Email</label>
+      <label for="cloudEmail" class="text-sm font-semibold text-slate-600">Email</label>
       <input type="email" id="cloudEmail" autocomplete="email" class="mt-1 mb-3 w-full border border-slate-300 rounded-lg px-3 py-2" placeholder="ton@email.com" />
-      <label class="text-sm font-semibold text-slate-600">Mot de passe</label>
+      <label for="cloudPassword" class="text-sm font-semibold text-slate-600">Mot de passe</label>
       <input type="password" id="cloudPassword" autocomplete="current-password" class="mt-1 mb-1 w-full border border-slate-300 rounded-lg px-3 py-2" placeholder="••••••••" />
       <div class="text-right" id="cloudForgotRow"><button type="button" id="cloudForgot" class="text-xs text-slate-500 hover:text-teal-700 underline">Mot de passe oublié ?</button></div>
       <p id="cloudAuthMsg" class="text-sm mb-3 hidden"></p>
@@ -720,7 +732,7 @@
     <!-- Création de compte : code reçu par e-mail (aucun lien à cliquer, on reste dans l'app) -->
     <div id="cloudCode" hidden>
       <p id="cloudCodeIntro" class="text-sm text-slate-600 mb-4"></p>
-      <label class="text-sm font-semibold text-slate-600">Code reçu par e-mail</label>
+      <label for="cloudSignupCode" class="text-sm font-semibold text-slate-600">Code reçu par e-mail</label>
       <input type="text" id="cloudSignupCode" inputmode="numeric" autocomplete="one-time-code" maxlength="6" class="mt-1 mb-1 w-full border border-slate-300 rounded-lg px-3 py-2 text-center text-xl tracking-[0.4em] font-bold" placeholder="••••••" />
       <p id="cloudCodeMsg" class="text-sm mb-3 hidden"></p>
       <button type="button" id="cloudCodeOk" class="mt-3 w-full px-3 py-3 rounded-xl bg-teal-600 text-white font-semibold hover:bg-teal-700">Valider mon compte</button>
@@ -732,13 +744,13 @@
     <div id="cloudRecover" hidden>
       <p id="cloudRecoverIntro" class="text-sm text-slate-600 mb-4">Choisis ton <b>nouveau mot de passe</b> (6 caractères minimum).</p>
       <div id="cloudCodeBox" hidden>
-        <label class="text-sm font-semibold text-slate-600">Code reçu par e-mail</label>
+        <label for="cloudRecoverCode" class="text-sm font-semibold text-slate-600">Code reçu par e-mail</label>
         <input type="text" id="cloudRecoverCode" inputmode="numeric" autocomplete="one-time-code" maxlength="6" class="mt-1 mb-1 w-full border border-slate-300 rounded-lg px-3 py-2 text-center text-xl tracking-[0.4em] font-bold" placeholder="••••••" />
         <div class="text-right mb-3"><button type="button" id="cloudResendCode" class="text-xs text-slate-500 hover:text-teal-700 underline">Renvoyer le code</button></div>
       </div>
-      <label class="text-sm font-semibold text-slate-600">Nouveau mot de passe</label>
+      <label for="cloudNewPassword" class="text-sm font-semibold text-slate-600">Nouveau mot de passe</label>
       <input type="password" id="cloudNewPassword" autocomplete="new-password" class="mt-1 mb-3 w-full border border-slate-300 rounded-lg px-3 py-2" placeholder="••••••••" />
-      <label class="text-sm font-semibold text-slate-600">Confirme le mot de passe</label>
+      <label for="cloudNewPassword2" class="text-sm font-semibold text-slate-600">Confirme le mot de passe</label>
       <input type="password" id="cloudNewPassword2" autocomplete="new-password" class="mt-1 mb-1 w-full border border-slate-300 rounded-lg px-3 py-2" placeholder="••••••••" />
       <p id="cloudRecoverMsg" class="text-sm mb-3 hidden"></p>
       <button type="button" id="cloudSetPassword" class="mt-3 w-full px-3 py-3 rounded-xl bg-teal-600 text-white font-semibold hover:bg-teal-700">Enregistrer le nouveau mot de passe</button>
@@ -751,7 +763,7 @@
       <button type="button" id="cloudCreateEst" class="w-full px-4 py-3 rounded-xl bg-teal-600 text-white font-semibold hover:bg-teal-700">Créer mon établissement</button>
       <p class="text-xs text-slate-400 mt-1 mb-4 text-center">Patron ou gérant : une minute avec l'assistant.</p>
       <div class="rounded-xl border border-slate-200 p-3">
-        <label class="text-sm font-semibold text-slate-600">Rejoindre une équipe avec un code</label>
+        <label for="cloudJoinCode" class="text-sm font-semibold text-slate-600">Rejoindre une équipe avec un code</label>
         <input type="text" id="cloudJoinCode" class="mt-1 mb-2 w-full border border-slate-300 rounded-lg px-3 py-2 uppercase tracking-widest text-center" placeholder="Code reçu, ex : ABC123" />
         <button type="button" id="cloudJoin" class="w-full px-4 py-3 rounded-xl btn-ink font-semibold">Rejoindre</button>
       </div>
@@ -793,7 +805,7 @@
   <div class="bg-white rounded-2xl shadow-xl w-full max-w-md p-5">
     <div class="flex items-center justify-between mb-1">
       <h3 class="text-lg font-bold" id="sendEmpTitle">Envoyer à…</h3>
-      <button class="closeSendEmp text-slate-400 hover:text-slate-600 text-2xl leading-none">&times;</button>
+      <button class="closeSendEmp text-slate-400 hover:text-slate-600 text-2xl leading-none" aria-label="Fermer">&times;</button>
     </div>
     <p class="text-sm text-slate-500 mb-4">Choisis quoi envoyer, puis par quel moyen.</p>
     <div class="mb-4">
@@ -810,7 +822,7 @@
     <div class="mb-2">
       <div class="text-xs font-bold uppercase tracking-wide text-slate-400 mb-2">Moyen</div>
       <div class="grid grid-cols-3 gap-2">
-        <button type="button" id="sendByWhatsApp" class="px-2 py-3 rounded-xl bg-[#25D366] text-white font-semibold hover:brightness-95 text-sm">🟢 WhatsApp</button>
+        <button type="button" id="sendByWhatsApp" class="px-2 py-3 rounded-xl bg-[#25D366] text-[#063D2B] font-semibold hover:brightness-95 text-sm">🟢 WhatsApp</button>
         <button type="button" id="sendByEmail" class="px-2 py-3 rounded-xl bg-teal-600 text-white font-semibold hover:bg-teal-700 text-sm">✉️ Email</button>
         <button type="button" id="sendBySms" class="px-2 py-3 rounded-xl btn-ink font-semibold text-sm">💬 SMS</button>
       </div>
@@ -825,7 +837,7 @@
   <div class="bg-white rounded-2xl shadow-xl w-full max-w-2xl p-5 max-h-[92vh] overflow-y-auto">
     <div class="flex items-center justify-between mb-1">
       <h3 class="text-lg font-bold">📋 Feuille d'heures</h3>
-      <button class="closeSheet text-slate-400 hover:text-slate-600 text-2xl leading-none">&times;</button>
+      <button class="closeSheet text-slate-400 hover:text-slate-600 text-2xl leading-none" aria-label="Fermer">&times;</button>
     </div>
     <p id="sheetWeekLabel" class="text-sm text-slate-500 mb-1"></p>
     <div class="no-print flex gap-1 mb-2 text-xs font-semibold">
@@ -865,13 +877,13 @@
   <div class="bg-white rounded-2xl shadow-xl w-full max-w-2xl p-5 max-h-[90vh] overflow-y-auto">
     <div class="flex items-center justify-between mb-1">
       <h3 class="text-lg font-bold inline-flex items-center gap-2"><span class="ic" data-ic="holiday" data-ic-size="20"></span>Congés &amp; absences</h3>
-      <button class="closeAbs text-slate-400 hover:text-slate-600 text-2xl leading-none">&times;</button>
+      <button class="closeAbs text-slate-400 hover:text-slate-600 text-2xl leading-none" aria-label="Fermer">&times;</button>
     </div>
     <p id="absWeekLabel" class="text-sm text-slate-500 mb-3"></p>
     <div class="flex flex-wrap items-center gap-2 mb-4">
       <span class="text-xs font-semibold text-slate-500">Type à poser :</span>
       <div id="absTypePicker" class="flex flex-wrap gap-1.5"></div>
-      <select id="absTypeMore" class="border border-slate-300 rounded-lg px-2 h-8 text-xs bg-white"><option value="">Autre type (paie)…</option></select>
+      <select id="absTypeMore" aria-label="Autre type d’absence" class="border border-slate-300 rounded-lg px-2 h-8 text-xs bg-white"><option value="">Autre type (paie)…</option></select>
       <label class="inline-flex items-center gap-1 text-xs text-slate-500">Heures <input type="number" id="absHours" min="0" step="0.25" placeholder="auto" class="w-16 border border-slate-300 rounded-lg px-2 h-8 text-xs"></label>
     </div>
     <div class="overflow-x-auto">
@@ -889,21 +901,21 @@
   <div class="bg-white rounded-2xl shadow-xl w-full max-w-md p-5">
     <div class="flex items-center justify-between mb-4">
       <h3 class="text-lg font-bold" id="noteModalTitle">Ajouter une note</h3>
-      <button class="closeNote text-slate-400 hover:text-slate-600 text-2xl leading-none">&times;</button>
+      <button class="closeNote text-slate-400 hover:text-slate-600 text-2xl leading-none" aria-label="Fermer">&times;</button>
     </div>
     <form id="noteForm" class="space-y-3">
       <input type="hidden" id="noteId" />
       <div>
-        <label class="text-sm font-semibold text-slate-600">Note / événement</label>
+        <label for="noteText" class="text-sm font-semibold text-slate-600">Note / événement</label>
         <textarea id="noteText" required rows="3" placeholder="Ex : Service de groupe 30 couverts samedi soir — prévoir renfort en cuisine." class="mt-1 w-full border border-slate-300 rounded-lg px-3 py-2"></textarea>
       </div>
       <div class="grid grid-cols-2 gap-3">
         <div>
-          <label class="text-sm font-semibold text-slate-600">Quand ?</label>
+          <label for="noteDay" class="text-sm font-semibold text-slate-600">Quand ?</label>
           <select id="noteDay" class="mt-1 w-full border border-slate-300 rounded-lg px-3 py-2"></select>
         </div>
         <div>
-          <label class="text-sm font-semibold text-slate-600">Importance</label>
+          <label for="noteLevel" class="text-sm font-semibold text-slate-600">Importance</label>
           <select id="noteLevel" class="mt-1 w-full border border-slate-300 rounded-lg px-3 py-2">
             <option value="info">Info</option>
             <option value="important">Important</option>
@@ -924,18 +936,18 @@
   <div class="bg-white rounded-2xl shadow-xl w-full max-w-md p-5 max-h-[90vh] overflow-y-auto">
     <div class="flex items-center justify-between mb-1">
       <h3 class="text-lg font-bold">🏢 Mes établissements</h3>
-      <button class="closeEstb text-slate-400 hover:text-slate-600 text-2xl leading-none">&times;</button>
+      <button class="closeEstb text-slate-400 hover:text-slate-600 text-2xl leading-none" aria-label="Fermer">&times;</button>
     </div>
     <p class="text-xs text-slate-400 mb-3">Basculez d'un établissement à l'autre — chacun garde son métier, ses équipes, ses employés et ses règles.</p>
     <div id="estbList" class="space-y-2"></div>
     <button type="button" id="estbAddBtn" class="mt-3 w-full inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl border border-dashed border-slate-300 text-slate-600 font-semibold hover:bg-slate-50"><span class="ic" data-ic="plus" data-ic-size="16"></span>Ajouter un établissement</button>
     <div id="estbAddForm" class="mt-3 rounded-xl border border-slate-200 p-3 space-y-2" hidden>
       <div>
-        <label class="text-xs font-semibold text-slate-600">Nom</label>
+        <label for="estbNewName" class="text-xs font-semibold text-slate-600">Nom</label>
         <input type="text" id="estbNewName" class="mt-1 w-full border border-slate-300 rounded-lg px-3 py-2 text-sm" placeholder="Ex : Le Bistrot du Port">
       </div>
       <div>
-        <label class="text-xs font-semibold text-slate-600">Type d'activité</label>
+        <label for="estbNewProfile" class="text-xs font-semibold text-slate-600">Type d'activité</label>
         <select id="estbNewProfile" class="mt-1 w-full border border-slate-300 rounded-lg px-3 py-2 text-sm"></select>
       </div>
       <div class="flex gap-2 pt-1">
@@ -952,7 +964,7 @@
     <div class="px-6 pt-6 pb-5 text-white" style="background:linear-gradient(165deg,#D0623A,#A8471F)">
       <div class="flex items-center justify-between">
         <span class="inline-flex items-center gap-2 text-xs font-bold uppercase tracking-wide bg-white/20 rounded-full px-3 py-1">Oplaa Pro</span>
-        <button class="closePaywall text-white/80 hover:text-white text-2xl leading-none">&times;</button>
+        <button class="closePaywall text-white/80 hover:text-white text-2xl leading-none" aria-label="Fermer">&times;</button>
       </div>
       <h3 class="text-2xl font-extrabold mt-3">Passez à Oplaa Pro</h3>
       <p id="paywallTrial" class="text-white/90 text-sm mt-1">1 mois offert, puis 7,99 €/mois par établissement.</p>
@@ -985,7 +997,7 @@
   <div class="bg-white rounded-2xl shadow-xl w-full max-w-lg p-5 max-h-[90vh] overflow-y-auto">
     <div class="flex items-center justify-between mb-4">
       <h3 class="text-lg font-bold" id="confModalTitle">Conformité</h3>
-      <button class="closeConf text-slate-400 hover:text-slate-600 text-2xl leading-none">&times;</button>
+      <button class="closeConf text-slate-400 hover:text-slate-600 text-2xl leading-none" aria-label="Fermer">&times;</button>
     </div>
     <form id="confForm" class="space-y-4">
       <input type="hidden" id="confEmpId" />
@@ -1025,7 +1037,7 @@
   <div class="bg-white rounded-2xl shadow-xl w-full max-w-md p-5 max-h-[90vh] overflow-y-auto">
     <div class="flex items-center justify-between mb-1">
       <h3 class="text-lg font-bold">Historique &amp; annuler</h3>
-      <button class="closeHistory text-slate-400 hover:text-slate-600 text-2xl leading-none">&times;</button>
+      <button class="closeHistory text-slate-400 hover:text-slate-600 text-2xl leading-none" aria-label="Fermer">&times;</button>
     </div>
     <button id="btnUndo" class="w-full mb-3 inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-teal-600 text-white font-semibold hover:bg-teal-700">↶ Annuler la dernière modification</button>
     <p class="text-sm text-slate-500 mb-4">Chaque modification crée une version. Restaure un état antérieur en un clic (les <b>25</b> dernières sont conservées).</p>
@@ -1038,7 +1050,7 @@
   <div class="bg-white rounded-2xl shadow-xl w-full max-w-2xl p-6 max-h-[90vh] overflow-y-auto">
     <div class="flex items-center justify-between mb-1">
       <h3 class="text-xl font-extrabold text-slate-900" id="profileModalTitle">Pour quel type d'activité ?</h3>
-      <button class="closeProfile text-slate-400 hover:text-slate-600 text-2xl leading-none">&times;</button>
+      <button class="closeProfile text-slate-400 hover:text-slate-600 text-2xl leading-none" aria-label="Fermer">&times;</button>
     </div>
     <p class="text-sm text-slate-500 mb-5">Choisissez un profil : il configure les équipes, les créneaux et la conformité adaptés. Vous pourrez tout personnaliser ensuite.</p>
     <div id="profileGrid" class="grid grid-cols-2 sm:grid-cols-3 gap-3"></div>
@@ -1051,12 +1063,12 @@
   <div class="bg-white rounded-2xl shadow-xl w-full max-w-sm p-5">
     <div class="flex items-start gap-2 mb-1">
       <h3 class="text-lg font-bold text-slate-800 mr-auto">Demander un congé</h3>
-      <button type="button" class="closeOffReq text-slate-400 hover:text-slate-700 text-2xl leading-none px-1">&times;</button>
+      <button type="button" class="closeOffReq text-slate-400 hover:text-slate-700 text-2xl leading-none px-1" aria-label="Fermer">&times;</button>
     </div>
     <p class="text-sm text-slate-500 mb-4">Ta demande est envoyée à ton responsable, qui l'accepte ou la refuse.</p>
-    <label class="text-sm font-semibold text-slate-600">Jour souhaité</label>
+    <label for="offReqDate" class="text-sm font-semibold text-slate-600">Jour souhaité</label>
     <input type="date" id="offReqDate" class="mt-1 mb-3 w-full border border-slate-300 rounded-lg px-3 py-2" />
-    <label class="text-sm font-semibold text-slate-600">Motif <span class="font-normal text-slate-400">(optionnel)</span></label>
+    <label for="offReqReason" class="text-sm font-semibold text-slate-600">Motif <span class="font-normal text-slate-400">(optionnel)</span></label>
     <input type="text" id="offReqReason" placeholder="Ex : rendez-vous, événement familial…" class="mt-1 w-full border border-slate-300 rounded-lg px-3 py-2" />
     <p id="offReqErr" class="hidden text-sm text-red-600 mt-2"></p>
     <div class="flex gap-2 justify-end mt-5">
@@ -1072,7 +1084,7 @@
   <div class="bg-white rounded-2xl shadow-xl w-full max-w-md p-5">
     <div class="flex items-center justify-between mb-1">
       <h3 class="text-lg font-bold">Modèles &amp; duplication</h3>
-      <button class="closeDup text-slate-400 hover:text-slate-600 text-2xl leading-none">&times;</button>
+      <button class="closeDup text-slate-400 hover:text-slate-600 text-2xl leading-none" aria-label="Fermer">&times;</button>
     </div>
     <p class="text-sm text-slate-500 mb-4">Gagne du temps : réutilise une semaine ou un planning existant.</p>
     <div class="space-y-2">
@@ -1088,7 +1100,7 @@
   <div class="bg-white rounded-2xl shadow-xl w-full max-w-lg p-5 max-h-[90vh] overflow-y-auto">
     <div class="flex items-center justify-between mb-1">
       <h3 class="text-lg font-bold">📥 Importer un export Combo</h3>
-      <button class="closeImport text-slate-400 hover:text-slate-600 text-2xl leading-none">&times;</button>
+      <button class="closeImport text-slate-400 hover:text-slate-600 text-2xl leading-none" aria-label="Fermer">&times;</button>
     </div>
     <p class="text-sm text-slate-500 mb-3">Aperçu de ce qui sera créé ou mis à jour. Rien n'est modifié avant « Importer ».</p>
     <div id="importSummary" class="space-y-2 text-sm"></div>
@@ -1105,7 +1117,7 @@
   <div class="bg-white rounded-2xl shadow-xl w-full max-w-lg p-5 max-h-[90vh] overflow-y-auto">
     <div class="flex items-center justify-between mb-1">
       <h3 class="text-lg font-bold">👥 Accès &amp; rôles</h3>
-      <button class="closeAccess text-slate-400 hover:text-slate-600 text-2xl leading-none">&times;</button>
+      <button class="closeAccess text-slate-400 hover:text-slate-600 text-2xl leading-none" aria-label="Fermer">&times;</button>
     </div>
     <p class="text-sm text-slate-500 mb-3">Qui a accès à « <b id="accEst"></b> », et avec quel rôle.</p>
     <div id="accList" class="space-y-2 mb-4"><span class="text-sm text-slate-400">Chargement…</span></div>
@@ -1132,7 +1144,7 @@
         <h3 class="text-lg font-bold text-slate-800">Demandes de congés</h3>
         <p class="text-sm text-slate-500 mt-0.5">Demandes de ton équipe. Accepter pose le congé automatiquement.</p>
       </div>
-      <button type="button" class="closeOffInbox text-slate-400 hover:text-slate-700 text-2xl leading-none px-1 shrink-0">&times;</button>
+      <button type="button" class="closeOffInbox text-slate-400 hover:text-slate-700 text-2xl leading-none px-1 shrink-0" aria-label="Fermer">&times;</button>
     </div>
     <div id="offInboxList" class="px-5 pb-5 space-y-2 mt-3"></div>
   </div>
@@ -1146,11 +1158,11 @@
         <h3 class="text-lg font-bold text-slate-800">Copier un planning</h3>
         <p class="text-sm text-slate-500 mt-0.5">Recopie tous les services d'un employé vers un autre, pour la <b>semaine affichée</b>.</p>
       </div>
-      <button type="button" class="closeCopyPlan text-slate-400 hover:text-slate-700 text-2xl leading-none px-1 shrink-0">&times;</button>
+      <button type="button" class="closeCopyPlan text-slate-400 hover:text-slate-700 text-2xl leading-none px-1 shrink-0" aria-label="Fermer">&times;</button>
     </div>
     <div class="grid grid-cols-2 gap-3 mt-3">
-      <div><label class="text-sm font-semibold text-slate-600">De</label><select id="copyPlanFrom" class="mt-1 w-full border border-slate-300 rounded-lg px-3 py-2 text-sm"></select></div>
-      <div><label class="text-sm font-semibold text-slate-600">Vers</label><select id="copyPlanTo" class="mt-1 w-full border border-slate-300 rounded-lg px-3 py-2 text-sm"></select></div>
+      <div><label for="copyPlanFrom" class="text-sm font-semibold text-slate-600">De</label><select id="copyPlanFrom" class="mt-1 w-full border border-slate-300 rounded-lg px-3 py-2 text-sm"></select></div>
+      <div><label for="copyPlanTo" class="text-sm font-semibold text-slate-600">Vers</label><select id="copyPlanTo" class="mt-1 w-full border border-slate-300 rounded-lg px-3 py-2 text-sm"></select></div>
     </div>
     <label class="flex items-center gap-2 mt-3 text-sm text-slate-600"><input type="checkbox" id="copyPlanReplace"> Remplacer d'abord les services existants de la cible</label>
     <p id="copyPlanErr" class="hidden text-sm text-red-600 mt-2"></p>
@@ -1169,7 +1181,7 @@
         <h3 class="text-lg font-bold text-slate-800">Modèles de semaine</h3>
         <p class="text-sm text-slate-500 mt-0.5">Enregistre une semaine-type et applique-la en 1 clic sur n'importe quelle semaine.</p>
       </div>
-      <button type="button" class="closeTpl text-slate-400 hover:text-slate-700 text-2xl leading-none px-1 shrink-0">&times;</button>
+      <button type="button" class="closeTpl text-slate-400 hover:text-slate-700 text-2xl leading-none px-1 shrink-0" aria-label="Fermer">&times;</button>
     </div>
     <div class="px-5 pb-5">
       <div class="flex gap-2 mt-3">
@@ -1190,7 +1202,7 @@
         <h3 class="text-lg font-bold text-slate-800">Mes équipes</h3>
         <p class="text-sm text-slate-500 mt-0.5">Les groupes qui segmentent tes employés (ex. Salle, Cuisine…). Renomme, change la couleur, ajoute ou supprime.</p>
       </div>
-      <button type="button" class="closeTeams text-slate-400 hover:text-slate-700 text-2xl leading-none px-1 shrink-0">&times;</button>
+      <button type="button" class="closeTeams text-slate-400 hover:text-slate-700 text-2xl leading-none px-1 shrink-0" aria-label="Fermer">&times;</button>
     </div>
     <form id="teamsForm" class="px-5 pb-5">
       <div id="teamsList" class="space-y-2 mt-3"></div>
@@ -1227,7 +1239,7 @@
   <div class="bg-white rounded-2xl shadow-xl w-full max-w-lg p-5 max-h-[90vh] overflow-y-auto">
     <div class="flex items-center justify-between mb-4">
       <h3 class="text-lg font-bold">Réglages</h3>
-      <button class="closeSettings text-slate-400 hover:text-slate-600 text-2xl leading-none">&times;</button>
+      <button class="closeSettings text-slate-400 hover:text-slate-600 text-2xl leading-none" aria-label="Fermer">&times;</button>
     </div>
     <form id="settingsForm" class="space-y-5">
       <div>
@@ -1235,7 +1247,7 @@
         <div class="mt-2 flex items-center gap-3">
           <div class="w-14 h-14 rounded-xl border border-slate-200 bg-slate-50 flex items-center justify-center overflow-hidden shrink-0">
             <img id="setLogoPreview" class="w-full h-full object-cover hidden" alt="" />
-            <span id="setLogoEmpty" class="text-2xl text-slate-300">🏠</span>
+            <span id="setLogoEmpty" class="text-2xl text-slate-400">🏠</span>
           </div>
           <div class="flex flex-wrap gap-2">
             <label class="px-3 py-2 rounded-lg bg-white border border-slate-300 font-semibold hover:bg-slate-50 text-sm cursor-pointer">📷 Choisir une image<input type="file" id="setLogoFile" accept="image/*" class="hidden" /></label>
@@ -1261,7 +1273,7 @@
         <p class="text-xs text-slate-400 mt-1">Dans tous les cas, les employés ne voient que les prénoms et les horaires — aucune autre information sur leurs collègues.</p>
       </div>
       <div>
-        <label class="text-sm font-semibold text-slate-600">Mot pour « équipe/poste »</label>
+        <label for="setTeamWord" class="text-sm font-semibold text-slate-600">Mot pour « équipe/poste »</label>
         <input type="text" id="setTeamWord" class="mt-1 w-full border border-slate-300 rounded-lg px-3 py-2" placeholder="Équipe" />
       </div>
       <div>
@@ -1332,12 +1344,12 @@
         <span class="text-xs font-bold uppercase tracking-wide text-slate-400">Paie &amp; export comptable</span>
         <p class="text-xs text-slate-400 mt-1 mb-2">Utilisé par l'export comptable (format Combo). Convention HCR par défaut.</p>
         <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-          <div><label class="text-sm font-semibold text-slate-600">SIRET de l'établissement</label><input type="text" id="setSiret" inputmode="numeric" placeholder="14 chiffres" class="mt-1 w-full border border-slate-300 rounded-lg px-3 py-2 text-sm" /></div>
-          <div><label class="text-sm font-semibold text-slate-600">Repas déclarés en paie comme</label>
+          <div><label for="setSiret" class="text-sm font-semibold text-slate-600">SIRET de l'établissement</label><input type="text" id="setSiret" inputmode="numeric" placeholder="14 chiffres" class="mt-1 w-full border border-slate-300 rounded-lg px-3 py-2 text-sm" /></div>
+          <div><label for="setMealType" class="text-sm font-semibold text-slate-600">Repas déclarés en paie comme</label>
             <select id="setMealType" class="mt-1 w-full border border-slate-300 rounded-lg px-2 py-2 text-sm bg-white"><option value="nature">Avantage en nature</option><option value="titre">Titre restaurant</option><option value="indemnite">Indemnité repas</option></select></div>
-          <div><label class="text-sm font-semibold text-slate-600">Heures sup +10 % jusqu'à (h/sem)</label><input type="number" id="setT10" min="35" max="48" step="1" class="mt-1 w-full border border-slate-300 rounded-lg px-3 py-2 text-sm" /></div>
-          <div><label class="text-sm font-semibold text-slate-600">Heures sup +20 % jusqu'à (h/sem)</label><input type="number" id="setT20" min="35" max="48" step="1" class="mt-1 w-full border border-slate-300 rounded-lg px-3 py-2 text-sm" /></div>
-          <div><label class="text-sm font-semibold text-slate-600">Jours travaillés par semaine (journée moyenne)</label><input type="number" id="setDaysPerWeek" min="1" max="7" step="1" class="mt-1 w-full border border-slate-300 rounded-lg px-3 py-2 text-sm" /></div>
+          <div><label for="setT10" class="text-sm font-semibold text-slate-600">Heures sup +10 % jusqu'à (h/sem)</label><input type="number" id="setT10" min="35" max="48" step="1" class="mt-1 w-full border border-slate-300 rounded-lg px-3 py-2 text-sm" /></div>
+          <div><label for="setT20" class="text-sm font-semibold text-slate-600">Heures sup +20 % jusqu'à (h/sem)</label><input type="number" id="setT20" min="35" max="48" step="1" class="mt-1 w-full border border-slate-300 rounded-lg px-3 py-2 text-sm" /></div>
+          <div><label for="setDaysPerWeek" class="text-sm font-semibold text-slate-600">Jours travaillés par semaine (journée moyenne)</label><input type="number" id="setDaysPerWeek" min="1" max="7" step="1" class="mt-1 w-full border border-slate-300 rounded-lg px-3 py-2 text-sm" /></div>
         </div>
         <p class="text-xs text-slate-400 mt-1">HCR : 36-39 h +10 %, 40-43 h +20 %, au-delà +50 %. Temps partiel : heures complémentaires +10 % jusqu'à 1/10 du contrat, +25 % au-delà.</p>
       </div>
@@ -1386,7 +1398,7 @@
   </div>
 </div>
 
-<div id="toast" class="no-print fixed bottom-5 left-1/2 -translate-x-1/2 btn-ink text-sm px-4 py-2 rounded-lg shadow-lg opacity-0 transition-opacity pointer-events-none z-50"></div>
+<div id="toast" role="status" aria-live="polite" class="no-print fixed bottom-5 left-1/2 -translate-x-1/2 btn-ink text-sm px-4 py-2 rounded-lg shadow-lg opacity-0 transition-opacity pointer-events-none z-50"></div>
 
 <script>
 /* ============ CONSTANTES ============ */
@@ -1697,10 +1709,13 @@ function pinHash(s){ let h=5381; for(let i=0;i<s.length;i++) h=((h<<5)+h+s.charC
 function _hexToRgb(h){ h=(h||'').replace('#',''); if(h.length===3) h=h.split('').map(c=>c+c).join(''); return [parseInt(h.slice(0,2),16),parseInt(h.slice(2,4),16),parseInt(h.slice(4,6),16)]; }
 function _rgbToHex(r){ return '#'+r.map(x=>Math.max(0,Math.min(255,Math.round(x))).toString(16).padStart(2,'0')).join(''); }
 function _mix(a,b,t){ return a.map((x,i)=>x+(b[i]-x)*t); }
+function _lum(c){ const f=v=>{ v/=255; return v<=0.03928 ? v/12.92 : Math.pow((v+0.055)/1.055,2.4); }; return 0.2126*f(c[0])+0.7152*f(c[1])+0.0722*f(c[2]); }
+function _contrast(a,b){ const la=_lum(a), lb=_lum(b); return (Math.max(la,lb)+0.05)/(Math.min(la,lb)+0.05); }
 function setAccent(hex){
   if(!/^#?[0-9a-fA-F]{6}$/.test(hex||'')) hex='#C4562F';
   if(hex[0]!=='#') hex='#'+hex;
-  const base=_hexToRgb(hex), white=[255,255,255], black=[24,16,10];
+  let base=_hexToRgb(hex); const white=[255,255,255], black=[24,16,10];
+  { let t=0; const b0=base; while(_contrast(base,white)<4.6 && t<0.6){ t+=0.02; base=_mix(b0,black,t); } }   // accessibilité : texte blanc lisible (≥ 4,5:1) sur le bouton principal
   const scale={ 50:_mix(base,white,.90),100:_mix(base,white,.82),200:_mix(base,white,.68),300:_mix(base,white,.45),400:_mix(base,white,.18),500:_mix(base,white,.07),600:base,700:_mix(base,black,.18),800:_mix(base,black,.34),900:_mix(base,black,.48) };
   const root=document.documentElement.style;
   Object.keys(scale).forEach(k=> root.setProperty('--o-'+k, _rgbToHex(scale[k])));
@@ -2084,7 +2099,7 @@ function renderGrid(){
     const absBadge = dayAbs.length ? `<div class="mt-1 flex flex-wrap gap-0.5 justify-center">${dayAbs.map(a=>`<span class="text-[9px] font-semibold px-1 py-0.5 rounded leading-none" style="background:${a.color}22;color:${a.color}" title="${a.label}">${a.emoji} ${escapeHtml(a.name)}</span>`).join('')}</div>` : '';
     hrow += `<th class="px-2 py-2 border-b border-l border-slate-200${sepCls(c,idx)} ${viewMode==='jour'?'':'min-w-[136px]'} ${today?'bg-teal-50':'bg-slate-50'}">
                <div class="text-xs font-bold ${today?'text-teal-700':'text-slate-700'}">${DAYS[c.day]}${pin}</div>
-               <div class="text-[11px] ${today?'text-teal-600':'text-slate-400'}">${fmtDate(date)}</div>${holBadge}${absBadge}
+               <div class="text-[11px] ${today?'text-teal-700':'text-slate-400'}">${fmtDate(date)}</div>${holBadge}${absBadge}
              </th>`;
   });
   head.innerHTML = `<tr>${hrow}</tr>`;
@@ -2124,9 +2139,9 @@ function renderGrid(){
       cols.forEach((c,idx)=>{
         const all=empColShifts(c,emp.id); const known=new Set(PERIODS.map(p=>p.key));
         b += `<td class="px-1.5 py-1.5 border-b border-l border-slate-100${sepCls(c,idx)} align-top bg-white cursor-pointer hover:bg-slate-50 transition" data-add-day="${c.day}" data-add-week="${c.week}" data-add-emp="${emp.id}" data-add-team="${emp.role}">`;
-        PERIODS.forEach(p=>{ const list=sortByStart(all.filter(s=>s.period===p.key)); if(list.length){ b+=grpLabel(p.label,p.accent?'text-teal-500':''); list.forEach(s=>b+=cardHtml(s)); } });
+        PERIODS.forEach(p=>{ const list=sortByStart(all.filter(s=>s.period===p.key)); if(list.length){ b+=grpLabel(p.label,p.accent?'text-teal-700':''); list.forEach(s=>b+=cardHtml(s)); } });
         const others=sortByStart(all.filter(s=>!known.has(s.period))); if(others.length){ b+=grpLabel('Autre'); others.forEach(s=>b+=cardHtml(s)); }
-        if(!all.length) b += `<div class="no-print text-center text-slate-300 text-lg leading-none select-none">+</div>`;
+        if(!all.length) b += `<div class="no-print text-center text-slate-400 text-lg leading-none select-none">+</div>`;
         b += `</td>`;
       });
       b += `</tr>`;
@@ -2159,11 +2174,11 @@ function renderGrid(){
       const known=new Set(PERIODS.map(p=>p.key));
       PERIODS.forEach(p=>{
         const list=sortByStart(all.filter(s=>s.period===p.key));
-        if(list.length){ b += grpLabel(p.label, p.accent?'text-teal-500':''); list.forEach(s=>b+=cardHtml(s)); }
+        if(list.length){ b += grpLabel(p.label, p.accent?'text-teal-700':''); list.forEach(s=>b+=cardHtml(s)); }
       });
       const others=sortByStart(all.filter(s=>!known.has(s.period)));
       if(others.length){ b += grpLabel('Autre'); others.forEach(s=>b+=cardHtml(s)); }
-      if(!all.length){ b += `<div class="no-print text-center text-slate-300 text-lg leading-none select-none">+</div>`; }
+      if(!all.length){ b += `<div class="no-print text-center text-slate-400 text-lg leading-none select-none">+</div>`; }
       b += `</td>`;
     });
     b += `</tr>`;
@@ -2175,7 +2190,7 @@ function renderGrid(){
   const grandCost = cols.reduce((a,c)=>a+dayCost(c),0);
   b += `<tr class="bg-slate-50">
           <td class="sticky left-0 z-10 bg-slate-50 px-3 py-2 border-r border-slate-200 text-[11px] font-bold uppercase tracking-wide text-slate-500">Total${grand>0?` · ${grand.toFixed(1)} h`:''}${showCost&&grandCost>0?`<div class="font-normal normal-case text-slate-400">${grandCost.toFixed(0)} €</div>`:''}</td>`;
-  cols.forEach((c,idx)=>{ const dt=dayTotal(c), dc=dayCost(c); b += `<td class="px-2 py-2 border-l border-slate-100${sepCls(c,idx)} text-center text-[11px] font-semibold tabular-nums ${dt>0?'text-slate-700':'text-slate-300'}">${dt>0?dt.toFixed(1)+' h':'—'}${showCost&&dc>0?`<div class="font-normal text-slate-400">${dc.toFixed(0)} €</div>`:''}</td>`; });
+  cols.forEach((c,idx)=>{ const dt=dayTotal(c), dc=dayCost(c); b += `<td class="px-2 py-2 border-l border-slate-100${sepCls(c,idx)} text-center text-[11px] font-semibold tabular-nums ${dt>0?'text-slate-700':'text-slate-400'}">${dt>0?dt.toFixed(1)+' h':'—'}${showCost&&dc>0?`<div class="font-normal text-slate-400">${dc.toFixed(0)} €</div>`:''}</td>`; });
   b += `</tr>`;
   body.innerHTML=b;
 
@@ -2263,7 +2278,7 @@ function renderNotes(){
         </div>
         <div class="text-sm text-slate-700 whitespace-pre-wrap">${escapeHtml(n.text)}</div>
       </div>
-      <button class="editNote no-print text-teal-600 font-semibold hover:underline text-sm shrink-0" data-id="${n.id}">Modifier</button>
+      <button class="editNote no-print text-teal-700 font-semibold hover:underline text-sm shrink-0" data-id="${n.id}">Modifier</button>
     </div>`;
   }).join('');
 }
@@ -2549,7 +2564,7 @@ function renderSuivi(){
     const ot = ch==null ? 0 : Math.max(0, prevu - ch*nbW);   // heures supplémentaires (au-delà du contrat)
     tP+=prevu; tR+=reel; tC+=cost; tAbs+=absDays; tOT+=ot;
     const t=teamOf(e.role);
-    const absCell = absDays ? ABSENCE_TYPES.filter(ty=>absInfo.by[ty.key]).map(ty=>`${ty.emoji}${absInfo.by[ty.key]}`).join(' ') : '<span class="text-slate-300">—</span>';
+    const absCell = absDays ? ABSENCE_TYPES.filter(ty=>absInfo.by[ty.key]).map(ty=>`${ty.emoji}${absInfo.by[ty.key]}`).join(' ') : '<span class="text-slate-400">—</span>';
     const absTitle = absDays ? ABSENCE_TYPES.filter(ty=>absInfo.by[ty.key]).map(ty=>`${absInfo.by[ty.key]} ${ty.label.toLowerCase()}`).join(', ') : 'Aucune absence';
     return `<tr class="border-t border-slate-100 hover:bg-slate-50">
       <td class="px-4 py-3 font-semibold text-slate-800" style="--c:${t.color}"><span class="inline-flex items-center gap-1.5"><span class="dot"></span>${escapeHtml(e.name)}</span></td>
@@ -2559,7 +2574,7 @@ function renderSuivi(){
       <td class="px-3 py-3 text-right text-slate-600">${prevu.toFixed(1)} h</td>
       <td class="px-3 py-3 text-right text-slate-800 font-medium">${reel.toFixed(1)} h</td>
       <td class="px-3 py-3 text-right">${chip(reel-prevu)}</td>
-      <td class="px-3 py-3 text-right hidden sm:table-cell">${vsC==null?'<span class="text-slate-300">—</span>':chip(vsC,'h','text-emerald-600','text-red-500')}</td>
+      <td class="px-3 py-3 text-right hidden sm:table-cell">${vsC==null?'<span class="text-slate-400">—</span>':chip(vsC,'h','text-emerald-600','text-red-500')}</td>
       <td class="cost-col px-4 py-3 text-right text-slate-700">${cost?cost.toFixed(0)+' €':'—'}</td>
     </tr>`;
   }).join('');
@@ -2728,7 +2743,7 @@ document.getElementById('deleteShiftBtn').addEventListener('click', ()=>{
 function renderDupDays(){
   const id=document.getElementById('shiftId').value; const s=state.shifts.find(x=>x.id===id); if(!s) return;
   document.getElementById('dupDaysChips').innerHTML = DAYS.map((d,i)=>
-    `<button type="button" class="dup-day px-2.5 py-1.5 rounded-lg text-xs font-semibold border ${i===s.day?'bg-slate-100 text-slate-300 border-slate-200 cursor-not-allowed':'bg-white text-slate-600 border-slate-300 hover:bg-teal-50'}" data-d="${i}" ${i===s.day?'disabled':''}>${DAYS_SHORT[i]}</button>`
+    `<button type="button" class="dup-day px-2.5 py-1.5 rounded-lg text-xs font-semibold border ${i===s.day?'bg-slate-100 text-slate-400 border-slate-200 cursor-not-allowed':'bg-white text-slate-600 border-slate-300 hover:bg-teal-50'}" data-d="${i}" ${i===s.day?'disabled':''}>${DAYS_SHORT[i]}</button>`
   ).join('');
 }
 document.getElementById('dupShiftBtn').addEventListener('click', ()=>{
@@ -2936,7 +2951,7 @@ function renderAbsTable(){
     const cells = DAYS_SHORT.map((d,i)=>{
       const a=absenceOf(e.id,i), t=a?absenceType(a.type):null;
       return `<td class="px-1 py-1 text-center border-b border-slate-100">
-        <button type="button" class="abs-cell w-9 h-9 rounded-lg border text-base leading-none ${a?'text-white':'border-slate-200 text-slate-300 hover:bg-slate-50'}" data-emp="${e.id}" data-day="${i}" ${a?`style="background:${t.color};border-color:${t.color}" title="${t.label}"`:'title="Aucune"'}>${a?t.emoji:'+'}</button>
+        <button type="button" class="abs-cell w-9 h-9 rounded-lg border text-base leading-none ${a?'text-white':'border-slate-200 text-slate-400 hover:bg-slate-50'}" data-emp="${e.id}" data-day="${i}" ${a?`style="background:${t.color};border-color:${t.color}" title="${t.label}"`:'title="Aucune"'}>${a?t.emoji:'+'}</button>
       </td>`;
     }).join('');
     return `<tr><td class="px-2 py-1 font-semibold text-slate-800 whitespace-nowrap">${escapeHtml(e.name)}</td>${cells}</tr>`;
@@ -2998,10 +3013,10 @@ function renderSheet(){
     const warn = month?monthBreakWarn(e.id,wk):weekBreakWarn(e.id,wk);
     const ec=r-p; tp+=p; tr+=r; ttk+=tk;
     const sig=t.signatures[e.id];
-    const sigCell = month ? `<span class="text-slate-300 text-xs">—</span>`
+    const sigCell = month ? `<span class="text-slate-400 text-xs">—</span>`
       : sig ? `<span class="text-emerald-700 font-semibold text-xs">✔ signé<br>${fmtStamp(sig.at)}</span>`
       : validated ? `<button class="sheet-sign px-2 py-1 rounded-md bg-teal-600 text-white text-xs font-semibold" data-emp="${e.id}">✍️ Signer</button>`
-      : `<span class="text-slate-300 text-xs">à valider</span>`;
+      : `<span class="text-slate-400 text-xs">à valider</span>`;
     const warnBadge = warn>0 ? ` <span title="${warn} service(s) sans pause légale (≥ ${LB.minMinutes||20} min dès ${LB.afterHours||6} h)" class="text-amber-600 text-xs">⚠️${warn>1?warn:''}</span>` : '';
     const mealCell = !showMeal ? '' :
       ((!month && !validated && ruleMeal().mode==='manual')
@@ -3030,7 +3045,7 @@ function renderSheet(){
           <td class="px-2 py-1.5 text-right tabular-nums text-slate-400 text-xs hidden sm:table-cell">${ph.toFixed(1)} h</td>
           <td class="px-2 py-1.5 text-right whitespace-nowrap">
             <input type="time" value="${rs}" data-shift="${s.id}" data-edge="start" class="${inCls}" ${validated?'disabled':''}>
-            <span class="text-slate-300">–</span>
+            <span class="text-slate-400">–</span>
             <input type="time" value="${re}" data-shift="${s.id}" data-edge="end" class="${inCls}" ${validated?'disabled':''}>
             <div class="text-[10px] ${ecCls(de)} mt-0.5">${rh.toFixed(1)} h <span class="sm:hidden">· ${ecTxt(de)}</span></div>
           </td>
@@ -3038,7 +3053,7 @@ function renderSheet(){
           ${showMeal?'<td></td>':''}
           <td></td>
         </tr>`;
-      }).join('') : `<tr class="det-row"><td class="pl-6 pr-2 py-1.5 text-slate-300 text-xs" colspan="${showMeal?6:5}">Aucun service cette semaine.</td></tr>`;
+      }).join('') : `<tr class="det-row"><td class="pl-6 pr-2 py-1.5 text-slate-400 text-xs" colspan="${showMeal?6:5}">Aucun service cette semaine.</td></tr>`;
     }
     return rows;
   }).join('');
@@ -3150,7 +3165,7 @@ function renderEmploye(){
   mine.forEach(s=>{
     const date=addDays(state.weekStart,s.day);
     const mates=[...new Set(state.shifts.filter(x=>x.week===state.weekStart && x.day===s.day && x.team===s.team && x.empId!==emp.id).map(x=>{const e2=empById(x.empId);return e2?e2.name.split(' ')[0]:null;}).filter(Boolean))];
-    const note = s.note ? `<div class="text-[11px] text-teal-600 mt-0.5">📝 ${escapeHtml(s.note)}</div>` : '';
+    const note = s.note ? `<div class="text-[11px] text-teal-700 mt-0.5">📝 ${escapeHtml(s.note)}</div>` : '';
     items.push({ day:s.day, k:s.start, html:`<div class="flex items-stretch gap-3 rounded-xl border border-slate-200 bg-white p-3" style="--c:${teamColor(s.team)}">
       <div class="w-1.5 rounded-full" style="background:var(--c)"></div>
       <div class="flex-1 min-w-0"><div class="font-bold text-slate-800">${DAYS[s.day]} <span class="font-normal text-slate-400 text-sm">${fmtDate(date)}</span></div>
@@ -3196,7 +3211,7 @@ function renderEmpTeam(){
     : `Tu vois <b>tout l'établissement</b> pour la semaine du ${fmtDate(parseLocalDate(wk))} au ${fmtDate(addDays(wk,6))}.`;
   let head=`<tr><th class="sticky left-0 z-10 bg-slate-50 text-left px-3 py-2 text-xs font-bold text-slate-500 uppercase border-b border-r border-slate-200 min-w-[92px]">${teamWord}</th>`;
   days.forEach(i=>{ const date=addDays(wk,i), today=new Date().toDateString()===date.toDateString();
-    head+=`<th class="px-2 py-2 border-b border-l border-slate-200 min-w-[104px] ${today?'bg-teal-50':'bg-slate-50'}"><div class="text-xs font-bold ${today?'text-teal-700':'text-slate-700'}">${DAYS_SHORT[i]}</div><div class="text-[11px] ${today?'text-teal-600':'text-slate-400'}">${fmtDate(date)}</div></th>`; });
+    head+=`<th class="px-2 py-2 border-b border-l border-slate-200 min-w-[104px] ${today?'bg-teal-50':'bg-slate-50'}"><div class="text-xs font-bold ${today?'text-teal-700':'text-slate-700'}">${DAYS_SHORT[i]}</div><div class="text-[11px] ${today?'text-teal-700':'text-slate-400'}">${fmtDate(date)}</div></th>`; });
   head+=`</tr>`;
   document.getElementById('empTeamHead').innerHTML=head;
   let body='';
@@ -3429,7 +3444,7 @@ function renderTplList(){
     <div class="min-w-0 flex-1"><div class="font-semibold text-slate-800 truncate">${escapeHtml(t.name)}</div>
       <div class="text-xs text-slate-400">${(t.shifts||[]).length} service(s)${(t.absences||[]).length?` · ${t.absences.length} congé(s)`:''}</div></div>
     <button type="button" class="tpl-apply px-3 py-1.5 rounded-lg bg-teal-600 text-white font-semibold text-sm hover:bg-teal-700" data-id="${t.id}">Appliquer</button>
-    <button type="button" class="tpl-del text-slate-300 hover:text-red-600 text-lg shrink-0" data-id="${t.id}" title="Supprimer">🗑</button>
+    <button type="button" class="tpl-del text-slate-400 hover:text-red-600 text-lg shrink-0" data-id="${t.id}" title="Supprimer">🗑</button>
   </div>`).join('');
 }
 document.getElementById('tplSave').addEventListener('click',()=>{
@@ -3928,8 +3943,8 @@ function teamRowHtml(t){ t=t||{key:'',label:'',color:'#0ea5e9'};
 function periodRowHtml(p){ p=p||{key:'',label:'',start:'09:00',end:'17:00',accent:false};
   return `<div class="set-period flex items-center gap-2 flex-wrap" data-key="${p.key}">
     <input type="text" value="${(p.label||'').replace(/"/g,'&quot;')}" placeholder="Nom" class="s-plabel flex-1 min-w-[110px] border border-slate-300 rounded-lg px-3 py-2 text-sm" />
-    <input type="time" value="${p.start||'09:00'}" class="s-start border border-slate-300 rounded-lg px-2 py-2 text-sm" />
-    <input type="time" value="${p.end||'17:00'}" class="s-end border border-slate-300 rounded-lg px-2 py-2 text-sm" />
+    <input type="time" value="${p.start||'09:00'}" aria-label="Heure de début" class="s-start border border-slate-300 rounded-lg px-2 py-2 text-sm" />
+    <input type="time" value="${p.end||'17:00'}" aria-label="Heure de fin" class="s-end border border-slate-300 rounded-lg px-2 py-2 text-sm" />
     <label class="text-xs text-slate-500 flex items-center gap-1"><input type="checkbox" class="s-accent" ${p.accent?'checked':''} /> continu</label>
     <button type="button" class="del-row text-red-500 hover:text-red-700 px-1" title="Supprimer">✕</button>
   </div>`;
@@ -3937,7 +3952,7 @@ function periodRowHtml(p){ p=p||{key:'',label:'',start:'09:00',end:'17:00',accen
 function complRowHtml(it){ it=it||{key:'',label:'',type:'date'};
   return `<div class="set-compl flex items-center gap-2 flex-wrap" data-key="${it.key}">
     <input type="text" value="${(it.label||'').replace(/"/g,'&quot;')}" placeholder="Ex : Visite médicale" class="c-label flex-1 min-w-[130px] border border-slate-300 rounded-lg px-3 py-2 text-sm" />
-    <select class="c-type border border-slate-300 rounded-lg px-2 py-2 text-sm"><option value="date" ${it.type==='date'?'selected':''}>Date / échéance</option><option value="bool" ${it.type==='bool'?'selected':''}>Oui / Non</option></select>
+    <select aria-label="Type de suivi" class="c-type border border-slate-300 rounded-lg px-2 py-2 text-sm"><option value="date" ${it.type==='date'?'selected':''}>Date / échéance</option><option value="bool" ${it.type==='bool'?'selected':''}>Oui / Non</option></select>
     <button type="button" class="del-row text-red-500 hover:text-red-700 px-1" title="Supprimer">✕</button>
   </div>`;
 }
@@ -3988,7 +4003,7 @@ function renderEstbList(){
   const idx=wsIndex(), act=wsActiveId();
   document.getElementById('estbList').innerHTML = idx.map(e=>{ const on=e.id===act; return `<div class="flex items-center gap-2 border rounded-xl px-3 py-2 ${on?'border-teal-500 bg-teal-50':'border-slate-200'}">
     <button type="button" class="estb-pick flex-1 text-left flex items-center gap-2 min-w-0" data-id="${e.id}"><span class="text-xl shrink-0">${e.icon||profileIcon(e.profile)}</span><span class="min-w-0"><span class="font-semibold text-slate-800 block truncate">${escapeHtml(e.name||'Établissement')}</span><span class="block text-xs text-slate-400">${profileName(e.profile)}${on?' · actuel':''}</span></span>${on?'<span class="ml-auto text-teal-600 font-bold">✓</span>':''}</button>
-    ${on?'':`<button type="button" class="estb-del text-slate-300 hover:text-red-600 text-lg shrink-0" data-id="${e.id}" title="Supprimer">🗑</button>`}
+    ${on?'':`<button type="button" class="estb-del text-slate-400 hover:text-red-600 text-lg shrink-0" data-id="${e.id}" title="Supprimer">🗑</button>`}
   </div>`; }).join('');
 }
 document.getElementById('btnEstb').addEventListener('click', openEstb);
@@ -4740,7 +4755,7 @@ document.getElementById('accInvGo').addEventListener('click', async ()=>{
     <div class="text-2xl font-extrabold tracking-[0.3em] text-teal-800 text-center bg-white border border-teal-200 rounded-lg py-2 mb-2">${code}</div>
     <div class="grid grid-cols-2 gap-2">
       <button type="button" id="accInvCopy" class="px-3 py-2 rounded-lg bg-white border border-slate-300 font-semibold text-sm hover:bg-slate-50">📋 Copier le message</button>
-      <a href="https://wa.me/?text=${encodeURIComponent(msg)}" target="_blank" rel="noopener" class="px-3 py-2 rounded-lg bg-[#25D366] text-white font-semibold text-sm text-center hover:brightness-95">🟢 WhatsApp</a>
+      <a href="https://wa.me/?text=${encodeURIComponent(msg)}" target="_blank" rel="noopener" class="px-3 py-2 rounded-lg bg-[#25D366] text-[#063D2B] font-semibold text-sm text-center hover:brightness-95">🟢 WhatsApp</a>
     </div>`;
   document.getElementById('accInvCopy').addEventListener('click', async ()=>{ const ok=await copyText(msg); toast(ok?'Message copié ✓':'Copie impossible — copie le code à la main'); });
 });
@@ -5063,6 +5078,40 @@ function traduireErreur(m){
 }
 // Au démarrage : session existante → rattachement, récupération si l'appareil est vierge, temps réel, envoi auto
 if(sb && !firstRun){ refreshCloud(); }   // (au 1er lancement, c'est startOnboarding() plus bas qui interroge le cloud)
+
+/* ============ ACCESSIBILITÉ : noms des contrôles générés dynamiquement ============
+   Le HTML statique porte déjà ses libellés ; ce passage complète ce qui est construit à la volée (listes, lignes de réglages,
+   cases d'absence…) : libellés reliés aux champs, nom pour les boutons-icônes, rôle de fenêtre pour les modales. */
+let _a11ySeq=0, _a11yTimer=null;
+function a11yEnhance(root){
+  root = root || document;
+  root.querySelectorAll('label:not([for])').forEach(l=>{
+    if(l.querySelector('input,select,textarea')) return;
+    let c=l.nextElementSibling;
+    while(c && !c.matches('input,select,textarea')){ const inner=c.querySelector && c.querySelector('input,select,textarea'); if(inner){ c=inner; break; } if(c.matches('label')){ c=null; break; } c=c.nextElementSibling; }
+    if(c && !(c.labels && c.labels.length)){ if(!c.id) c.id='fld'+(++_a11ySeq); l.htmlFor=c.id; }
+  });
+  root.querySelectorAll('input:not([type=hidden]),select,textarea').forEach(c=>{
+    if(c.getAttribute('aria-label') || c.getAttribute('aria-labelledby') || (c.labels && c.labels.length)) return;
+    const t = c.getAttribute('placeholder') || c.getAttribute('title') || (c.type==='color' ? 'Couleur' : c.type==='checkbox' ? 'Sélectionner' : '');
+    if(t) c.setAttribute('aria-label', t.replace(/^[^\p{L}\p{N}]+/u,''));
+  });
+  root.querySelectorAll('button,[role=button],a[href]').forEach(b=>{
+    if(b.getAttribute('aria-label')) return;
+    const txt=(b.textContent||'').trim(); if(/[\p{L}\p{N}]/u.test(txt)) return;
+    const t=b.getAttribute('title');
+    if(t) b.setAttribute('aria-label', /^#[0-9a-f]{6}$/i.test(t) ? ('Couleur '+t) : t);
+    else if(txt==='×' || txt==='✕') b.setAttribute('aria-label','Fermer');
+  });
+  root.querySelectorAll('[id$="Modal"]:not([role])').forEach(m=>{
+    m.setAttribute('role','dialog'); m.setAttribute('aria-modal','true');
+    const h=m.querySelector('h2,h3'); if(h){ if(!h.id) h.id=m.id+'Title'; m.setAttribute('aria-labelledby', h.id); }
+  });
+}
+try{
+  a11yEnhance(document);
+  new MutationObserver(()=>{ clearTimeout(_a11yTimer); _a11yTimer=setTimeout(()=>a11yEnhance(document), 120); }).observe(document.body, { childList:true, subtree:true });
+}catch(e){}
 
 /* ============ INIT ============ */
 function renderAll(){ renderTeamFilter(); renderGrid(); renderTeam(); renderSuivi(); }

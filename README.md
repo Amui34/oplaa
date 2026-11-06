@@ -38,6 +38,15 @@ Pour voir l'app : `python3 -m http.server 8795` dans `www/` → http://localhost
 ### Tests d'intégration
 `tests/integration/backend.test.mjs` frappe un **projet Supabase de test** (`rourjugjspqppjhrizxw`, « Confirm email » désactivé — indispensable : le signup doit renvoyer un token). Ne jamais les pointer sur la prod : ils créent des comptes et consommeraient le quota d'e-mails.
 
+## Accessibilité
+
+`npm run test:a11y` parcourt 33 écrans et fenêtres au format iPhone (≈ 490 contrôles) et vérifie : les règles WCAG 2.x A/AA d'axe-core (contrastes, libellés, noms), le **nom accessible** de chaque bouton/champ (VoiceOver) et la **taille des cibles tactiles** (≥ 44 pt, recommandation Apple). L'audit tourne aussi en CI. Principes en place dans `www/index.html` :
+
+- chaque `<label>` est relié à son champ (`for=`) ; les boutons-icônes ont un `aria-label` ; `a11yEnhance()` complète les contenus générés à la volée (listes, lignes de réglages) et donne aux fenêtres `role="dialog"` ;
+- sur écran tactile, une zone de toucher invisible de 44 × 44 pt entoure les petits boutons (bloc CSS « Accessibilité tactile ») ; champs de 44 pt de haut ;
+- contrastes : le ton 600 de l'accent est assombri automatiquement (`setAccent`) pour garder un texte blanc lisible, quel que soit l'accent choisi ; gris secondaire `--s-400` ≥ 4,5:1 ;
+- tout nouveau bouton sans texte doit porter un `aria-label`, tout nouveau champ un `<label for>`.
+
 ## Export comptable & import (format Combo)
 
 - **Suivi → Export comptable (Excel)** (admins) : fichier `.xlsx` à 3 feuilles au format de l'export comptable Combo — `Synthèse` (72 colonnes, sections identiques, ligne TOTAL en formules), `Éléments Variables de Paie`, `Absences` — pour la période affichée (semaine ou mois). Calculs HCR : heures sup au contrat / hors contrat par paliers (+10 % / +20 % / +50 %, seuils réglables), complémentaires temps partiel (+10 % / +25 %), heures manquantes, jours fériés travaillés, absences valorisées (saisie > planifié > journée contrat moyenne), entrée/sortie, repas (avantage en nature / titre / indemnité) et paniers. Réglages → « Paie & export comptable » (SIRET, type de repas, paliers, jours/semaine).
