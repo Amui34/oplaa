@@ -8,64 +8,44 @@ test.beforeEach(async ({ page }) => {
   await page.goto('/');
 });
 
-test("écran d'accueil : créer un compte / se connecter + démo (web)", async ({ page }) => {
-  await expect(page.locator('#welcomeSignup')).toBeVisible();
-  await expect(page.locator('#welcomeLogin')).toBeVisible();
-  // Connexion depuis l'accueil : ouvre la modale compte avec le formulaire e-mail / mot de passe
-  await page.locator('#welcomeLogin').click();
-  await expect(page.locator('#welcome')).not.toBeVisible();
+test("ouverture : on arrive directement sur « Créer mon compte » (pas d'écran intermédiaire)", async ({ page }) => {
+  // La fenêtre compte s'affiche en plein écran, en mode création
   await expect(page.locator('#cloudModal')).toBeVisible();
-  // Mot de passe oublié : le lien existe et réclame l'e-mail s'il est vide
-  await expect(page.locator('#cloudForgot')).toBeVisible({ timeout: 15000 });
+  await expect(page.locator('#cloudModal')).toHaveClass(/onb/);
+  await expect(page.locator('#cloudSignUp')).toBeVisible({ timeout: 15000 });
+  await expect(page.locator('#cloudAuthIntro')).toContainText('Crée ton compte');
+  await expect(page.locator('#cloudSignIn')).toBeHidden();
+  await expect(page.locator('#cloudForgot')).toBeHidden();
+  await expect(page.locator('#wizardModal')).toBeHidden();          // l'assistant ne s'ouvre qu'après connexion
+  await expect(page.locator('#welcomeDemo')).toBeVisible();          // la démo reste accessible sans compte
+  // Bascule « J'ai déjà un compte » + mot de passe oublié (réclame l'e-mail s'il est vide)
+  await page.locator('#cloudAuthSwitch').click();
+  await expect(page.locator('#cloudSignIn')).toBeVisible();
+  await expect(page.locator('#cloudSignUp')).toBeHidden();
   await page.locator('#cloudForgot').click();
   await expect(page.locator('#cloudAuthMsg')).toContainText('Entre ton email');
-  await page.locator('.closeCloud').first().click();
-  await expect(page.locator('#welcome')).toBeVisible();   // fermé sans connexion → retour à l'accueil
-  // Le bouton démo n'est visible que sur le web (pas dans l'app native)
-  await expect(page.locator('#welcomeDemo')).toBeVisible();
+  // Sans compte, on ne peut pas fermer cet écran pour atteindre un planning vide
+  await page.keyboard.press('Escape');
+  await expect(page.locator('#cloudModal')).toBeVisible();
+  await expect(page.locator('#cloudModal')).toHaveClass(/onb/);
 });
 
-test('accueil : recharger la page sans avoir choisi ramène toujours l’accueil', async ({ page }) => {
-  await expect(page.locator('#welcome')).toBeVisible();
+test('ouverture : recharger la page ramène toujours sur la création de compte, sans rien écrire sur l’appareil', async ({ page }) => {
+  await expect(page.locator('#cloudSignUp')).toBeVisible({ timeout: 15000 });
   await page.reload();
-  await expect(page.locator('#welcome')).toBeVisible();
-  await expect(page.locator('#welcomeSignup')).toBeVisible();
-  // Même après avoir ouvert puis fermé la modale compte sans se connecter
-  await page.locator('#welcomeSignup').click();
-  await expect(page.locator('#cloudModal')).toBeVisible();
-  await page.locator('.closeCloud').first().click();
-  await page.reload();
-  await expect(page.locator('#welcome')).toBeVisible();
+  await expect(page.locator('#cloudModal')).toHaveClass(/onb/);
+  await expect(page.locator('#cloudSignUp')).toBeVisible({ timeout: 15000 });
   const keys = await page.evaluate(() => Object.keys(localStorage).filter(k => k.startsWith('planning_resto')));
   expect(keys).toEqual([]);   // rien n'a été écrit sur l'appareil
 });
 
 test('mode démo : charge le planning de démonstration', async ({ page }) => {
   await page.locator('#welcomeDemo').click();
-  // L'écran d'accueil disparaît, le planning s'affiche avec l'établissement de démo
+  // L'écran de création de compte disparaît, le planning s'affiche avec l'établissement de démo
   await expect(page.locator('#restoName')).toContainText('Bistrot');
-  await expect(page.locator('#welcome')).not.toBeVisible();
+  await expect(page.locator('#cloudModal')).toBeHidden();
   // Les employés de démo sont bien rendus dans l'app
   await expect(page.getByText('Camille Durand').first()).toBeAttached();
-});
-
-test('création de compte : formulaire dédié (compte obligatoire), bascule connexion, retour accueil si on ferme', async ({ page }) => {
-  await page.locator('#welcomeSignup').click();
-  await expect(page.locator('#welcome')).not.toBeVisible();
-  await expect(page.locator('#cloudModal')).toBeVisible();
-  await expect(page.locator('#wizardModal')).toBeHidden();          // l'assistant ne s'ouvre qu'après connexion
-  await expect(page.locator('#cloudAuth')).toBeVisible({ timeout: 15000 });
-  await expect(page.locator('#cloudAuthIntro')).toContainText('Crée ton compte');
-  // Mode création : un seul bouton principal ; on peut basculer vers la connexion
-  await expect(page.locator('#cloudSignUp')).toBeVisible();
-  await expect(page.locator('#cloudSignIn')).toBeHidden();
-  await expect(page.locator('#cloudForgot')).toBeHidden();
-  await page.locator('#cloudAuthSwitch').click();
-  await expect(page.locator('#cloudSignIn')).toBeVisible();
-  await expect(page.locator('#cloudSignUp')).toBeHidden();
-  await expect(page.locator('#cloudForgot')).toBeVisible();
-  await page.locator('.closeCloud').first().click();
-  await expect(page.locator('#welcome')).toBeVisible();
 });
 
 test('confidentialité : le filigrane RGPD est inactif hors connexion', async ({ page }) => {
@@ -74,16 +54,16 @@ test('confidentialité : le filigrane RGPD est inactif hors connexion', async ({
   await expect(page.locator('body')).not.toHaveClass(/rgpd-on/);
 });
 
-test('démo : on peut quitter la démo et revenir à l’écran d’accueil', async ({ page }) => {
+test('démo : on peut quitter la démo et revenir à la création de compte', async ({ page }) => {
   await page.locator('#welcomeDemo').click();
   // Le bandeau démo + le bouton Quitter apparaissent
   await expect(page.locator('#demoBanner')).toBeVisible();
   await expect(page.locator('#demoQuit')).toBeVisible();
-  // Quitter la démo → l’écran d’accueil revient (et le bandeau disparaît)
+  // Quitter la démo → retour à l'écran de création de compte (et le bandeau disparaît)
   await page.locator('#demoQuit').click();
-  await expect(page.locator('#welcome')).toBeVisible();
+  await expect(page.locator('#cloudModal')).toHaveClass(/onb/);
   await expect(page.locator('#demoBanner')).toBeHidden();
-  await expect(page.locator('#welcomeSignup')).toBeVisible();
+  await expect(page.locator('#cloudSignUp')).toBeVisible({ timeout: 15000 });
 });
 
 test('affichage : aucune dérive horizontale de la page (iPad 768px)', async ({ page }) => {
