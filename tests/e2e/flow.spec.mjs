@@ -8,9 +8,8 @@ test.beforeEach(async ({ page }) => {
   await page.goto('/');
 });
 
-test("écran d'accueil : choix patron / employé + démo (web)", async ({ page }) => {
-  await expect(page.locator('#welcomePatron')).toBeVisible();
-  await expect(page.locator('#welcomeEmploye')).toBeVisible();
+test("écran d'accueil : créer un compte / se connecter + démo (web)", async ({ page }) => {
+  await expect(page.locator('#welcomeSignup')).toBeVisible();
   await expect(page.locator('#welcomeLogin')).toBeVisible();
   // Connexion depuis l'accueil : ouvre la modale compte avec le formulaire e-mail / mot de passe
   await page.locator('#welcomeLogin').click();
@@ -30,9 +29,9 @@ test('accueil : recharger la page sans avoir choisi ramène toujours l’accueil
   await expect(page.locator('#welcome')).toBeVisible();
   await page.reload();
   await expect(page.locator('#welcome')).toBeVisible();
-  await expect(page.locator('#welcomePatron')).toBeVisible();
+  await expect(page.locator('#welcomeSignup')).toBeVisible();
   // Même après avoir ouvert puis fermé la modale compte sans se connecter
-  await page.locator('#welcomePatron').click();
+  await page.locator('#welcomeSignup').click();
   await expect(page.locator('#cloudModal')).toBeVisible();
   await page.locator('.closeCloud').first().click();
   await page.reload();
@@ -50,13 +49,21 @@ test('mode démo : charge le planning de démonstration', async ({ page }) => {
   await expect(page.getByText('Camille Durand').first()).toBeAttached();
 });
 
-test('création patron : demande d’abord un compte (compte obligatoire), puis retour accueil si on ferme', async ({ page }) => {
-  await page.locator('#welcomePatron').click();
+test('création de compte : formulaire dédié (compte obligatoire), bascule connexion, retour accueil si on ferme', async ({ page }) => {
+  await page.locator('#welcomeSignup').click();
   await expect(page.locator('#welcome')).not.toBeVisible();
   await expect(page.locator('#cloudModal')).toBeVisible();
   await expect(page.locator('#wizardModal')).toBeHidden();          // l'assistant ne s'ouvre qu'après connexion
   await expect(page.locator('#cloudAuth')).toBeVisible({ timeout: 15000 });
   await expect(page.locator('#cloudAuthIntro')).toContainText('Crée ton compte');
+  // Mode création : un seul bouton principal ; on peut basculer vers la connexion
+  await expect(page.locator('#cloudSignUp')).toBeVisible();
+  await expect(page.locator('#cloudSignIn')).toBeHidden();
+  await expect(page.locator('#cloudForgot')).toBeHidden();
+  await page.locator('#cloudAuthSwitch').click();
+  await expect(page.locator('#cloudSignIn')).toBeVisible();
+  await expect(page.locator('#cloudSignUp')).toBeHidden();
+  await expect(page.locator('#cloudForgot')).toBeVisible();
   await page.locator('.closeCloud').first().click();
   await expect(page.locator('#welcome')).toBeVisible();
 });
@@ -76,7 +83,7 @@ test('démo : on peut quitter la démo et revenir à l’écran d’accueil', as
   await page.locator('#demoQuit').click();
   await expect(page.locator('#welcome')).toBeVisible();
   await expect(page.locator('#demoBanner')).toBeHidden();
-  await expect(page.locator('#welcomePatron')).toBeVisible();
+  await expect(page.locator('#welcomeSignup')).toBeVisible();
 });
 
 test('affichage : aucune dérive horizontale de la page (iPad 768px)', async ({ page }) => {

@@ -16,7 +16,7 @@ Application iOS (App Store) + web de planification d'équipe pour restaurants, c
 
 ## Rôles (cloud)
 
-**Compte obligatoire** (depuis le 04/11/2026, décision Noa) : créer ou rejoindre un établissement passe d'abord par la connexion (écran d'accueil → modale compte → assistant → `create_establishment` + push). Seule la démo fonctionne sans compte. Les anciens utilisateurs avec des données locales gardent la passerelle « Je suis le patron — créer mon établissement » (création + envoi des données existantes).
+**Compte obligatoire, un seul chemin** (décisions Noa des 04 et 06/11/2026) : accueil (« Créer mon compte » / « J'ai déjà un compte » / démo) → e-mail + mot de passe → **code à 6 chiffres reçu par e-mail** saisi dans l'app (`verifyOtp` type `signup`, aucun lien à cliquer) → une seule question : « Créer mon établissement » (assistant → `create_establishment` + push) ou « Rejoindre avec un code ». Mot de passe oublié : même principe (code + nouveau mot de passe, `verifyOtp` type `recovery`). Une adresse e-mail = un seul compte. Modèles d'e-mails : `supabase/email-templates/`. Seule la démo fonctionne sans compte. Les anciens utilisateurs avec des données locales gardent la passerelle « Je suis le patron — créer mon établissement » (création + envoi des données existantes).
 
 - **Admin** (`owner`) : tout, y compris salaires et gestion des accès. Plusieurs admins possibles.
 - **Manager** : planning, congés, équipe, réglages — pas les salaires, n'invite que des employés.

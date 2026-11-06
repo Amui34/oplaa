@@ -10,12 +10,13 @@
       </td></tr>
       <tr><td style="padding:12px 32px 0 32px;">
         <h1 style="margin:12px 0 10px 0;font-size:22px;line-height:1.25;color:#2A1D16;">Bienvenue sur Oplaa 👋</h1>
-        <p style="margin:0 0 22px 0;font-size:16px;line-height:1.6;color:#2A1D16;">Ton compte est presque prêt. Confirme ton adresse e-mail pour commencer à créer et partager les plannings de ton équipe.</p>
-        <table role="presentation" cellpadding="0" cellspacing="0"><tr><td style="border-radius:12px;background:#C4562F;">
-          <a href="{{ .ConfirmationURL }}" style="display:inline-block;padding:14px 26px;font-size:16px;font-weight:700;color:#ffffff;text-decoration:none;border-radius:12px;">Confirmer mon adresse</a>
+        <p style="margin:0 0 18px 0;font-size:16px;line-height:1.6;color:#2A1D16;">Ton compte est presque prêt. Saisis ce code dans l'application pour l'activer.</p>
+        <table role="presentation" width="100%" cellpadding="0" cellspacing="0"><tr><td align="center" style="background:#FBF6F1;border:1px solid #E7DBCE;border-radius:14px;padding:18px 12px;">
+          <div style="font-size:12px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:#6E655C;margin-bottom:6px;">Ton code</div>
+          <div style="font-size:36px;font-weight:800;letter-spacing:10px;color:#C4562F;font-family:'SF Mono',Menlo,Consolas,monospace;">{{ .Token }}</div>
         </td></tr></table>
-        <p style="margin:22px 0 0 0;font-size:15px;line-height:1.6;color:#2A1D16;">Une fois confirmé, reviens dans l'application et connecte-toi avec ton e-mail et ton mot de passe.</p>
-        <p style="margin:18px 0 0 0;font-size:13px;line-height:1.6;color:#6E655C;">Le bouton ne fonctionne pas ? Copie ce lien dans ton navigateur :<br><a href="{{ .ConfirmationURL }}" style="color:#C4562F;word-break:break-all;">{{ .ConfirmationURL }}</a></p>
+        <p style="margin:18px 0 0 0;font-size:15px;line-height:1.6;color:#2A1D16;">Le code est valable une heure. Ensuite, tu pourras créer ton établissement ou rejoindre ton équipe avec un code d'invitation.</p>
+        <p style="margin:16px 0 0 0;font-size:13px;line-height:1.6;color:#6E655C;">Tu es sur ordinateur ? Tu peux aussi <a href="{{ .ConfirmationURL }}" style="color:#C4562F;font-weight:600;">confirmer ton adresse en un clic</a>.</p>
       </td></tr>
       <tr><td style="padding:22px 32px 26px 32px;">
         <p style="margin:0;padding-top:18px;border-top:1px solid #E7DBCE;font-size:13px;line-height:1.6;color:#6E655C;">Tu n'as pas créé de compte Oplaa ? Ignore simplement cet e-mail, aucun compte ne sera activé.<br><br>Oplaa — le planning d'équipe, simplifié.<br><a href="https://oplaa.pro" style="color:#C4562F;text-decoration:none;font-weight:600;">oplaa.pro</a> · <a href="https://oplaa.pro/assistance.html" style="color:#C4562F;text-decoration:none;font-weight:600;">Assistance</a><br>Édité par SAS NOMAD, La Grande-Motte, France.</p>
