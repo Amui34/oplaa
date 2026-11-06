@@ -1,6 +1,7 @@
 #!/bin/sh
 # =============================================================================
 # Xcode Cloud — préparation de l'app Capacitor avant le build iOS.
+# IMPORTANT : ce dossier ci_scripts doit rester À CÔTÉ du projet Xcode (ios/App/), sinon Xcode Cloud ne l'exécute pas.
 # Xcode Cloud exécute ce script juste après le clone du dépôt.
 #   1) installe Node (nécessaire à Capacitor CLI + Tailwind)
 #   2) installe les dépendances npm

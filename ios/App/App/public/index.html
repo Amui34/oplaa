@@ -184,12 +184,11 @@
   <div class="oplaa-word" style="font-size:40px;color:#C4562F">oplaa</div>
   <p class="text-slate-500 mt-2 mb-8 text-base">Le planning d'équipe, simplifié.</p>
   <div class="w-full max-w-xs flex flex-col gap-3">
-    <button id="welcomePatron" class="w-full inline-flex items-center justify-center gap-2 px-5 py-4 rounded-2xl bg-teal-600 text-white font-bold text-lg hover:bg-teal-700"><span class="ic" data-ic="store" data-ic-size="22"></span>Je gère mon établissement</button>
-    <button id="welcomeEmploye" class="w-full inline-flex items-center justify-center gap-2 px-5 py-4 rounded-2xl bg-white border border-slate-300 text-slate-800 font-bold text-lg hover:bg-slate-50"><span class="ic" data-ic="user" data-ic-size="22"></span>Je suis employé — j'ai un code</button>
-    <button id="welcomeLogin" class="w-full inline-flex items-center justify-center gap-2 px-5 py-3 rounded-2xl bg-white border border-teal-600 text-teal-700 font-bold hover:bg-teal-50"><span class="ic" data-ic="cloud" data-ic-size="20"></span>J'ai déjà un compte — me connecter</button>
-    <button id="welcomeDemo" hidden class="w-full inline-flex items-center justify-center gap-2 px-5 py-3 rounded-2xl text-slate-500 font-semibold hover:bg-slate-50 border border-dashed border-slate-300"><span class="ic" data-ic="bulb" data-ic-size="18"></span>Voir une démo (données d'exemple)</button>
+    <button id="welcomeSignup" class="w-full inline-flex items-center justify-center gap-2 px-5 py-4 rounded-2xl bg-teal-600 text-white font-bold text-lg hover:bg-teal-700"><span class="ic" data-ic="user" data-ic-size="22"></span>Créer mon compte</button>
+    <button id="welcomeLogin" class="w-full inline-flex items-center justify-center gap-2 px-5 py-4 rounded-2xl bg-white border border-slate-300 text-slate-800 font-bold text-lg hover:bg-slate-50"><span class="ic" data-ic="cloud" data-ic-size="22"></span>J'ai déjà un compte</button>
+    <button id="welcomeDemo" hidden class="w-full inline-flex items-center justify-center gap-2 px-5 py-2 text-sm text-slate-500 font-semibold underline hover:text-slate-700"><span class="ic" data-ic="bulb" data-ic-size="16"></span>Voir une démo sans compte</button>
   </div>
-  <p class="text-slate-400 text-xs mt-6 max-w-xs">Un compte gratuit est nécessaire pour créer ou rejoindre un établissement : tes données sont sauvegardées et partagées avec ton équipe. Pour essayer sans compte, regarde la démo.</p>
+  <p class="text-slate-400 text-xs mt-6 max-w-xs">Patron ou employé : crée ton compte en une minute, puis crée ton établissement ou entre ton code d'invitation.</p>
 </div>
 
 <!-- ============ BANDEAU MODE DÉMO ============ -->
@@ -237,7 +236,7 @@
         <button id="btnSettings" class="mi w-full text-left px-4 py-2 hover:bg-slate-50"><span class="ic" data-ic="settings"></span>Réglages &amp; plus…</button>
         <button id="btnGuide" class="mi w-full text-left px-4 py-2 hover:bg-slate-50"><span class="ic" data-ic="bulb"></span>Aide (guide de démarrage)</button>
         <div class="mi px-4 py-1.5 text-[10px] text-emerald-600 leading-snug"><span class="ic" data-ic="cloud" data-ic-size="13" style="align-self:flex-start;margin-top:1px"></span><span>Tout est enregistré et synchronisé automatiquement.</span></div>
-        <div class="px-4 pt-0.5 pb-1.5 text-[10px] text-slate-300">Oplaa v1.0 · © 2026 SAS NOMAD · Conçu et développé par Noa Madar</div>
+        <div class="px-4 pt-0.5 pb-1.5 text-[10px] text-slate-300">Oplaa v1.0.10 · © 2026 SAS NOMAD · Conçu et développé par Noa Madar</div>
       </div>
       <input type="file" id="importFile" accept="application/json" class="hidden" />
     </div>
@@ -613,9 +612,15 @@
     </div>
     <form id="empForm" class="space-y-3">
       <input type="hidden" id="empId" />
-      <div>
-        <label class="text-sm font-semibold text-slate-600">Nom complet</label>
-        <input type="text" id="empName" required placeholder="Ex : Camille Durand" class="mt-1 w-full border border-slate-300 rounded-lg px-3 py-2" />
+      <div class="grid grid-cols-2 gap-3">
+        <div>
+          <label class="text-sm font-semibold text-slate-600">Prénom</label>
+          <input type="text" id="empFirstName" required autocomplete="off" placeholder="Camille" class="mt-1 w-full border border-slate-300 rounded-lg px-3 py-2" />
+        </div>
+        <div>
+          <label class="text-sm font-semibold text-slate-600">Nom</label>
+          <input type="text" id="empLastName" required autocomplete="off" placeholder="Durand" class="mt-1 w-full border border-slate-300 rounded-lg px-3 py-2" />
+        </div>
       </div>
       <div class="grid grid-cols-2 gap-3">
         <div>
@@ -698,26 +703,56 @@
 
     <!-- Non connecté : se connecter / créer un compte -->
     <div id="cloudAuth" hidden>
-      <p id="cloudAuthIntro" class="text-sm text-slate-500 mb-4">Connecte-toi pour synchroniser et partager tes plannings, ou crée ton compte.</p>
+      <p id="cloudAuthIntro" class="text-sm text-slate-500 mb-4">Connecte-toi pour retrouver ton établissement.</p>
       <label class="text-sm font-semibold text-slate-600">Email</label>
       <input type="email" id="cloudEmail" autocomplete="email" class="mt-1 mb-3 w-full border border-slate-300 rounded-lg px-3 py-2" placeholder="ton@email.com" />
       <label class="text-sm font-semibold text-slate-600">Mot de passe</label>
       <input type="password" id="cloudPassword" autocomplete="current-password" class="mt-1 mb-1 w-full border border-slate-300 rounded-lg px-3 py-2" placeholder="••••••••" />
+      <div class="text-right" id="cloudForgotRow"><button type="button" id="cloudForgot" class="text-xs text-slate-500 hover:text-teal-700 underline">Mot de passe oublié ?</button></div>
       <p id="cloudAuthMsg" class="text-sm mb-3 hidden"></p>
-      <div class="grid grid-cols-2 gap-2 mt-3">
-        <button type="button" id="cloudSignIn" class="px-3 py-3 rounded-xl bg-teal-600 text-white font-semibold hover:bg-teal-700">Se connecter</button>
-        <button type="button" id="cloudSignUp" class="px-3 py-3 rounded-xl bg-white border border-slate-300 font-semibold hover:bg-slate-50">Créer un compte</button>
+      <button type="button" id="cloudSignUp" hidden class="mt-3 w-full px-3 py-3 rounded-xl bg-teal-600 text-white font-semibold hover:bg-teal-700">Créer mon compte</button>
+      <button type="button" id="cloudSignIn" class="mt-3 w-full px-3 py-3 rounded-xl bg-teal-600 text-white font-semibold hover:bg-teal-700">Se connecter</button>
+      <button type="button" id="cloudAuthSwitch" class="w-full mt-3 text-sm text-slate-500 hover:underline">Pas encore de compte ? Créer mon compte</button>
+    </div>
+
+    <!-- Création de compte : code reçu par e-mail (aucun lien à cliquer, on reste dans l'app) -->
+    <div id="cloudCode" hidden>
+      <p id="cloudCodeIntro" class="text-sm text-slate-600 mb-4"></p>
+      <label class="text-sm font-semibold text-slate-600">Code reçu par e-mail</label>
+      <input type="text" id="cloudSignupCode" inputmode="numeric" autocomplete="one-time-code" maxlength="6" class="mt-1 mb-1 w-full border border-slate-300 rounded-lg px-3 py-2 text-center text-xl tracking-[0.4em] font-bold" placeholder="••••••" />
+      <p id="cloudCodeMsg" class="text-sm mb-3 hidden"></p>
+      <button type="button" id="cloudCodeOk" class="mt-3 w-full px-3 py-3 rounded-xl bg-teal-600 text-white font-semibold hover:bg-teal-700">Valider mon compte</button>
+      <button type="button" id="cloudCodeResend" class="w-full mt-3 text-sm text-slate-500 hover:underline">Renvoyer le code</button>
+      <button type="button" id="cloudCodeBack" class="w-full mt-2 text-sm text-slate-400 hover:underline">← Modifier mon e-mail</button>
+    </div>
+
+    <!-- Retour par le lien « mot de passe oublié » : choisir un nouveau mot de passe -->
+    <div id="cloudRecover" hidden>
+      <p id="cloudRecoverIntro" class="text-sm text-slate-600 mb-4">Choisis ton <b>nouveau mot de passe</b> (6 caractères minimum).</p>
+      <div id="cloudCodeBox" hidden>
+        <label class="text-sm font-semibold text-slate-600">Code reçu par e-mail</label>
+        <input type="text" id="cloudRecoverCode" inputmode="numeric" autocomplete="one-time-code" maxlength="6" class="mt-1 mb-1 w-full border border-slate-300 rounded-lg px-3 py-2 text-center text-xl tracking-[0.4em] font-bold" placeholder="••••••" />
+        <div class="text-right mb-3"><button type="button" id="cloudResendCode" class="text-xs text-slate-500 hover:text-teal-700 underline">Renvoyer le code</button></div>
       </div>
+      <label class="text-sm font-semibold text-slate-600">Nouveau mot de passe</label>
+      <input type="password" id="cloudNewPassword" autocomplete="new-password" class="mt-1 mb-3 w-full border border-slate-300 rounded-lg px-3 py-2" placeholder="••••••••" />
+      <label class="text-sm font-semibold text-slate-600">Confirme le mot de passe</label>
+      <input type="password" id="cloudNewPassword2" autocomplete="new-password" class="mt-1 mb-1 w-full border border-slate-300 rounded-lg px-3 py-2" placeholder="••••••••" />
+      <p id="cloudRecoverMsg" class="text-sm mb-3 hidden"></p>
+      <button type="button" id="cloudSetPassword" class="mt-3 w-full px-3 py-3 rounded-xl bg-teal-600 text-white font-semibold hover:bg-teal-700">Enregistrer le nouveau mot de passe</button>
+      <button type="button" id="cloudRecoverCancel" class="w-full mt-3 text-sm text-slate-400 hover:underline">← Retour à la connexion</button>
     </div>
 
     <!-- Connecté mais sans établissement : patron ou employé -->
     <div id="cloudOnboard" hidden>
-      <p class="text-sm text-slate-600 mb-4">Connecté : <b id="cloudOnbEmail"></b>. Tu n'es rattaché à aucun établissement.</p>
-      <button type="button" id="cloudCreateEst" class="w-full px-4 py-3 rounded-xl bg-teal-600 text-white font-semibold hover:bg-teal-700 mb-4">🏪 Je suis le patron — créer mon établissement</button>
-      <div class="text-center text-xs text-slate-400 mb-3">— ou si tu es un employé —</div>
-      <label class="text-sm font-semibold text-slate-600">J'ai un code d'invitation</label>
-      <input type="text" id="cloudJoinCode" class="mt-1 mb-2 w-full border border-slate-300 rounded-lg px-3 py-2 uppercase tracking-widest text-center" placeholder="Ex : ABC123" />
-      <button type="button" id="cloudJoin" class="w-full px-4 py-3 rounded-xl btn-ink font-semibold">Rejoindre mon établissement</button>
+      <p class="text-sm text-slate-600 mb-4">Bienvenue <b id="cloudOnbEmail"></b> ! Dernière étape :</p>
+      <button type="button" id="cloudCreateEst" class="w-full px-4 py-3 rounded-xl bg-teal-600 text-white font-semibold hover:bg-teal-700">Créer mon établissement</button>
+      <p class="text-xs text-slate-400 mt-1 mb-4 text-center">Patron ou gérant : une minute avec l'assistant.</p>
+      <div class="rounded-xl border border-slate-200 p-3">
+        <label class="text-sm font-semibold text-slate-600">Rejoindre une équipe avec un code</label>
+        <input type="text" id="cloudJoinCode" class="mt-1 mb-2 w-full border border-slate-300 rounded-lg px-3 py-2 uppercase tracking-widest text-center" placeholder="Code reçu, ex : ABC123" />
+        <button type="button" id="cloudJoin" class="w-full px-4 py-3 rounded-xl btn-ink font-semibold">Rejoindre</button>
+      </div>
       <p id="cloudOnbMsg" class="text-sm mt-3 hidden"></p>
       <button type="button" id="cloudSignOut2" class="w-full mt-4 text-sm text-slate-400 hover:underline">Se déconnecter</button>
       <button type="button" id="cloudDeleteAcc2" class="w-full mt-2 text-sm text-red-600 hover:underline">Supprimer mon compte</button>
@@ -918,7 +953,7 @@
         <button class="closePaywall text-white/80 hover:text-white text-2xl leading-none">&times;</button>
       </div>
       <h3 class="text-2xl font-extrabold mt-3">Passez à Oplaa Pro</h3>
-      <p id="paywallTrial" class="text-white/90 text-sm mt-1">1 mois offert, puis 4,99 €/mois par établissement.</p>
+      <p id="paywallTrial" class="text-white/90 text-sm mt-1">1 mois offert, puis 7,99 €/mois par établissement.</p>
     </div>
     <div class="p-6">
       <ul class="space-y-3 text-sm text-slate-700">
@@ -928,7 +963,7 @@
         <li class="flex gap-2"><span>✅</span><span>Synchronisation et espace employé</span></li>
       </ul>
       <div class="mt-5 rounded-xl border border-slate-200 p-4 text-center">
-        <div class="text-2xl font-extrabold text-slate-800">4,99 €<span class="text-base font-semibold text-slate-500">/mois</span></div>
+        <div class="text-2xl font-extrabold text-slate-800">7,99 €<span class="text-base font-semibold text-slate-500">/mois</span></div>
         <div class="text-xs text-slate-500 mt-1">par établissement · 1er mois gratuit · sans engagement · résiliable à tout moment</div>
       </div>
       <button id="paywallBuy" class="mt-4 w-full py-3 rounded-xl bg-teal-600 text-white font-bold hover:bg-teal-700">Commencer l'essai gratuit</button>
@@ -1370,7 +1405,7 @@ let STORAGE_KEY = wsDataKey(wsActiveId());
 const DAYS = ['Lundi','Mardi','Mercredi','Jeudi','Vendredi','Samedi','Dimanche'];
 const DAYS_SHORT = ['Lun','Mar','Mer','Jeu','Ven','Sam','Dim'];
 const RECALL_DAYS = 60; // seuil d'alerte "bientôt à échéance"
-const APP_VERSION = '1.0';
+const APP_VERSION = '1.0.10';
 const CONTACT_EMAIL = 'noamadar.noa@gmail.com';   // adresse qui reçoit les retours des testeurs (modifiable)
 const ASSISTANCE_URL = 'https://oplaa.pro/assistance.html';   // page Aide/FAQ (oplaa.pro)
 /* ---- Oplaa Pro — abonnement (v1.1). Signé : Noa Madar. ---- */
@@ -1378,7 +1413,7 @@ const SUBSCRIPTION_ENABLED = false;                 // ← passer à true pour l
 const TRIAL_DAYS = 30;                              // essai gratuit
 const RC_ENTITLEMENT_ID = 'pro';                    // identifiant d'entitlement dans RevenueCat
 const RC_IOS_API_KEY = 'appl_XXXXXXXXXXXXXXXX';     // clé API publique iOS RevenueCat (à remplir en v1.1)
-const PRO_PRICE_LABEL = '4,99 €/mois par établissement';
+const PRO_PRICE_LABEL = '7,99 €/mois par établissement';
 const ABSENCE_TYPES = [
   // Types « classiques » (boutons rapides). unit : 'j' = jours, 'h' = heures · pay : rem = rémunérée, ind = indemnisée, non = non rémunérée
   {key:'conge',   label:'Congé payé', emoji:'🌴', color:'#3F6B4A', unit:'j', pay:'rem', combo:'Congé payé (j)'},
@@ -1595,6 +1630,22 @@ function splitName(full){
   if(isUpper(parts[0]) && !isUpper(parts[parts.length-1])) return {prenom:parts.slice(1).join(' '), nom:parts[0]};
   return {prenom:parts[0], nom:parts.slice(1).join(' ').toUpperCase()};
 }
+// Prénom / nom séparés sur la fiche employé. `name` reste le nom complet affiché partout (« Prénom Nom »).
+function fullName(first,last){ return [String(first||'').trim(), String(last||'').trim()].filter(Boolean).join(' '); }
+function splitNameRaw(full){   // comme splitName, sans mettre le nom en capitales (pour préremplir la fiche)
+  const parts=String(full||'').trim().split(/\s+/).filter(Boolean); if(!parts.length) return {prenom:'',nom:''};
+  if(parts.length===1) return {prenom:parts[0],nom:''};
+  const isUpper=w=>w.length>1 && w===w.toUpperCase() && /[A-ZÀ-Ý]/.test(w);
+  if(isUpper(parts[0]) && !isUpper(parts[parts.length-1])) return {prenom:parts.slice(1).join(' '), nom:parts[0]};
+  return {prenom:parts[0], nom:parts.slice(1).join(' ')};
+}
+// Prénom/nom d'un employé : les champs dédiés s'ils sont cohérents avec le nom complet, sinon découpage du nom complet
+// (anciennes fiches, ou fiche renommée depuis une ancienne version de l'app qui ne connaît que `name`).
+function nameParts(e){
+  if(e && (e.firstName||e.lastName) && fullName(e.firstName,e.lastName)===String(e.name||'').trim()) return {prenom:e.firstName||'', nom:e.lastName||''};
+  return splitNameRaw(e&&e.name);
+}
+function ensureNameParts(e){ if(!e) return e; const np=nameParts(e); e.firstName=np.prenom; e.lastName=np.nom; return e; }
 // Journée « contrat » moyenne (pour valoriser une absence en heures quand rien n'était planifié).
 function dailyContractHours(contract, daysPerWeek){ return (contract>0) ? (+contract)/(daysPerWeek||5) : 0; }
 function rulePay(){ const d={mealType:'nature',t10End:39,t20End:43,daysPerWeek:5}; return Object.assign(d,(state.rules&&state.rules.pay)||{}); }
@@ -1825,6 +1876,7 @@ function load(){
   s=migrate(s); saveQuiet(s); return s;    // pas d'historique pendant l'init (state pas encore prêt)
 }
 function migrate(s){
+  if(Array.isArray(s.employees)) s.employees.forEach(ensureNameParts);   // prénom / nom séparés (déduits du nom complet pour les anciennes fiches)
   if(!s.weekStart) s.weekStart = isoDay(mondayOf(new Date()));
   if(!s.restaurant) s.restaurant='Mon Restaurant';
   // Ancien état sans profil → on adopte le profil Restaurant (rétrocompatibilité)
@@ -2714,7 +2766,7 @@ function openEmpModal(emp){
   if(emp){
     document.getElementById('empModalTitle').textContent='Modifier l’employé';
     document.getElementById('empId').value=emp.id;
-    document.getElementById('empName').value=emp.name;
+    { const np=nameParts(emp); document.getElementById('empFirstName').value=np.prenom; document.getElementById('empLastName').value=np.nom; }
     document.getElementById('empEmail').value=emp.email||'';
     document.getElementById('empPhone').value=emp.phone||'';
     document.getElementById('empRole').value=emp.role;
@@ -2728,7 +2780,7 @@ function openEmpModal(emp){
   } else {
     document.getElementById('empModalTitle').textContent='Ajouter un employé';
     document.getElementById('empId').value='';
-    ['empName','empEmail','empPhone','empRate','empHours'].forEach(id=>document.getElementById(id).value='');
+    ['empFirstName','empLastName','empEmail','empPhone','empRate','empHours'].forEach(id=>document.getElementById(id).value='');
     document.getElementById('empConges').value='25';
     ['empMatricule','empJobTitle','empStart','empEnd','empBaseSalary'].forEach(id=>document.getElementById(id).value=''); document.getElementById('empMutuelle').checked=false;
     document.getElementById('empRole').value='salle';
@@ -2764,7 +2816,9 @@ document.getElementById('empForm').addEventListener('submit', ev=>{
   const hoursUnit = document.getElementById('empHoursUnit').value==='mois' ? 'mois' : 'semaine';
   const contractType = document.getElementById('empType').value || 'Autre';
   const data={
-    name:document.getElementById('empName').value.trim(),
+    firstName:document.getElementById('empFirstName').value.trim(),
+    lastName:document.getElementById('empLastName').value.trim(),
+    name:fullName(document.getElementById('empFirstName').value, document.getElementById('empLastName').value),
     email:document.getElementById('empEmail').value.trim(),
     phone:document.getElementById('empPhone').value.trim(),
     role:document.getElementById('empRole').value,
@@ -3666,7 +3720,7 @@ function openWizard(){
 }
 function closeWizard(){ wizardModal.classList.add('hidden'); wizardModal.classList.remove('flex'); }
 // Sortie de l'assistant → revenir à l'écran d'accueil (au 1er lancement) au lieu de rester coincé
-function cancelWizard(){ closeWizard(); if(firstRun) showWelcome(); }
+function cancelWizard(){ closeWizard(); if(firstRun){ if(cloudSession && !cloudMembership) openCloud(); else showWelcome(); } }   // connecté sans établissement → retour au choix « créer / rejoindre »
 document.querySelectorAll('.closeWizard').forEach(b=>b.addEventListener('click', cancelWizard));
 wizardModal.addEventListener('click', e=>{ if(e.target===wizardModal) cancelWizard(); });   // clic sur le fond
 function resetWizCounts(){
@@ -3724,10 +3778,11 @@ function renderWizard(){
     body.innerHTML=`<div class="space-y-4 max-h-[46vh] overflow-y-auto pr-1">`+wizTeams().map(t=>{
       const n=wiz.counts[t.key]||0; if(!n) return '';
       const inputs=[];
-      for(let i=0;i<n;i++){ const v=(wiz.names[t.key]&&wiz.names[t.key][i])||'';
-        inputs.push(`<input type="text" data-nm="${t.key}" data-i="${i}" value="${v.replace(/"/g,'&quot;')}" placeholder="${t.label} ${i+1}" class="border border-slate-300 rounded-lg px-3 py-2 text-sm" />`); }
+      const q=x=>String(x||'').replace(/"/g,'&quot;');
+      for(let i=0;i<n;i++){ const v=(wiz.names[t.key]&&wiz.names[t.key][i])||{};
+        inputs.push(`<div class="grid grid-cols-2 gap-1.5"><input type="text" data-nm="${t.key}" data-i="${i}" data-part="first" value="${q(v.first)}" placeholder="Prénom" class="min-w-0 border border-slate-300 rounded-lg px-3 py-2 text-sm" /><input type="text" data-nm="${t.key}" data-i="${i}" data-part="last" value="${q(v.last)}" placeholder="Nom" class="min-w-0 border border-slate-300 rounded-lg px-3 py-2 text-sm" /></div>`); }
       return `<div><div class="flex items-center gap-2 mb-1.5"><span class="w-2.5 h-2.5 rounded-full" style="background:${t.color}"></span><span class="text-xs font-bold uppercase tracking-wide text-slate-500">${t.label} · ${n}</span></div>
-        <div class="grid grid-cols-2 sm:grid-cols-3 gap-2">${inputs.join('')}</div></div>`;
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">${inputs.join('')}</div></div>`;
     }).join('')+`</div>`;
   } else {
     const P=PROFILE_PRESETS[wiz.profile];
@@ -3757,7 +3812,7 @@ document.getElementById('wizBody').addEventListener('click',e=>{
 document.getElementById('wizBody').addEventListener('input',e=>{
   const inp=e.target.closest('[data-nm]'); if(!inp) return;
   const k=inp.dataset.nm, i=parseInt(inp.dataset.i,10);
-  (wiz.names[k]=wiz.names[k]||[])[i]=inp.value;
+  const arr=(wiz.names[k]=wiz.names[k]||[]); const o=(arr[i]=(arr[i]&&typeof arr[i]==='object')?arr[i]:{}); o[inp.dataset.part==='last'?'last':'first']=inp.value;
 });
 document.getElementById('wizBack').addEventListener('click',()=>{ if(wiz.step>1){ wiz.step--; renderWizard(); } else { cancelWizard(); } });
 document.getElementById('wizNext').addEventListener('click',()=>{
@@ -3775,8 +3830,10 @@ function finishWizard(){
   wizTeams().forEach(t=>{
     const n=wiz.counts[t.key]||0;
     for(let i=0;i<n;i++){
-      const nm=((wiz.names[t.key]&&wiz.names[t.key][i])||'').trim() || (t.label+' '+(i+1));
-      st.employees.push({ id:uid(), name:nm, role:t.key, contract:'35h', email:'', phone:'', rate:0 });
+      const wn=(wiz.names[t.key]&&wiz.names[t.key][i])||{}; const fn=String(wn.first||'').trim(), ln=String(wn.last||'').trim();
+      const nm=fullName(fn,ln) || (t.label+' '+(i+1));   // rien saisi → « Salle 1 », à renommer plus tard
+      const emp={ id:uid(), name:nm, role:t.key, contract:'35h', email:'', phone:'', rate:0 }; if(fn||ln){ emp.firstName=fn; emp.lastName=ln; }
+      st.employees.push(emp);
     }
   });
   state=st; migrate(state); syncGlobals(); firstRun=false; save();
@@ -4148,7 +4205,7 @@ function buildComptaExport(weeks){
   const synth=[head1, COMBO_COLS.slice()], evp=[['Nom','Prénom','Matricule','Code','Valeur','Date début','Date fin']], absRows=[['Nom','Prénom','Matricule','Code','Rang','Date début','Date fin','Valeur','Unité']];
   const emps = state.employees.filter(e=>!e.archived || state.shifts.some(s=>s.empId===e.id && weeks.includes(s.week)));
   emps.forEach(e=>{
-    const {prenom,nom}=splitName(e.name); const ch=contractHours(e); const monthly=ch!=null?ch*52/12:null;
+    const _np=nameParts(e); const prenom=_np.prenom, nom=String(_np.nom||'').toUpperCase(); const ch=contractHours(e); const monthly=ch!=null?ch*52/12:null;
     const row=COMBO_COLS.map(()=>''); const set=(name,v)=>{ const i=comboCol(name); if(i>=0 && v!==''&&v!=null) row[i]=v; };
     set('Nom',nom||prenom); set('Prénom',nom?prenom:''); set('Matricule',e.matricule||''); set('SIRET Établissement',state.siret||''); set('Contrat',e.contractType||'');
     set("Date d'entrée", e.startDate?frDate(e.startDate):''); set('Date de sortie', e.endDate?frDate(e.endDate):''); set('Poste', e.jobTitle||teamOf(e.role).label||''); set('Mutuelle', e.mutuelle?'Oui':'Non');
@@ -4247,7 +4304,7 @@ async function analyseComboFile(file){
     const name=`${titleCase(prenom)} ${titleCase(nom)}`.trim();
     const hebdo=numOr(g(r,'Heures contrat hebdo.'),null), mensuel=numOr(g(r,'Heures contrat mensuel'),0), base=numOr(g(r,'Salaire de base'),0), extraRate=numOr(g(r,'Salaire horaire brut (extra)'),0);
     const poste=String(g(r,'Poste')).trim(); const role=teamByLabel[normName(poste)]||null;
-    const fields={ name, matricule, contractType:String(g(r,'Contrat')).trim()||'', startDate:parseFrDate(g(r,"Date d'entrée")), endDate:parseFrDate(g(r,'Date de sortie')), jobTitle:poste, mutuelle:/^oui$/i.test(String(g(r,'Mutuelle')).trim()) };
+    const fields={ name, firstName:titleCase(prenom), lastName:titleCase(nom), matricule, contractType:String(g(r,'Contrat')).trim()||'', startDate:parseFrDate(g(r,"Date d'entrée")), endDate:parseFrDate(g(r,'Date de sortie')), jobTitle:poste, mutuelle:/^oui$/i.test(String(g(r,'Mutuelle')).trim()) };
     if(hebdo!=null && hebdo>0){ fields.hours=hebdo; fields.hoursUnit='semaine'; } if(base>0) fields.baseSalary=base;
     const rate = extraRate>0 ? extraRate : (base>0 && mensuel>0 ? Math.round(base/mensuel*100)/100 : 0); if(rate>0) fields.rate=rate;
     if(role) fields.role=role;
@@ -4361,7 +4418,7 @@ try { if(window.supabase && window.OPLAA_SUPABASE){ sb = window.supabase.createC
 
 const cloudModal = document.getElementById('cloudModal');
 function showCloudState(state){
-  ['cloudLoading','cloudAuth','cloudOnboard','cloudMember'].forEach(id=>{ document.getElementById(id).hidden = (id!==state); });
+  ['cloudLoading','cloudAuth','cloudCode','cloudOnboard','cloudMember','cloudRecover'].forEach(id=>{ document.getElementById(id).hidden = (id!==state); });
 }
 function cloudMsg(id, text, ok){
   const el=document.getElementById(id); if(!el) return;
@@ -4403,13 +4460,10 @@ async function refreshCloud(){
   catch(e){ showCloudState('cloudAuth'); cloudMsg('cloudAuthMsg','Connexion impossible (réseau). Réessaie.', false); return; }
   cloudSession = session;
   updateCloudMenuLabel();
-  if(!session){
-    const intro=document.getElementById('cloudAuthIntro');
-    if(intro) intro.textContent = _welcomeIntent==='patron' ? 'Crée ton compte (ou connecte-toi) : ton établissement sera sauvegardé et partageable avec ton équipe.'
-      : _welcomeIntent==='employe' ? 'Crée ton compte (ou connecte-toi), puis entre le code reçu de ton patron.'
-      : 'Connecte-toi pour retrouver ton établissement, ou crée ton compte.';
-    showCloudState('cloudAuth'); return;
-  }
+  if(_pwRecovery && session){ showRecover(null); return; }               // arrivé par le lien de l'e-mail → nouveau mot de passe d'abord
+  if(_pwCodeEmail && !session){ showRecover(_pwCodeEmail); return; }      // code demandé, pas encore saisi → on reste sur l'écran dédié
+  if(_signupEmail && !session){ showSignupCode(_signupEmail); return; }   // compte créé, code de confirmation en attente
+  if(!session){ setAuthMode(_authMode); showCloudState('cloudAuth'); return; }
   await loadMembership();
   if(cloudMembership){
     document.getElementById('cloudMemEmail').textContent = session.user.email;
@@ -4436,9 +4490,6 @@ async function refreshCloud(){
   } else if(cloudMembership && firstRun && !_welcomeIntent){
     // Démarrage avec une session déjà ouverte sur un appareil vierge : les données viennent d'être récupérées → planning
     firstRun=false; hideWelcome();
-  } else if(_welcomeIntent==='patron' && !cloudMembership){
-    // Patron connecté sans établissement → assistant de création (l'établissement sera créé dans le cloud à la fin)
-    _welcomeIntent=null; closeCloud(); openWizard();
   }
   _membersCache=null; if(typeof renderManageBanner==='function') renderManageBanner();
   if(typeof renderProBox==='function') renderProBox();
@@ -4515,10 +4566,15 @@ async function pushToCloud(){
   try{
     const estUpd = await sb.from('establishments').update({ name:state.restaurant, teams:state.teams, periods:state.periods, compliance:state.complianceItems, team_word:state.teamWord, accent:state.accent, logo:state.logo||null, emp_scope:state.empScope, profile:state.profile, siret:state.siret||null, rules:state.rules||{} }).eq('id', est);
     if(estUpd.error) return {error:'Réglages non synchronisés : '+estUpd.error.message};
-    const emps = state.employees.map(e=>{ const o={ establishment_id:est, local_id:e.id, name:e.name, role:e.role||'', contract:String(e.contract||''), phone:e.phone||'', email:e.email||'', archived:!!e.archived, compliance:e.compliance||{}, conges_allowance:(e.congesAllowance!=null?e.congesAllowance:25), hours:(e.hours!=null&&e.hours!==''&&!isNaN(parseFloat(e.hours))?parseFloat(e.hours):null), hours_unit:(e.hoursUnit==='mois'?'mois':'semaine'), contract_type:e.contractType||null, matricule:e.matricule||null, job_title:e.jobTitle||null, start_date:e.startDate||null, end_date:e.endDate||null, mutuelle:!!e.mutuelle };
+    const emps = state.employees.map(e=>{ const o={ establishment_id:est, local_id:e.id, name:e.name, role:e.role||'', contract:String(e.contract||''), phone:e.phone||'', email:e.email||'', archived:!!e.archived, compliance:e.compliance||{}, conges_allowance:(e.congesAllowance!=null?e.congesAllowance:25), hours:(e.hours!=null&&e.hours!==''&&!isNaN(parseFloat(e.hours))?parseFloat(e.hours):null), hours_unit:(e.hoursUnit==='mois'?'mois':'semaine'), contract_type:e.contractType||null, matricule:e.matricule||null, job_title:e.jobTitle||null, start_date:e.startDate||null, end_date:e.endDate||null, mutuelle:!!e.mutuelle, first_name:(nameParts(e).prenom||null), last_name:(nameParts(e).nom||null) };
       if(canSeeSalaries()){ o.rate=e.rate||0; o.base_salary=e.baseSalary||0; }   // un manager n'envoie JAMAIS le taux → ne peut pas écraser les salaires
       return o; });
-    if(emps.length){ const {error}=await sb.from('employees').upsert(emps,{onConflict:'establishment_id,local_id'}); if(error) return {error:error.message}; }
+    if(emps.length){
+      let {error}=await sb.from('employees').upsert(emps,{onConflict:'establishment_id,local_id'});
+      // Base pas encore migrée (colonnes prénom/nom absentes) → on renvoie sans ces deux champs plutôt que de bloquer la synchro
+      if(error && /first_name|last_name/.test(error.message||'')){ emps.forEach(o=>{ delete o.first_name; delete o.last_name; }); ({error}=await sb.from('employees').upsert(emps,{onConflict:'establishment_id,local_id'})); }
+      if(error) return {error:error.message};
+    }
     const { data:remEmps } = await sb.from('employees').select('id,local_id').eq('establishment_id', est);
     const map={}; (remEmps||[]).forEach(r=>{ if(r.local_id) map[r.local_id]=r.id; });
     const shifts = state.shifts.map(s=>({ establishment_id:est, local_id:s.id, employee_id: s.empId?(map[s.empId]||null):null, extra_name:s.extraName||null, week:s.week, day:s.day, team:s.team, period:s.period, start_t:s.start, end_t:s.end, real_start:s.realStart||null, real_end:s.realEnd||null, breaks:s.breaks||[], note:s.note||null }));
@@ -4578,7 +4634,7 @@ async function pullForOwner(){
     // Manager : on ne récupère PAS la colonne « rate » (taux) → les salaires ne quittent pas le serveur
     const empCols = canSeeSalaries() ? '*' : 'id,local_id,name,role,contract,phone,email,archived,compliance,conges_allowance,hours,hours_unit,contract_type,matricule,job_title,start_date,end_date,mutuelle';
     const { data:emps } = await sb.from('employees').select(empCols).eq('establishment_id', est);
-    state.employees = (emps||[]).map(r=>{ const lid=r.local_id||r.id; remoteToLocal[r.id]=lid; return { id:lid, name:r.name, role:r.role||'', contract:r.contract||'', rate:r.rate||0, phone:r.phone||'', email:r.email||'', archived:!!r.archived, compliance:Object.assign(emptyCompliance(), r.compliance||{}), congesAllowance:(r.conges_allowance!=null?r.conges_allowance:25), hours:(r.hours!=null?r.hours:undefined), hoursUnit:(r.hours_unit==='mois'?'mois':'semaine'), contractType:r.contract_type||'', matricule:r.matricule||'', jobTitle:r.job_title||'', startDate:r.start_date||'', endDate:r.end_date||'', mutuelle:!!r.mutuelle, baseSalary:(r.base_salary!=null?r.base_salary:0) }; });
+    state.employees = (emps||[]).map(r=>{ const lid=r.local_id||r.id; remoteToLocal[r.id]=lid; return ensureNameParts({ id:lid, name:r.name, firstName:r.first_name||'', lastName:r.last_name||'', role:r.role||'', contract:r.contract||'', rate:r.rate||0, phone:r.phone||'', email:r.email||'', archived:!!r.archived, compliance:Object.assign(emptyCompliance(), r.compliance||{}), congesAllowance:(r.conges_allowance!=null?r.conges_allowance:25), hours:(r.hours!=null?r.hours:undefined), hoursUnit:(r.hours_unit==='mois'?'mois':'semaine'), contractType:r.contract_type||'', matricule:r.matricule||'', jobTitle:r.job_title||'', startDate:r.start_date||'', endDate:r.end_date||'', mutuelle:!!r.mutuelle, baseSalary:(r.base_salary!=null?r.base_salary:0) }); });
     const { data:shifts } = await sb.from('shifts').select('*').eq('establishment_id', est);
     state.shifts = (shifts||[]).map(s=>({ id:s.local_id||s.id, week:s.week, day:s.day, team:s.team, period:s.period, start:s.start_t, end:s.end_t, empId: s.employee_id?(remoteToLocal[s.employee_id]||''):'', extraName:s.extra_name||'', realStart:s.real_start||'', realEnd:s.real_end||'', breaks:Array.isArray(s.breaks)?s.breaks:[], note:s.note||'' }));
     _knownShiftLocalIds = new Set((shifts||[]).map(s=>s.local_id||s.id));   // ce qu'on a VU du cloud (co-édition)
@@ -4800,27 +4856,145 @@ const _btnHome=document.getElementById('btnHome'); if(_btnHome) _btnHome.addEven
 });
 
 function openCloud(){ cloudModal.classList.remove('hidden'); cloudModal.classList.add('flex'); refreshCloud(); }
-function closeCloud(){ cloudModal.classList.add('hidden'); cloudModal.classList.remove('flex'); if(firstRun && !cloudSession){ _welcomeIntent=null; showWelcome(); } }   // onboarding employé fermé sans connexion → retour accueil
+function closeCloud(noWelcome){ cloudModal.classList.add('hidden'); cloudModal.classList.remove('flex'); if(noWelcome!==true && firstRun && !cloudMembership){ _welcomeIntent=null; showWelcome(); } }   // onboarding employé fermé sans connexion → retour accueil
 document.getElementById('btnCloud').addEventListener('click', ()=>{ dataMenu.classList.add('hidden'); openCloud(); });
 document.querySelectorAll('.closeCloud').forEach(b=>b.addEventListener('click',closeCloud));
 cloudModal.addEventListener('click',e=>{ if(e.target===cloudModal) closeCloud(); });
 
+// ── Fenêtre compte : un seul bouton principal selon le mode (création ou connexion)
+let _authMode = 'login';     // 'signup' | 'login'
+let _signupEmail = null;     // compte créé pour cette adresse, code de confirmation en attente
+function setAuthMode(mode){
+  _authMode = (mode==='signup') ? 'signup' : 'login';
+  const up = _authMode==='signup';
+  document.getElementById('cloudAuthIntro').textContent = up
+    ? 'Crée ton compte en une minute. Tu recevras un code par e-mail pour le confirmer.'
+    : 'Connecte-toi pour retrouver ton établissement.';
+  document.getElementById('cloudSignUp').hidden = !up;
+  document.getElementById('cloudSignIn').hidden = up;
+  document.getElementById('cloudForgotRow').hidden = up;
+  document.getElementById('cloudAuthSwitch').textContent = up ? 'J’ai déjà un compte — me connecter' : 'Pas encore de compte ? Créer mon compte';
+  document.getElementById('cloudPassword').setAttribute('autocomplete', up ? 'new-password' : 'current-password');
+  document.getElementById('cloudPassword').setAttribute('placeholder', up ? '6 caractères minimum' : '••••••••');
+}
+document.getElementById('cloudAuthSwitch').addEventListener('click', ()=>{ document.getElementById('cloudAuthMsg').classList.add('hidden'); setAuthMode(_authMode==='signup' ? 'login' : 'signup'); });
+function showSignupCode(email){
+  document.getElementById('cloudCodeIntro').innerHTML = 'Un <b>code à 6 chiffres</b> vient d’être envoyé à <b>'+escapeHtml(email)+'</b> (regarde aussi les indésirables). Saisis-le pour activer ton compte.';
+  document.getElementById('cloudCodeMsg').classList.add('hidden');
+  showCloudState('cloudCode');
+  setTimeout(()=>{ const f=document.getElementById('cloudSignupCode'); if(f) f.focus(); }, 150);
+}
 document.getElementById('cloudSignIn').addEventListener('click', async ()=>{
   const email=document.getElementById('cloudEmail').value.trim(), pw=document.getElementById('cloudPassword').value;
   if(!email||!pw){ cloudMsg('cloudAuthMsg','Entre ton email et ton mot de passe.', false); return; }
   cloudMsg('cloudAuthMsg','Connexion…', true);
   const { error } = await sb.auth.signInWithPassword({ email, password:pw });
-  if(error){ cloudMsg('cloudAuthMsg', traduireErreur(error.message), false); return; }
+  if(error){
+    if(/not confirmed/i.test(error.message||'')){
+      // Compte créé mais jamais confirmé → on renvoie un code et on passe à l'écran de saisie
+      try{ await sb.auth.resend({ type:'signup', email }); }catch(e){}
+      _signupEmail = email; showSignupCode(email); return;
+    }
+    cloudMsg('cloudAuthMsg', traduireErreur(error.message), false); return;
+  }
   toast('Connecté ✓'); refreshCloud();
 });
+document.getElementById('cloudCodeOk').addEventListener('click', async ()=>{
+  const code=document.getElementById('cloudSignupCode').value.replace(/\s+/g,'');
+  if(!code){ cloudMsg('cloudCodeMsg','Entre le code reçu par e-mail.', false); return; }
+  cloudMsg('cloudCodeMsg','Vérification…', true);
+  const { error } = await sb.auth.verifyOtp({ email:_signupEmail, token:code, type:'signup' });
+  if(error){ cloudMsg('cloudCodeMsg', /expired|invalid/i.test(error.message||'') ? 'Code incorrect ou expiré. Vérifie les chiffres ou clique sur « Renvoyer le code ».' : traduireErreur(error.message), false); return; }
+  _signupEmail=null; document.getElementById('cloudSignupCode').value=''; document.getElementById('cloudPassword').value='';
+  toast('Compte confirmé ✓'); refreshCloud();
+});
+document.getElementById('cloudCodeResend').addEventListener('click', async ()=>{
+  if(!_signupEmail) return;
+  cloudMsg('cloudCodeMsg','Envoi d’un nouveau code…', true);
+  const { error } = await sb.auth.resend({ type:'signup', email:_signupEmail });
+  cloudMsg('cloudCodeMsg', error ? traduireErreur(error.message) : 'Nouveau code envoyé. Seul le dernier code reçu est valable.', !error);
+});
+document.getElementById('cloudCodeBack').addEventListener('click', ()=>{ _signupEmail=null; document.getElementById('cloudSignupCode').value=''; setAuthMode('signup'); refreshCloud(); });
+// ── Mot de passe oublié : e-mail de réinitialisation (Supabase) puis, au retour par le lien, nouveau mot de passe
+// Deux chemins vers le même écran :
+//  • dans l'app : « Mot de passe oublié ? » → e-mail avec un CODE → saisie du code + nouveau mot de passe (sans quitter l'app)
+//  • depuis l'e-mail : le bouton/lien ouvre oplaa.pro déjà authentifié → nouveau mot de passe seulement
+let _pwRecovery = false;      // arrivé par le lien de l'e-mail (session de récupération ouverte)
+let _pwCodeEmail = null;      // code demandé pour cette adresse, en attente de saisie
+function showRecover(email){
+  const withCode = !!email;
+  document.getElementById('cloudCodeBox').hidden = !withCode;
+  document.getElementById('cloudRecoverIntro').innerHTML = withCode
+    ? 'Un <b>code à 6 chiffres</b> vient d’être envoyé à <b>'+escapeHtml(email)+'</b> (regarde aussi les indésirables). Saisis-le ci-dessous avec ton nouveau mot de passe.'
+    : 'Choisis ton <b>nouveau mot de passe</b> (6 caractères minimum).';
+  cloudMsg('cloudRecoverMsg','', true); document.getElementById('cloudRecoverMsg').classList.add('hidden');
+  showCloudState('cloudRecover');
+  setTimeout(()=>{ const f=document.getElementById(withCode?'cloudRecoverCode':'cloudNewPassword'); if(f) f.focus(); }, 150);
+}
+async function sendRecoveryCode(email){
+  const { error } = await sb.auth.resetPasswordForEmail(email, { redirectTo: 'https://oplaa.pro/' });
+  return error ? traduireErreur(error.message) : null;
+}
+document.getElementById('cloudForgot').addEventListener('click', async ()=>{
+  const email=document.getElementById('cloudEmail').value.trim();
+  if(!email){ cloudMsg('cloudAuthMsg','Entre ton email ci-dessus, puis clique sur « Mot de passe oublié ? ».', false); document.getElementById('cloudEmail').focus(); return; }
+  cloudMsg('cloudAuthMsg','Envoi du code…', true);
+  const err = await sendRecoveryCode(email);
+  if(err){ cloudMsg('cloudAuthMsg', err, false); return; }
+  _pwCodeEmail = email; showRecover(email);
+});
+document.getElementById('cloudResendCode').addEventListener('click', async ()=>{
+  if(!_pwCodeEmail) return;
+  cloudMsg('cloudRecoverMsg','Envoi d’un nouveau code…', true);
+  const err = await sendRecoveryCode(_pwCodeEmail);
+  cloudMsg('cloudRecoverMsg', err || 'Nouveau code envoyé. Seul le dernier code reçu est valable.', !err);
+});
+document.getElementById('cloudRecoverCancel').addEventListener('click', async ()=>{
+  const viaLink = _pwRecovery; _pwRecovery=false; _pwCodeEmail=null;
+  ['cloudRecoverCode','cloudNewPassword','cloudNewPassword2'].forEach(id=>{ document.getElementById(id).value=''; });
+  if(viaLink){ try{ await sb.auth.signOut(); }catch(e){} try{ history.replaceState(null,'',location.pathname); }catch(e){} }
+  refreshCloud();
+});
+document.getElementById('cloudSetPassword').addEventListener('click', async ()=>{
+  const p1=document.getElementById('cloudNewPassword').value, p2=document.getElementById('cloudNewPassword2').value;
+  const code=document.getElementById('cloudRecoverCode').value.replace(/\s+/g,'');
+  if(_pwCodeEmail && !code){ cloudMsg('cloudRecoverMsg','Entre le code reçu par e-mail.', false); return; }
+  if(p1.length<6){ cloudMsg('cloudRecoverMsg','Mot de passe : 6 caractères minimum.', false); return; }
+  if(p1!==p2){ cloudMsg('cloudRecoverMsg','Les deux mots de passe ne sont pas identiques.', false); return; }
+  cloudMsg('cloudRecoverMsg','Vérification…', true);
+  if(_pwCodeEmail){
+    // Le code ouvre une session de récupération pour cette adresse
+    const { error:e1 } = await sb.auth.verifyOtp({ email:_pwCodeEmail, token:code, type:'recovery' });
+    if(e1){ cloudMsg('cloudRecoverMsg', /expired|invalid/i.test(e1.message||'') ? 'Code incorrect ou expiré. Vérifie les chiffres ou clique sur « Renvoyer le code ».' : traduireErreur(e1.message), false); return; }
+  }
+  const { error } = await sb.auth.updateUser({ password: p1 });
+  if(error){ cloudMsg('cloudRecoverMsg', /different from the old|same password/i.test(error.message||'') ? 'Choisis un mot de passe différent de l’ancien.' : traduireErreur(error.message), false); return; }
+  _pwRecovery=false; _pwCodeEmail=null;
+  ['cloudRecoverCode','cloudNewPassword','cloudNewPassword2'].forEach(id=>{ document.getElementById(id).value=''; });
+  try{ history.replaceState(null, '', location.pathname); }catch(e){}
+  toast('Mot de passe modifié ✓ Tu es connecté.'); _welcomeIntent='login'; refreshCloud();
+});
+if(sb){
+  // Arrivée par le lien de l'e-mail : supabase-js ouvre la session et émet PASSWORD_RECOVERY
+  try{ sb.auth.onAuthStateChange((event)=>{ if(event==='PASSWORD_RECOVERY'){ _pwRecovery=true; hideWelcome(); openCloud(); } }); }catch(e){}
+  // Secours si l'évènement est émis avant notre abonnement : le lien contient type=recovery → on ouvre la modale nous-mêmes
+  if(/type=recovery/.test(location.hash||'') || /type=recovery/.test(location.search||'')){ _pwRecovery=true; setTimeout(()=>{ hideWelcome(); openCloud(); }, 900); }
+}
 document.getElementById('cloudSignUp').addEventListener('click', async ()=>{
   const email=document.getElementById('cloudEmail').value.trim(), pw=document.getElementById('cloudPassword').value;
   if(!email||pw.length<6){ cloudMsg('cloudAuthMsg','Email valide + mot de passe (6 caractères min).', false); return; }
   cloudMsg('cloudAuthMsg','Création du compte…', true);
   const { data, error } = await sb.auth.signUp({ email, password:pw });
-  if(error){ cloudMsg('cloudAuthMsg', traduireErreur(error.message), false); return; }
-  if(data.session){ toast('Compte créé ✓'); refreshCloud(); }
-  else { cloudMsg('cloudAuthMsg','Compte créé ! Vérifie ta boîte mail pour confirmer, puis connecte-toi.', true); }
+  if(error){
+    if(/already/i.test(error.message||'')){ setAuthMode('login'); cloudMsg('cloudAuthMsg','Un compte existe déjà avec cet e-mail. Connecte-toi (ou « Mot de passe oublié ? »).', false); return; }
+    cloudMsg('cloudAuthMsg', traduireErreur(error.message), false); return;
+  }
+  // Une adresse = un seul compte : si elle est déjà utilisée, Supabase renvoie un utilisateur sans identité
+  if(data && data.user && Array.isArray(data.user.identities) && data.user.identities.length===0){
+    setAuthMode('login'); cloudMsg('cloudAuthMsg','Un compte existe déjà avec cet e-mail. Connecte-toi (ou « Mot de passe oublié ? »).', false); return;
+  }
+  if(data.session){ toast('Compte créé ✓'); refreshCloud(); return; }
+  _signupEmail = email; showSignupCode(email);
 });
 async function cloudSignOut(){ if(typeof stopRealtime==='function') stopRealtime(); await sb.auth.signOut(); cloudSession=null; cloudMembership=null; updateCloudMenuLabel(); refreshCloud(); toast('Déconnecté'); }
 document.getElementById('cloudSignOut').addEventListener('click', cloudSignOut);
@@ -4843,7 +5017,7 @@ document.getElementById('cloudDeleteAcc2').addEventListener('click', cloudDelete
 
 document.getElementById('cloudCreateEst').addEventListener('click', async ()=>{
   // Appareil vierge (1er lancement) → l'assistant de configuration crée l'établissement dans le cloud à la fin
-  if(firstRun || (!state.employees.length && !state.shifts.length)){ closeCloud(); openWizard(); return; }
+  if(firstRun || (!state.employees.length && !state.shifts.length)){ _welcomeIntent=null; closeCloud(true); openWizard(); return; }
   // Sinon (données locales déjà présentes, ex. ancien utilisateur) : on crée l'établissement avec le nom existant
   // On demande le nom seulement s'il n'existe pas déjà (évite « Mon établissement » par défaut)
   let nom = (state.restaurant && state.restaurant.trim() && state.restaurant.trim()!=='Mon établissement') ? state.restaurant.trim() : '';
@@ -4882,7 +5056,7 @@ function traduireErreur(m){
   return m || 'Une erreur est survenue.';
 }
 // Au démarrage : session existante → rattachement, récupération si l'appareil est vierge, temps réel, envoi auto
-if(sb){ refreshCloud(); }
+if(sb){ refreshCloud().then(()=>{ if(cloudSession && !cloudMembership && firstRun && !_pwRecovery){ hideWelcome(); cloudModal.classList.remove('hidden'); cloudModal.classList.add('flex'); } }); }
 
 /* ============ INIT ============ */
 function renderAll(){ renderTeamFilter(); renderGrid(); renderTeam(); renderSuivi(); }
@@ -4893,13 +5067,12 @@ setView('planning'); setMode(state.viewMode||'semaine'); setScope('semaine'); te
 // Écran d'accueil au 1er lancement : choisir patron ou employé
 function showWelcome(){ document.getElementById('welcome').classList.add('show'); }
 function hideWelcome(){ document.getElementById('welcome').classList.remove('show'); }
-// Compte obligatoire (depuis la 1.0.9) : créer ou rejoindre un établissement passe d'abord par la connexion.
-// _welcomeIntent mémorise d'où vient l'utilisateur : 'patron' → assistant de création après connexion,
-// 'employe' → saisie du code, 'login' → simple récupération. La démo reste accessible sans compte.
+// Compte obligatoire : un seul chemin. Accueil → créer un compte ou se connecter → (code de confirmation) →
+// établissement existant : planning ; sinon une question : créer mon établissement ou rejoindre avec un code.
+// _welcomeIntent indique qu'on vient de l'accueil : la modale se referme dès que l'établissement est connu.
 let _welcomeIntent=null;
-function welcomeGo(intent){ _welcomeIntent=intent; hideWelcome(); openCloud(); setTimeout(()=>{ const e=document.getElementById('cloudEmail'); if(e && !e.value && !e.closest('[hidden]')) e.focus(); }, 300); }
-document.getElementById('welcomePatron').addEventListener('click', ()=>welcomeGo('patron'));
-document.getElementById('welcomeEmploye').addEventListener('click', ()=>welcomeGo('employe'));
+function welcomeGo(intent){ _welcomeIntent=intent; _authMode=(intent==='signup')?'signup':'login'; hideWelcome(); openCloud(); setTimeout(()=>{ const e=document.getElementById('cloudEmail'); if(e && !e.value && !e.closest('[hidden]')) e.focus(); }, 300); }
+document.getElementById('welcomeSignup').addEventListener('click', ()=>welcomeGo('signup'));
 document.getElementById('welcomeLogin').addEventListener('click', ()=>welcomeGo('login'));
 // « Voir une démo » : visible partout (web ET app iOS) — permet notamment à la vérification Apple de tester l'app sans compte
 const _isNativeApp = !!(window.Capacitor && (typeof window.Capacitor.isNativePlatform==='function' ? window.Capacitor.isNativePlatform() : window.Capacitor.isNative));
