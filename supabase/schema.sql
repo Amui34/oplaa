@@ -171,6 +171,8 @@ alter table employees add column if not exists contract_type    text;
 -- Paie / export comptable (2026-11-02) : identité paie des employés, SIRET + règles de l'établissement,
 -- heures d'une absence (types « paie » en heures), partagés entre admins/managers.
 alter table employees add column if not exists matricule   text;
+alter table employees add column if not exists first_name  text;   -- prénom (le nom complet reste dans `name`)
+alter table employees add column if not exists last_name   text;   -- nom de famille
 alter table employees add column if not exists job_title   text;
 alter table employees add column if not exists start_date  date;
 alter table employees add column if not exists end_date    date;

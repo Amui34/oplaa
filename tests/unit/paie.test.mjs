@@ -1,7 +1,7 @@
 // Tests unitaires — moteur de paie HCR (paliers d'heures sup, complémentaires, noms).
 import { describe, it, expect } from 'vitest';
 import core from '../extract-core.mjs';
-const { hcrTiers, payWeekSplit, payContractSup, payPeriod, splitName, dailyContractHours } = core;
+const { hcrTiers, payWeekSplit, payContractSup, payPeriod, splitName, dailyContractHours, fullName, splitNameRaw, nameParts, ensureNameParts } = core;
 const close = (a, b) => expect(Math.abs(a - b)).toBeLessThan(1e-9);
 
 describe('paliers HCR (temps plein)', () => {
@@ -51,4 +51,18 @@ describe('nom / prénom', () => {
   it('« DURAND Camille » (nom en capitales d’abord) → idem', () => { expect(splitName('DURAND Camille')).toEqual({ prenom: 'Camille', nom: 'DURAND' }); });
   it('nom composé', () => { expect(splitName('Jean-Pierre de la Tour')).toEqual({ prenom: 'Jean-Pierre', nom: 'DE LA TOUR' }); });
   it('un seul mot → prénom', () => { expect(splitName('Léo')).toEqual({ prenom: 'Léo', nom: '' }); });
+});
+
+describe('fiche employé : prénom et nom séparés', () => {
+  it('nom complet = prénom + nom', () => { expect(fullName(' Camille ', 'Durand')).toBe('Camille Durand'); expect(fullName('Léo', '')).toBe('Léo'); });
+  it('ancienne fiche (nom complet seul) → prénom / nom déduits, casse conservée', () => {
+    expect(ensureNameParts({ name: 'Jean-Pierre de la Tour' })).toMatchObject({ firstName: 'Jean-Pierre', lastName: 'de la Tour' });
+    expect(splitNameRaw('DURAND Camille')).toEqual({ prenom: 'Camille', nom: 'DURAND' });
+  });
+  it('champs dédiés prioritaires quand ils sont cohérents avec le nom complet (prénom composé)', () => {
+    expect(nameParts({ name: 'Marie Anne Dupont', firstName: 'Marie Anne', lastName: 'Dupont' })).toEqual({ prenom: 'Marie Anne', nom: 'Dupont' });
+  });
+  it('fiche renommée par une ancienne version (champs périmés) → on se fie au nom complet', () => {
+    expect(nameParts({ name: 'Zoé Martin', firstName: 'Camille', lastName: 'Durand' })).toEqual({ prenom: 'Zoé', nom: 'Martin' });
+  });
 });

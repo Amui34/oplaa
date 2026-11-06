@@ -300,3 +300,20 @@ test('export comptable : 3 feuilles au format Combo (72 colonnes, TOTAL en formu
   expect(r.absHead).toBe(9);
   expect(r.buttons).toBe(true);
 });
+
+test('équipe : une fiche employé se saisit avec prénom et nom séparés', async ({ page }) => {
+  await page.locator('#welcomeDemo').click();
+  // Les fiches existantes sont découpées automatiquement
+  const parts = await page.evaluate(() => { const e = state.employees.find(x => x.name === 'Camille Durand'); return [e.firstName, e.lastName]; });
+  expect(parts).toEqual(['Camille', 'Durand']);
+  // Nouvelle fiche : deux champs, le nom complet affiché est « Prénom Nom »
+  await page.locator('.tab-btn[data-view="equipe"]').click();
+  await page.locator('#addEmpHeaderBtn').click();
+  await expect(page.locator('#empFirstName')).toBeVisible();
+  await page.locator('#empFirstName').fill('Marie Anne');
+  await page.locator('#empLastName').fill('Dupont');
+  await page.locator('#empForm button[type="submit"]').click();
+  const saved = await page.evaluate(() => { const e = state.employees.find(x => x.lastName === 'Dupont'); return e && [e.name, e.firstName, e.lastName]; });
+  expect(saved).toEqual(['Marie Anne Dupont', 'Marie Anne', 'Dupont']);
+  await expect(page.getByText('Marie Anne Dupont').first()).toBeAttached();
+});

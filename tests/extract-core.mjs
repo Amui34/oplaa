@@ -11,10 +11,11 @@ export const CORE_FUNCTIONS = [
   'parseLocalDate','mondayOf','isoDay','addDays','toMin','addMin','hoursBetween',
   'breakMinutes','shiftHours','realHours','shiftSpan','coversLunch',
   'easterDate','frHolidays','isHoliday',
+  'fullName','ensureNameParts',
 ];
 
 // Fonctions pures MULTI-LIGNES (moteur de paie) : extraites de `function nom(` jusqu'à la première ligne `}` en colonne 0.
-export const CORE_BLOCKS = ['hcrTiers','payWeekSplit','payContractSup','payPeriod','splitName','dailyContractHours'];
+export const CORE_BLOCKS = ['hcrTiers','payWeekSplit','payContractSup','payPeriod','splitName','dailyContractHours','splitNameRaw','nameParts'];
 
 let src = '';
 for (const name of CORE_FUNCTIONS) {

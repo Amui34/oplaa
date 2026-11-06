@@ -612,9 +612,15 @@
     </div>
     <form id="empForm" class="space-y-3">
       <input type="hidden" id="empId" />
-      <div>
-        <label class="text-sm font-semibold text-slate-600">Nom complet</label>
-        <input type="text" id="empName" required placeholder="Ex : Camille Durand" class="mt-1 w-full border border-slate-300 rounded-lg px-3 py-2" />
+      <div class="grid grid-cols-2 gap-3">
+        <div>
+          <label class="text-sm font-semibold text-slate-600">Prénom</label>
+          <input type="text" id="empFirstName" required autocomplete="off" placeholder="Camille" class="mt-1 w-full border border-slate-300 rounded-lg px-3 py-2" />
+        </div>
+        <div>
+          <label class="text-sm font-semibold text-slate-600">Nom</label>
+          <input type="text" id="empLastName" required autocomplete="off" placeholder="Durand" class="mt-1 w-full border border-slate-300 rounded-lg px-3 py-2" />
+        </div>
       </div>
       <div class="grid grid-cols-2 gap-3">
         <div>
@@ -1624,6 +1630,22 @@ function splitName(full){
   if(isUpper(parts[0]) && !isUpper(parts[parts.length-1])) return {prenom:parts.slice(1).join(' '), nom:parts[0]};
   return {prenom:parts[0], nom:parts.slice(1).join(' ').toUpperCase()};
 }
+// Prénom / nom séparés sur la fiche employé. `name` reste le nom complet affiché partout (« Prénom Nom »).
+function fullName(first,last){ return [String(first||'').trim(), String(last||'').trim()].filter(Boolean).join(' '); }
+function splitNameRaw(full){   // comme splitName, sans mettre le nom en capitales (pour préremplir la fiche)
+  const parts=String(full||'').trim().split(/\s+/).filter(Boolean); if(!parts.length) return {prenom:'',nom:''};
+  if(parts.length===1) return {prenom:parts[0],nom:''};
+  const isUpper=w=>w.length>1 && w===w.toUpperCase() && /[A-ZÀ-Ý]/.test(w);
+  if(isUpper(parts[0]) && !isUpper(parts[parts.length-1])) return {prenom:parts.slice(1).join(' '), nom:parts[0]};
+  return {prenom:parts[0], nom:parts.slice(1).join(' ')};
+}
+// Prénom/nom d'un employé : les champs dédiés s'ils sont cohérents avec le nom complet, sinon découpage du nom complet
+// (anciennes fiches, ou fiche renommée depuis une ancienne version de l'app qui ne connaît que `name`).
+function nameParts(e){
+  if(e && (e.firstName||e.lastName) && fullName(e.firstName,e.lastName)===String(e.name||'').trim()) return {prenom:e.firstName||'', nom:e.lastName||''};
+  return splitNameRaw(e&&e.name);
+}
+function ensureNameParts(e){ if(!e) return e; const np=nameParts(e); e.firstName=np.prenom; e.lastName=np.nom; return e; }
 // Journée « contrat » moyenne (pour valoriser une absence en heures quand rien n'était planifié).
 function dailyContractHours(contract, daysPerWeek){ return (contract>0) ? (+contract)/(daysPerWeek||5) : 0; }
 function rulePay(){ const d={mealType:'nature',t10End:39,t20End:43,daysPerWeek:5}; return Object.assign(d,(state.rules&&state.rules.pay)||{}); }
@@ -1854,6 +1876,7 @@ function load(){
   s=migrate(s); saveQuiet(s); return s;    // pas d'historique pendant l'init (state pas encore prêt)
 }
 function migrate(s){
+  if(Array.isArray(s.employees)) s.employees.forEach(ensureNameParts);   // prénom / nom séparés (déduits du nom complet pour les anciennes fiches)
   if(!s.weekStart) s.weekStart = isoDay(mondayOf(new Date()));
   if(!s.restaurant) s.restaurant='Mon Restaurant';
   // Ancien état sans profil → on adopte le profil Restaurant (rétrocompatibilité)
@@ -2743,7 +2766,7 @@ function openEmpModal(emp){
   if(emp){
     document.getElementById('empModalTitle').textContent='Modifier l’employé';
     document.getElementById('empId').value=emp.id;
-    document.getElementById('empName').value=emp.name;
+    { const np=nameParts(emp); document.getElementById('empFirstName').value=np.prenom; document.getElementById('empLastName').value=np.nom; }
     document.getElementById('empEmail').value=emp.email||'';
     document.getElementById('empPhone').value=emp.phone||'';
     document.getElementById('empRole').value=emp.role;
@@ -2757,7 +2780,7 @@ function openEmpModal(emp){
   } else {
     document.getElementById('empModalTitle').textContent='Ajouter un employé';
     document.getElementById('empId').value='';
-    ['empName','empEmail','empPhone','empRate','empHours'].forEach(id=>document.getElementById(id).value='');
+    ['empFirstName','empLastName','empEmail','empPhone','empRate','empHours'].forEach(id=>document.getElementById(id).value='');
     document.getElementById('empConges').value='25';
     ['empMatricule','empJobTitle','empStart','empEnd','empBaseSalary'].forEach(id=>document.getElementById(id).value=''); document.getElementById('empMutuelle').checked=false;
     document.getElementById('empRole').value='salle';
@@ -2793,7 +2816,9 @@ document.getElementById('empForm').addEventListener('submit', ev=>{
   const hoursUnit = document.getElementById('empHoursUnit').value==='mois' ? 'mois' : 'semaine';
   const contractType = document.getElementById('empType').value || 'Autre';
   const data={
-    name:document.getElementById('empName').value.trim(),
+    firstName:document.getElementById('empFirstName').value.trim(),
+    lastName:document.getElementById('empLastName').value.trim(),
+    name:fullName(document.getElementById('empFirstName').value, document.getElementById('empLastName').value),
     email:document.getElementById('empEmail').value.trim(),
     phone:document.getElementById('empPhone').value.trim(),
     role:document.getElementById('empRole').value,
@@ -3753,10 +3778,11 @@ function renderWizard(){
     body.innerHTML=`<div class="space-y-4 max-h-[46vh] overflow-y-auto pr-1">`+wizTeams().map(t=>{
       const n=wiz.counts[t.key]||0; if(!n) return '';
       const inputs=[];
-      for(let i=0;i<n;i++){ const v=(wiz.names[t.key]&&wiz.names[t.key][i])||'';
-        inputs.push(`<input type="text" data-nm="${t.key}" data-i="${i}" value="${v.replace(/"/g,'&quot;')}" placeholder="${t.label} ${i+1}" class="border border-slate-300 rounded-lg px-3 py-2 text-sm" />`); }
+      const q=x=>String(x||'').replace(/"/g,'&quot;');
+      for(let i=0;i<n;i++){ const v=(wiz.names[t.key]&&wiz.names[t.key][i])||{};
+        inputs.push(`<div class="grid grid-cols-2 gap-1.5"><input type="text" data-nm="${t.key}" data-i="${i}" data-part="first" value="${q(v.first)}" placeholder="Prénom" class="min-w-0 border border-slate-300 rounded-lg px-3 py-2 text-sm" /><input type="text" data-nm="${t.key}" data-i="${i}" data-part="last" value="${q(v.last)}" placeholder="Nom" class="min-w-0 border border-slate-300 rounded-lg px-3 py-2 text-sm" /></div>`); }
       return `<div><div class="flex items-center gap-2 mb-1.5"><span class="w-2.5 h-2.5 rounded-full" style="background:${t.color}"></span><span class="text-xs font-bold uppercase tracking-wide text-slate-500">${t.label} · ${n}</span></div>
-        <div class="grid grid-cols-2 sm:grid-cols-3 gap-2">${inputs.join('')}</div></div>`;
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">${inputs.join('')}</div></div>`;
     }).join('')+`</div>`;
   } else {
     const P=PROFILE_PRESETS[wiz.profile];
@@ -3786,7 +3812,7 @@ document.getElementById('wizBody').addEventListener('click',e=>{
 document.getElementById('wizBody').addEventListener('input',e=>{
   const inp=e.target.closest('[data-nm]'); if(!inp) return;
   const k=inp.dataset.nm, i=parseInt(inp.dataset.i,10);
-  (wiz.names[k]=wiz.names[k]||[])[i]=inp.value;
+  const arr=(wiz.names[k]=wiz.names[k]||[]); const o=(arr[i]=(arr[i]&&typeof arr[i]==='object')?arr[i]:{}); o[inp.dataset.part==='last'?'last':'first']=inp.value;
 });
 document.getElementById('wizBack').addEventListener('click',()=>{ if(wiz.step>1){ wiz.step--; renderWizard(); } else { cancelWizard(); } });
 document.getElementById('wizNext').addEventListener('click',()=>{
@@ -3804,8 +3830,10 @@ function finishWizard(){
   wizTeams().forEach(t=>{
     const n=wiz.counts[t.key]||0;
     for(let i=0;i<n;i++){
-      const nm=((wiz.names[t.key]&&wiz.names[t.key][i])||'').trim() || (t.label+' '+(i+1));
-      st.employees.push({ id:uid(), name:nm, role:t.key, contract:'35h', email:'', phone:'', rate:0 });
+      const wn=(wiz.names[t.key]&&wiz.names[t.key][i])||{}; const fn=String(wn.first||'').trim(), ln=String(wn.last||'').trim();
+      const nm=fullName(fn,ln) || (t.label+' '+(i+1));   // rien saisi → « Salle 1 », à renommer plus tard
+      const emp={ id:uid(), name:nm, role:t.key, contract:'35h', email:'', phone:'', rate:0 }; if(fn||ln){ emp.firstName=fn; emp.lastName=ln; }
+      st.employees.push(emp);
     }
   });
   state=st; migrate(state); syncGlobals(); firstRun=false; save();
@@ -4177,7 +4205,7 @@ function buildComptaExport(weeks){
   const synth=[head1, COMBO_COLS.slice()], evp=[['Nom','Prénom','Matricule','Code','Valeur','Date début','Date fin']], absRows=[['Nom','Prénom','Matricule','Code','Rang','Date début','Date fin','Valeur','Unité']];
   const emps = state.employees.filter(e=>!e.archived || state.shifts.some(s=>s.empId===e.id && weeks.includes(s.week)));
   emps.forEach(e=>{
-    const {prenom,nom}=splitName(e.name); const ch=contractHours(e); const monthly=ch!=null?ch*52/12:null;
+    const _np=nameParts(e); const prenom=_np.prenom, nom=String(_np.nom||'').toUpperCase(); const ch=contractHours(e); const monthly=ch!=null?ch*52/12:null;
     const row=COMBO_COLS.map(()=>''); const set=(name,v)=>{ const i=comboCol(name); if(i>=0 && v!==''&&v!=null) row[i]=v; };
     set('Nom',nom||prenom); set('Prénom',nom?prenom:''); set('Matricule',e.matricule||''); set('SIRET Établissement',state.siret||''); set('Contrat',e.contractType||'');
     set("Date d'entrée", e.startDate?frDate(e.startDate):''); set('Date de sortie', e.endDate?frDate(e.endDate):''); set('Poste', e.jobTitle||teamOf(e.role).label||''); set('Mutuelle', e.mutuelle?'Oui':'Non');
@@ -4276,7 +4304,7 @@ async function analyseComboFile(file){
     const name=`${titleCase(prenom)} ${titleCase(nom)}`.trim();
     const hebdo=numOr(g(r,'Heures contrat hebdo.'),null), mensuel=numOr(g(r,'Heures contrat mensuel'),0), base=numOr(g(r,'Salaire de base'),0), extraRate=numOr(g(r,'Salaire horaire brut (extra)'),0);
     const poste=String(g(r,'Poste')).trim(); const role=teamByLabel[normName(poste)]||null;
-    const fields={ name, matricule, contractType:String(g(r,'Contrat')).trim()||'', startDate:parseFrDate(g(r,"Date d'entrée")), endDate:parseFrDate(g(r,'Date de sortie')), jobTitle:poste, mutuelle:/^oui$/i.test(String(g(r,'Mutuelle')).trim()) };
+    const fields={ name, firstName:titleCase(prenom), lastName:titleCase(nom), matricule, contractType:String(g(r,'Contrat')).trim()||'', startDate:parseFrDate(g(r,"Date d'entrée")), endDate:parseFrDate(g(r,'Date de sortie')), jobTitle:poste, mutuelle:/^oui$/i.test(String(g(r,'Mutuelle')).trim()) };
     if(hebdo!=null && hebdo>0){ fields.hours=hebdo; fields.hoursUnit='semaine'; } if(base>0) fields.baseSalary=base;
     const rate = extraRate>0 ? extraRate : (base>0 && mensuel>0 ? Math.round(base/mensuel*100)/100 : 0); if(rate>0) fields.rate=rate;
     if(role) fields.role=role;
@@ -4538,10 +4566,15 @@ async function pushToCloud(){
   try{
     const estUpd = await sb.from('establishments').update({ name:state.restaurant, teams:state.teams, periods:state.periods, compliance:state.complianceItems, team_word:state.teamWord, accent:state.accent, logo:state.logo||null, emp_scope:state.empScope, profile:state.profile, siret:state.siret||null, rules:state.rules||{} }).eq('id', est);
     if(estUpd.error) return {error:'Réglages non synchronisés : '+estUpd.error.message};
-    const emps = state.employees.map(e=>{ const o={ establishment_id:est, local_id:e.id, name:e.name, role:e.role||'', contract:String(e.contract||''), phone:e.phone||'', email:e.email||'', archived:!!e.archived, compliance:e.compliance||{}, conges_allowance:(e.congesAllowance!=null?e.congesAllowance:25), hours:(e.hours!=null&&e.hours!==''&&!isNaN(parseFloat(e.hours))?parseFloat(e.hours):null), hours_unit:(e.hoursUnit==='mois'?'mois':'semaine'), contract_type:e.contractType||null, matricule:e.matricule||null, job_title:e.jobTitle||null, start_date:e.startDate||null, end_date:e.endDate||null, mutuelle:!!e.mutuelle };
+    const emps = state.employees.map(e=>{ const o={ establishment_id:est, local_id:e.id, name:e.name, role:e.role||'', contract:String(e.contract||''), phone:e.phone||'', email:e.email||'', archived:!!e.archived, compliance:e.compliance||{}, conges_allowance:(e.congesAllowance!=null?e.congesAllowance:25), hours:(e.hours!=null&&e.hours!==''&&!isNaN(parseFloat(e.hours))?parseFloat(e.hours):null), hours_unit:(e.hoursUnit==='mois'?'mois':'semaine'), contract_type:e.contractType||null, matricule:e.matricule||null, job_title:e.jobTitle||null, start_date:e.startDate||null, end_date:e.endDate||null, mutuelle:!!e.mutuelle, first_name:(nameParts(e).prenom||null), last_name:(nameParts(e).nom||null) };
       if(canSeeSalaries()){ o.rate=e.rate||0; o.base_salary=e.baseSalary||0; }   // un manager n'envoie JAMAIS le taux → ne peut pas écraser les salaires
       return o; });
-    if(emps.length){ const {error}=await sb.from('employees').upsert(emps,{onConflict:'establishment_id,local_id'}); if(error) return {error:error.message}; }
+    if(emps.length){
+      let {error}=await sb.from('employees').upsert(emps,{onConflict:'establishment_id,local_id'});
+      // Base pas encore migrée (colonnes prénom/nom absentes) → on renvoie sans ces deux champs plutôt que de bloquer la synchro
+      if(error && /first_name|last_name/.test(error.message||'')){ emps.forEach(o=>{ delete o.first_name; delete o.last_name; }); ({error}=await sb.from('employees').upsert(emps,{onConflict:'establishment_id,local_id'})); }
+      if(error) return {error:error.message};
+    }
     const { data:remEmps } = await sb.from('employees').select('id,local_id').eq('establishment_id', est);
     const map={}; (remEmps||[]).forEach(r=>{ if(r.local_id) map[r.local_id]=r.id; });
     const shifts = state.shifts.map(s=>({ establishment_id:est, local_id:s.id, employee_id: s.empId?(map[s.empId]||null):null, extra_name:s.extraName||null, week:s.week, day:s.day, team:s.team, period:s.period, start_t:s.start, end_t:s.end, real_start:s.realStart||null, real_end:s.realEnd||null, breaks:s.breaks||[], note:s.note||null }));
@@ -4601,7 +4634,7 @@ async function pullForOwner(){
     // Manager : on ne récupère PAS la colonne « rate » (taux) → les salaires ne quittent pas le serveur
     const empCols = canSeeSalaries() ? '*' : 'id,local_id,name,role,contract,phone,email,archived,compliance,conges_allowance,hours,hours_unit,contract_type,matricule,job_title,start_date,end_date,mutuelle';
     const { data:emps } = await sb.from('employees').select(empCols).eq('establishment_id', est);
-    state.employees = (emps||[]).map(r=>{ const lid=r.local_id||r.id; remoteToLocal[r.id]=lid; return { id:lid, name:r.name, role:r.role||'', contract:r.contract||'', rate:r.rate||0, phone:r.phone||'', email:r.email||'', archived:!!r.archived, compliance:Object.assign(emptyCompliance(), r.compliance||{}), congesAllowance:(r.conges_allowance!=null?r.conges_allowance:25), hours:(r.hours!=null?r.hours:undefined), hoursUnit:(r.hours_unit==='mois'?'mois':'semaine'), contractType:r.contract_type||'', matricule:r.matricule||'', jobTitle:r.job_title||'', startDate:r.start_date||'', endDate:r.end_date||'', mutuelle:!!r.mutuelle, baseSalary:(r.base_salary!=null?r.base_salary:0) }; });
+    state.employees = (emps||[]).map(r=>{ const lid=r.local_id||r.id; remoteToLocal[r.id]=lid; return ensureNameParts({ id:lid, name:r.name, firstName:r.first_name||'', lastName:r.last_name||'', role:r.role||'', contract:r.contract||'', rate:r.rate||0, phone:r.phone||'', email:r.email||'', archived:!!r.archived, compliance:Object.assign(emptyCompliance(), r.compliance||{}), congesAllowance:(r.conges_allowance!=null?r.conges_allowance:25), hours:(r.hours!=null?r.hours:undefined), hoursUnit:(r.hours_unit==='mois'?'mois':'semaine'), contractType:r.contract_type||'', matricule:r.matricule||'', jobTitle:r.job_title||'', startDate:r.start_date||'', endDate:r.end_date||'', mutuelle:!!r.mutuelle, baseSalary:(r.base_salary!=null?r.base_salary:0) }); });
     const { data:shifts } = await sb.from('shifts').select('*').eq('establishment_id', est);
     state.shifts = (shifts||[]).map(s=>({ id:s.local_id||s.id, week:s.week, day:s.day, team:s.team, period:s.period, start:s.start_t, end:s.end_t, empId: s.employee_id?(remoteToLocal[s.employee_id]||''):'', extraName:s.extra_name||'', realStart:s.real_start||'', realEnd:s.real_end||'', breaks:Array.isArray(s.breaks)?s.breaks:[], note:s.note||'' }));
     _knownShiftLocalIds = new Set((shifts||[]).map(s=>s.local_id||s.id));   // ce qu'on a VU du cloud (co-édition)
