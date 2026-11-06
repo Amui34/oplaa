@@ -31,6 +31,7 @@
     "@capacitor/filesystem": "^8.1.5",
     "@capacitor/ios": "^8.5.1",
     "@capacitor/share": "^8.0.3",
+    "@revenuecat/purchases-capacitor": "^14.1.0",
     "xlsx": "^0.18.5"
   },
   "devDependencies": {

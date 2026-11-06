@@ -1,65 +1,52 @@
-# Oplaa Pro — activer l'abonnement (v1.1)
+# Oplaa Pro — activer l'abonnement (version 1.1)
 
-Modèle : **1 mois d'essai gratuit, puis 7,99 €/mois** (ou 79,99 €/an, 2 mois offerts — décision Noa 04/11/2026), 1 abonnement = **1 établissement** (prix par établissement ; une entreprise multi-sites paie un abonnement par site). Éditeur / vendeur : SAS NOMAD.
-Employés = gratuits. La consultation reste gratuite ; créer/modifier un planning devient Pro.
+Branche : `abonnement-1.1` (à fusionner dans `main` au moment du lancement).
 
-⚠️ À faire **seulement après** la validation de la v1.0 (gratuite) par Apple.
-Le code est déjà prêt dans `www/index.html` (module « OPLAA PRO ») mais **désactivé**
-(`SUBSCRIPTION_ENABLED = false`).
+**Modèle** (décisions Noa, 04–06/11/2026) : **7,99 €/mois ou 79,99 €/an, par établissement**. Employés toujours gratuits.
+Essai gratuit de 30 jours compté depuis la création de l'établissement. Éditeur / vendeur : SAS NOMAD.
+Tant que `SUBSCRIPTION_ENABLED = false` dans `www/index.html`, rien n'est bridé et le paywall n'apparaît jamais.
 
----
+## Ce qui est prêt dans le code (testé avec un faux module d'achat)
 
-## Étape 1 — Créer l'abonnement dans App Store Connect
-1. App Store Connect → **Oplaa** → **Monétisation → Abonnements**.
-2. Créer un **groupe d'abonnements** (ex. « Oplaa Pro »).
-3. Dans le groupe, créer un **abonnement auto-renouvelable** :
-   - **ID de produit (Product ID)** : `oplaa_pro_monthly`
-   - **Durée** : 1 mois
-   - **Prix** : 7,99 € mensuel (`oplaa_pro_monthly`) + 79,99 € annuel (`oplaa_pro_yearly`) dans le même groupe (choisir le palier France ; les autres pays se remplissent tout seuls)
-4. Ajouter une **offre d'introduction** → **Essai gratuit** → **1 mois**.
-5. Remplir **nom d'affichage** + **description** (localisation FR) + une **capture de l'écran d'abonnement** (le paywall).
-6. (Recommandé) S'inscrire au **App Store Small Business Program** → commission 15 % au lieu de 30 %.
+| Élément | Où | État |
+|---|---|---|
+| Plugin `@revenuecat/purchases-capacitor` 14.1 (Capacitor 8) | `package.json`, `ios/App/CapApp-SPM/Package.swift` | installé sur la branche, compilation iOS vérifiée |
+| Abonnement rattaché à l'**établissement** (`Purchases.logIn('est_<id>')`) | `rcIdentify()` | prêt — tous les admins/managers d'un établissement partagent l'abonnement |
+| Formules mensuelle et annuelle, prix lus dans l'App Store | `rcLoadOffers()`, `renderPaywall()`, `#planMonthly` / `#planAnnual` | prêt |
+| Essai 30 jours par établissement (date de création côté serveur, non réinitialisable) | `trialStartMs()`, constante `PRO_LAUNCH` | prêt — **ajuster `PRO_LAUNCH` à la date de sortie** (les établissements existants démarrent leur essai ce jour-là) |
+| Employés et démo jamais bridés | `isPro()` | prêt |
+| Sur le web : pas d'encaissement, renvoi vers l'app iPhone | `#paywallWeb` | prêt |
+| Codes offerts (BIVOUAK, TEST3M) | `redeem_licence`, `proFromCloud()` | en production depuis le 26/10 |
+| Webhook RevenueCat → `establishments.pro_until` (Pro visible sur le web) | `supabase/functions/revenuecat-webhook/index.ts` | écrit, **à déployer** |
+| Garde-fou : `pro_until` non modifiable par un client | `guard_pro_columns` dans `supabase/schema.sql` | écrit, **à appliquer en base** |
+| Actions bridées sans Pro (5 points : créer/modifier un service, une fiche, etc.) | `ensurePro()` | en place |
+| Tests | `tests/e2e/flow.spec.mjs` (3 tests « abonnement ») | verts |
 
-## Étape 2 — Configurer RevenueCat (gratuit)
-1. Créer un compte sur https://www.revenuecat.com → nouveau projet « Oplaa ».
-2. **Project settings → Apps** : ajouter l'app iOS avec le bundle `com.oplaa.app`
-   + coller la **clé App Store Connect API** (In-App Purchase key, générée dans ASC → Utilisateurs et accès → Clés).
-3. **Products** : ajouter `oplaa_pro_monthly`.
-4. **Entitlements** : créer un entitlement d'identifiant **`pro`** et y attacher le produit.
-5. **Offerings** : créer l'offering « default » (`current`) avec un package contenant `oplaa_pro_monthly`.
-6. Copier la **clé API publique iOS** (commence par `appl_...`).
+## Ce qu'il reste à faire, dans l'ordre
 
-## Étape 3 — Brancher le code
-Dans `www/index.html` :
-- Remplacer `RC_IOS_API_KEY = 'appl_XXXX...'` par la vraie clé publique iOS.
-- Passer `SUBSCRIPTION_ENABLED = false` → **`true`**.
-- (Les identifiants `RC_ENTITLEMENT_ID='pro'` et le Product ID doivent correspondre à RevenueCat.)
+### A. Côté comptes (Noa / Lucas)
+1. **Conversion du compte Apple en SAS NOMAD** — dossier 30000005124775. Puis re-signer les contrats, refaire W-8BEN-E, Certificate of Foreign Status et DAC7 au nom de NOMAD.
+2. **Small Business Program** (commission 15 %) : App Store Connect → Business.
+3. **RevenueCat** (Lucas) : compte + projet « Oplaa » ; app iOS `com.oplaa.app` ; clé « In-App Purchase » App Store Connect (.p8) importée dans RevenueCat ; entitlement **`pro`** ; offering `default` avec deux packages `$rc_monthly` et `$rc_annual` ; transmettre la **clé publique iOS** (`appl_…`).
+4. **Médiateur de la consommation** à désigner (CGU, art. 16).
 
-Installer le plugin Capacitor RevenueCat :
-```
-cd "/Users/noamadar/Local Sites/oplaa"
-npm i @revenuecat/purchases-capacitor
-npx cap sync ios
-```
+### B. Côté App Store Connect (Claude, via l'API, une fois A.1 fait)
+5. Groupe d'abonnements « Oplaa Pro » ; produits `oplaa_pro_monthly` (7,99 €, 1 mois) et `oplaa_pro_yearly` (79,99 €, 1 an) ; nom + description FR ; capture du paywall pour la review.
+   Pas d'offre d'introduction Apple : l'essai de 30 jours est géré par l'app (sinon double essai).
 
-## Étape 4 — Rebuild + test
-```
-cd "/Users/noamadar/Local Sites/oplaa"
-npx tailwindcss -c tailwind.config.js -i www/tw-input.css -o www/tailwind.css --minify
-npx cap copy ios
-```
-- Monter le build (`CURRENT_PROJECT_VERSION` → 3, `MARKETING_VERSION` → 1.1).
-- Tester l'achat en **bac à sable** (Sandbox) avec un compte de test Sandbox (ASC → Utilisateurs et accès → Testeurs Sandbox).
-- Vérifier : essai → paywall à l'expiration → achat → déblocage → restauration.
+### C. Côté serveur (GO de Noa nécessaire : production)
+6. Appliquer le bloc `guard_pro_columns` de `supabase/schema.sql`.
+7. Déployer la fonction `revenuecat-webhook` (Supabase → Edge Functions), définir le secret `REVENUECAT_WEBHOOK_AUTH`, puis dans RevenueCat → Integrations → Webhooks : URL de la fonction + en-tête `Authorization: Bearer <secret>`.
 
-## Étape 5 — Soumettre la v1.1
-- Archive Xcode → upload.
-- Dans la version 1.1, **joindre l'abonnement à l'examen** (l'IAP est examiné avec le build qui l'utilise).
-- Soumettre.
+### D. Côté app (Claude)
+8. `RC_IOS_API_KEY` = clé publique iOS ; `PRO_LAUNCH` = date de sortie ; `SUBSCRIPTION_ENABLED = true`.
+9. Fusionner `abonnement-1.1` dans `main`, `npm run build:css && npx cap sync ios`, version 1.1.
+10. Test en **bac à sable** (testeur Sandbox dans App Store Connect) : essai → paywall → achat mensuel → achat annuel → restauration → deuxième admin du même établissement → web.
+11. Archive, upload, joindre les deux abonnements à la version, soumettre.
 
----
+## Points d'attention
 
-### Rappels
-- Le paywall contient déjà les mentions et liens exigés par Apple (renouvellement auto, Conditions d'utilisation = EULA standard Apple, Confidentialité).
-- Apple prend 15 % (Small Business) ou 30 % → net ≈ 4,25 €/mois.
-- « Par établissement » n'est pas géré par Apple : c'est 1 abonnement par compte Apple. Multi-établissements = logique serveur à ajouter plus tard si besoin.
+- **Factures** : Apple envoie un reçu au client, pas une facture avec TVA au nom de son entreprise. Pour des clients professionnels, prévoir à terme un paiement web (Stripe) qui, lui, émet des factures.
+- **Contrôle côté serveur** : le Pro est vérifié dans l'app (affichage du paywall). La base n'interdit pas d'écrire un planning sans Pro. Suffisant pour démarrer ; à durcir si des contournements apparaissent.
+- **Changement d'établissement** : l'identifiant RevenueCat suit l'établissement (`est_<id>`), pas la personne. Un admin qui gère deux établissements a deux abonnements distincts.
+- **Remboursements / résiliations** : gérés par Apple ; le webhook met à jour l'échéance, l'accès court jusqu'à la fin de la période payée.

@@ -297,3 +297,61 @@ test('équipe : une fiche employé se saisit avec prénom et nom séparés', asy
   expect(saved).toEqual(['Marie Anne Dupont', 'Marie Anne', 'Dupont']);
   await expect(page.getByText('Marie Anne Dupont').first()).toBeAttached();
 });
+
+// ── Abonnement (désactivé en production : ces tests l'activent avec un faux module d'achat) ──
+const fakePurchases = () => {
+  window.__OPLAA_SUB_TEST = true;
+  const rc = (window.__rc = { logIn: [], purchased: null, active: false });
+  window.Purchases = {
+    configure: async () => {},
+    getCustomerInfo: async () => ({ customerInfo: { entitlements: { active: rc.active ? { pro: { expirationDate: '2027-01-01' } } : {} } } }),
+    getOfferings: async () => ({ current: { availablePackages: [
+      { identifier: '$rc_monthly', packageType: 'MONTHLY', product: { priceString: '7,99 €' } },
+      { identifier: '$rc_annual', packageType: 'ANNUAL', product: { priceString: '79,99 €' } } ] } }),
+    logIn: async (o) => { rc.logIn.push(o.appUserID); }, logOut: async () => {},
+    purchasePackage: async (o) => { rc.purchased = o.aPackage.identifier; rc.active = true; },
+    restorePurchases: async () => {},
+  };
+};
+const expiredTrial = () => { try { localStorage.setItem('oplaa_trial_start', String(Date.now() - 40 * 86400000)); } catch (e) {} };
+
+test('abonnement : essai expiré → paywall mensuel / annuel, achat de la formule choisie, accès rétabli', async ({ page }) => {
+  await page.addInitScript(fakePurchases); await page.addInitScript(expiredTrial);
+  await page.goto('/');
+  await page.locator('#welcomeDemo').click();
+  expect(await page.evaluate(() => isPro())).toBe(true);                  // la démo n'est jamais bridée
+  await page.evaluate(() => { state.demo = false; });                     // établissement réel, essai terminé
+  expect(await page.evaluate(() => ensurePro())).toBe(false);
+  await expect(page.locator('#paywallModal')).toBeVisible();
+  await expect(page.locator('#paywallNative')).toBeVisible();
+  await expect(page.locator('#paywallWeb')).toBeHidden();
+  await expect(page.locator('#planMonthlyPrice')).toHaveText('7,99 €');
+  await expect(page.locator('#planAnnualPrice')).toHaveText('79,99 €');
+  await expect(page.locator('#planMonthly')).toHaveAttribute('aria-checked', 'true');
+  await page.locator('#planAnnual').click();
+  await expect(page.locator('#planAnnual')).toHaveAttribute('aria-checked', 'true');
+  await page.locator('#paywallBuy').click();
+  await expect(page.locator('#paywallModal')).toBeHidden();
+  expect(await page.evaluate(() => window.__rc.purchased)).toBe('$rc_annual');
+  expect(await page.evaluate(() => isPro())).toBe(true);
+});
+
+test('abonnement : sur le web (sans module d’achat), le paywall renvoie vers l’app iPhone', async ({ page }) => {
+  await page.addInitScript(() => { window.__OPLAA_SUB_TEST = true; }); await page.addInitScript(expiredTrial);
+  await page.goto('/');
+  await page.locator('#welcomeDemo').click();
+  await page.evaluate(() => { state.demo = false; });
+  expect(await page.evaluate(() => ensurePro())).toBe(false);
+  await expect(page.locator('#paywallWeb')).toBeVisible();
+  await expect(page.locator('#paywallWeb')).toContainText('iPhone');
+  await expect(page.locator('#paywallNative')).toBeHidden();
+});
+
+test('abonnement : désactivé par défaut → rien n’est bridé', async ({ page }) => {
+  await page.addInitScript(expiredTrial);
+  await page.goto('/');
+  await page.locator('#welcomeDemo').click();
+  await page.evaluate(() => { state.demo = false; });
+  expect(await page.evaluate(() => ensurePro())).toBe(true);
+  await expect(page.locator('#paywallModal')).toBeHidden();
+});

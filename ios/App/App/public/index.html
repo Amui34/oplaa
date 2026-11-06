@@ -967,7 +967,7 @@
         <button class="closePaywall text-white/80 hover:text-white text-2xl leading-none" aria-label="Fermer">&times;</button>
       </div>
       <h3 class="text-2xl font-extrabold mt-3">Passez à Oplaa Pro</h3>
-      <p id="paywallTrial" class="text-white/90 text-sm mt-1">1 mois offert, puis 7,99 €/mois par établissement.</p>
+      <p id="paywallTrial" class="text-white/90 text-sm mt-1">30 jours d'essai gratuit, puis abonnement par établissement.</p>
     </div>
     <div class="p-6">
       <ul class="space-y-3 text-sm text-slate-700">
@@ -976,12 +976,27 @@
         <li class="flex gap-2"><span>✅</span><span>Équipe illimitée, congés, extras et conformité</span></li>
         <li class="flex gap-2"><span>✅</span><span>Synchronisation et espace employé</span></li>
       </ul>
-      <div class="mt-5 rounded-xl border border-slate-200 p-4 text-center">
-        <div class="text-2xl font-extrabold text-slate-800">7,99 €<span class="text-base font-semibold text-slate-500">/mois</span></div>
-        <div class="text-xs text-slate-500 mt-1">par établissement · 1er mois gratuit · sans engagement · résiliable à tout moment</div>
+      <div class="mt-5 grid grid-cols-2 gap-2" role="radiogroup" aria-label="Formule d'abonnement">
+        <button type="button" id="planMonthly" role="radio" aria-checked="true" class="rounded-xl border-2 border-teal-600 bg-teal-50 p-3 text-center">
+          <div class="text-xs font-bold uppercase tracking-wide text-slate-500">Mensuel</div>
+          <div class="text-xl font-extrabold text-slate-800 mt-1"><span id="planMonthlyPrice">7,99 €</span><span class="text-sm font-semibold text-slate-500">/mois</span></div>
+          <div class="text-[11px] text-slate-500 mt-1">sans engagement</div>
+        </button>
+        <button type="button" id="planAnnual" role="radio" aria-checked="false" class="rounded-xl border-2 border-slate-200 p-3 text-center">
+          <div class="text-xs font-bold uppercase tracking-wide text-slate-500">Annuel</div>
+          <div class="text-xl font-extrabold text-slate-800 mt-1"><span id="planAnnualPrice">79,99 €</span><span class="text-sm font-semibold text-slate-500">/an</span></div>
+          <div class="text-[11px] font-semibold text-teal-700 mt-1">2 mois offerts</div>
+        </button>
       </div>
-      <button id="paywallBuy" class="mt-4 w-full py-3 rounded-xl bg-teal-600 text-white font-bold hover:bg-teal-700">Commencer l'essai gratuit</button>
-      <button id="paywallRestore" class="mt-2 w-full py-2 text-sm text-slate-500 font-semibold hover:text-slate-700">Restaurer mes achats</button>
+      <p class="text-xs text-slate-500 mt-2 text-center">Prix par établissement · employés toujours gratuits · résiliable à tout moment</p>
+      <div id="paywallNative">
+        <button id="paywallBuy" class="mt-4 w-full py-3 rounded-xl bg-teal-600 text-white font-bold hover:bg-teal-700">S'abonner</button>
+        <button id="paywallRestore" class="mt-2 w-full py-2 text-sm text-slate-500 font-semibold hover:text-slate-700">Restaurer mes achats</button>
+      </div>
+      <div id="paywallWeb" hidden class="mt-4 rounded-xl bg-slate-50 border border-slate-200 p-4 text-sm text-slate-700">
+        L'abonnement se souscrit depuis <b>l'app Oplaa sur iPhone</b>. Une fois abonné, votre établissement est Pro partout, y compris ici sur le web.
+        <a href="https://apps.apple.com/fr/app/id6810034842" target="_blank" rel="noopener" class="mt-3 block w-full text-center py-3 rounded-xl bg-teal-600 text-white font-bold hover:bg-teal-700">Ouvrir Oplaa sur l'App Store</a>
+      </div>
       <p class="mt-3 text-[11px] leading-relaxed text-slate-400 text-center">
         L'abonnement se renouvelle automatiquement sauf résiliation au moins 24 h avant la fin de la période. Gérable dans les réglages de votre compte Apple.
         <br><a href="https://oplaa.pro/cgu.html" target="_blank" class="underline">CGU/CGV</a> ·
@@ -1423,11 +1438,14 @@ const APP_VERSION = '1.0.11';
 const CONTACT_EMAIL = 'noamadar.noa@gmail.com';   // adresse qui reçoit les retours des testeurs (modifiable)
 const ASSISTANCE_URL = 'https://oplaa.pro/assistance.html';   // page Aide/FAQ (oplaa.pro)
 /* ---- Oplaa Pro — abonnement (v1.1). Signé : Noa Madar. ---- */
-const SUBSCRIPTION_ENABLED = false;                 // ← passer à true pour la v1.1 (après RevenueCat + produit App Store Connect)
-const TRIAL_DAYS = 30;                              // essai gratuit
+const SUBSCRIPTION_ENABLED = false || (typeof window!=='undefined' && window.__OPLAA_SUB_TEST===true);   // ← remplacer `false` par `true` pour la v1.1 (__OPLAA_SUB_TEST : tests automatiques uniquement)
+const TRIAL_DAYS = 30;                              // essai gratuit, compté depuis la création de l'établissement
+const PRO_LAUNCH = '2026-12-01';                    // date de lancement de l'abonnement : les établissements créés avant ont leur essai à partir de cette date (à ajuster à la sortie)
 const RC_ENTITLEMENT_ID = 'pro';                    // identifiant d'entitlement dans RevenueCat
 const RC_IOS_API_KEY = 'appl_XXXXXXXXXXXXXXXX';     // clé API publique iOS RevenueCat (à remplir en v1.1)
+const PRO_PRICES = { monthly:'7,99 €', annual:'79,99 €' };   // repli d'affichage ; le prix réel affiché vient de l'App Store
 const PRO_PRICE_LABEL = '7,99 €/mois par établissement';
+const APP_STORE_URL = 'https://apps.apple.com/fr/app/id6810034842';
 const ABSENCE_TYPES = [
   // Types « classiques » (boutons rapides). unit : 'j' = jours, 'h' = heures · pay : rem = rémunérée, ind = indemnisée, non = non rémunérée
   {key:'conge',   label:'Congé payé', emoji:'🌴', color:'#3F6B4A', unit:'j', pay:'rem', combo:'Congé payé (j)'},
@@ -4466,7 +4484,7 @@ document.addEventListener('copy', e=>{
 async function loadMembership(){
   cloudMembership=null;
   if(!sb || !cloudSession) return;
-  const { data } = await sb.from('memberships').select('*, establishments(name)').limit(1);
+  const { data } = await sb.from('memberships').select('*, establishments(name, created_at)').limit(1);
   if(data && data.length) cloudMembership = data[0];
 }
 async function refreshCloud(){
@@ -4510,6 +4528,7 @@ async function refreshCloud(){
   }
   _membersCache=null; if(typeof renderManageBanner==='function') renderManageBanner();
   if(typeof renderProBox==='function') renderProBox();
+  if(typeof rcIdentify==='function') rcIdentify();   // abonnement rattaché à l'établissement (sans effet tant que l'abonnement est désactivé)
   setSyncStatus(canAutoPush() ? 'ok' : null);   // indicateur d'en-tête : « Synchronisé ✓ » pour le patron connecté
 }
 
@@ -5181,6 +5200,10 @@ window.addEventListener('focus', onAppResume);
 let proState = { active:false, source:null, expires:null };   // source: 'trial' | 'subscribed'
 
 function trialStartMs(){
+  // Essai rattaché à l'ÉTABLISSEMENT (date de création côté serveur) : le même pour tous ses admins, non réinitialisable
+  // en réinstallant l'app. Les établissements antérieurs au lancement de l'abonnement démarrent leur essai à PRO_LAUNCH.
+  const c = (typeof cloudMembership!=='undefined') && cloudMembership && cloudMembership.establishments && cloudMembership.establishments.created_at;
+  if(c){ const t=Date.parse(c), l=Date.parse(PRO_LAUNCH); if(!isNaN(t)) return Math.max(t, isNaN(l)?0:l); }
   try{
     let v = localStorage.getItem('oplaa_trial_start');
     if(!v){ v = String(Date.now()); localStorage.setItem('oplaa_trial_start', v); }
@@ -5199,7 +5222,9 @@ function proFromCloud(){ return proUntilMs() > Date.now(); }
 function proLabel(){ const m=proUntilMs(); if(!(m>Date.now())) return ''; if(m===Infinity) return 'Oplaa Pro offert — à vie'; return 'Oplaa Pro offert jusqu\'au '+new Date(m).toLocaleDateString('fr-FR',{day:'numeric',month:'long',year:'numeric'}); }
 function isPro(){
   if(!SUBSCRIPTION_ENABLED) return true;                 // abonnement pas encore activé → tout est libre
-  if(proFromCloud()) return true;                        // code gratuit (ou activation serveur)
+  if(state && state.demo) return true;                   // la démo n'est jamais bridée
+  if((typeof cloudMembership!=='undefined') && cloudMembership && cloudMembership.role==='employee') return true;   // toujours gratuit pour les employés
+  if(proFromCloud()) return true;                        // code offert, ou abonnement confirmé côté serveur (pro_until)
   if(proState.source==='subscribed' && proState.active) return true;
   return trialActive();
 }
@@ -5222,12 +5247,37 @@ async function rcRefresh(){
     proState.expires = ent ? (ent.expirationDate||null) : null;
   }catch(e){ console.warn('RevenueCat refresh', e); }
 }
+// L'abonnement appartient à l'ÉTABLISSEMENT : on identifie RevenueCat avec l'id de l'établissement, pas avec l'appareil.
+// Tous les admins/managers de cet établissement partagent ainsi le même abonnement sur leurs iPhone.
+let _rcUser=null;
+async function rcIdentify(){
+  const P = rcPlugin(); if(!P || !SUBSCRIPTION_ENABLED) return;
+  const est = (cloudMembership && ['owner','manager'].includes(cloudMembership.role)) ? cloudMembership.establishment_id : null;
+  try{
+    if(est){ const id='est_'+est; if(_rcUser!==id){ await P.logIn({ appUserID:id }); _rcUser=id; } }
+    else if(_rcUser){ await P.logOut(); _rcUser=null; }
+    await rcRefresh();
+  }catch(e){ console.warn('RevenueCat identify', e); }
+}
+// Offres : mensuelle et annuelle, avec le prix localisé renvoyé par l'App Store
+let _rcPkgs={ monthly:null, annual:null }, _rcPlan='monthly';
+async function rcLoadOffers(){
+  const P = rcPlugin(); if(!P) return;
+  try{
+    const off = await P.getOfferings();
+    const cur = off && (off.current || (off.offerings && off.offerings.current));
+    const list = (cur && cur.availablePackages) || [];
+    _rcPkgs.monthly = list.find(k=>k.packageType==='MONTHLY' || /monthly|mensuel/i.test(k.identifier||'')) || list[0] || null;
+    _rcPkgs.annual  = list.find(k=>k.packageType==='ANNUAL'  || /annual|yearly|annuel/i.test(k.identifier||'')) || null;
+  }catch(e){ console.warn('RevenueCat offerings', e); }
+}
 async function rcPurchase(){
   const P = rcPlugin(); if(!P){ toast('Achats indisponibles sur cet appareil.'); return false; }
   try{
-    const off = await P.getOfferings();
-    const pkg = off && off.current && off.current.availablePackages && off.current.availablePackages[0];
+    if(!_rcPkgs.monthly && !_rcPkgs.annual) await rcLoadOffers();
+    const pkg = _rcPkgs[_rcPlan] || _rcPkgs.monthly || _rcPkgs.annual;
     if(!pkg){ toast('Aucune offre disponible pour le moment.'); return false; }
+    await rcIdentify();                                  // l'achat est rattaché à l'établissement
     await P.purchasePackage({ aPackage: pkg });
     await rcRefresh();
     if(isPro()){ toast('Merci ! Oplaa Pro est activé 🎉'); closePaywall(); return true; }
@@ -5241,13 +5291,27 @@ async function rcRestore(){
 }
 
 /* --- Paywall --- */
+function renderPaywall(){
+  const d=trialDaysLeft(), t=document.getElementById('paywallTrial');
+  if(t) t.textContent = trialActive()
+    ? ('Il vous reste '+d+' jour'+(d>1?'s':'')+' d’essai gratuit.')
+    : 'Votre essai gratuit est terminé — abonnez-vous pour continuer à modifier vos plannings.';
+  const price=(k)=>{ const g=_rcPkgs[k]; return (g && g.product && g.product.priceString) || PRO_PRICES[k]; };
+  const pm=document.getElementById('planMonthlyPrice'), pa=document.getElementById('planAnnualPrice');
+  if(pm) pm.textContent=price('monthly'); if(pa) pa.textContent=price('annual');
+  [['planMonthly','monthly'],['planAnnual','annual']].forEach(([id,k])=>{ const b=document.getElementById(id); if(!b) return;
+    const on=(_rcPlan===k); b.setAttribute('aria-checked', on?'true':'false');
+    b.classList.toggle('border-teal-600', on); b.classList.toggle('bg-teal-50', on); b.classList.toggle('border-slate-200', !on); });
+  // Sur le web (ou sans le module d'achat), on ne peut pas encaisser : l'abonnement se prend depuis l'app iPhone
+  const native=!!rcPlugin();
+  const nb=document.getElementById('paywallNative'), wb=document.getElementById('paywallWeb');
+  if(nb) nb.hidden=!native; if(wb) wb.hidden=native;
+}
 function openPaywall(){
   const m=document.getElementById('paywallModal'); if(!m) return;
-  const t=document.getElementById('paywallTrial'); const d=trialDaysLeft();
-  if(t) t.textContent = trialActive()
-    ? ('Il vous reste '+d+' jour'+(d>1?'s':'')+' d’essai gratuit, puis '+PRO_PRICE_LABEL+'.')
-    : ('Votre essai gratuit est terminé — abonnez-vous pour continuer.');
+  renderPaywall();
   m.classList.remove('hidden'); m.classList.add('flex');
+  if(rcPlugin() && !_rcPkgs.monthly && !_rcPkgs.annual) rcLoadOffers().then(renderPaywall);
 }
 function closePaywall(){ const m=document.getElementById('paywallModal'); if(!m) return; m.classList.add('hidden'); m.classList.remove('flex'); }
 
@@ -5257,7 +5321,8 @@ function ensurePro(){ if(isPro()) return true; openPaywall(); return false; }
 function proInit(){
   if(!SUBSCRIPTION_ENABLED) return;
   trialStartMs();                                  // démarre l'essai au 1er lancement
-  rcInit();
+  rcInit().then(()=>rcLoadOffers());
+  [['planMonthly','monthly'],['planAnnual','annual']].forEach(([id,k])=>{ const b=document.getElementById(id); if(b) b.addEventListener('click', ()=>{ _rcPlan=k; renderPaywall(); }); });
   const buy=document.getElementById('paywallBuy'); if(buy) buy.addEventListener('click', rcPurchase);
   const rst=document.getElementById('paywallRestore'); if(rst) rst.addEventListener('click', rcRestore);
   document.querySelectorAll('.closePaywall').forEach(b=>b.addEventListener('click', closePaywall));

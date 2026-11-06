@@ -473,12 +473,31 @@ begin
   if cur = 'infinity' then return jsonb_build_object('ok', false, 'error', 'Cet établissement a déjà Oplaa Pro à vie.'); end if;
   if c.months is null then nouveau := 'infinity';
   else base := greatest(coalesce(cur, now()), now()); nouveau := base + make_interval(months => c.months); end if;
+  perform set_config('oplaa.pro_write', '1', true);   -- autorise l'écriture de pro_until pour cette transaction (voir guard_pro_columns)
   update establishments set pro_until = nouveau, pro_source = 'code:' || c.code where id = est;
   update licence_codes set uses = uses + 1 where code = c.code;
   return jsonb_build_object('ok', true, 'pro_until', nouveau, 'months', c.months);
 end;
 $$;
 grant execute on function redeem_licence(uuid, text) to authenticated;
+
+-- OPLAA PRO : pro_until / pro_source ne sont modifiables que par le serveur — un code offert (redeem_licence)
+-- ou le webhook RevenueCat (clé de service). Sans ce garde-fou, un admin pourrait s'accorder le Pro lui-même
+-- via la politique est_admin_all (mise à jour libre de sa ligne d'établissement).
+create or replace function guard_pro_columns() returns trigger language plpgsql as $$
+begin
+  if (new.pro_until is distinct from old.pro_until or new.pro_source is distinct from old.pro_source)
+     and coalesce(current_setting('oplaa.pro_write', true), '') <> '1'
+     and coalesce(auth.role(), '') <> 'service_role' then
+    new.pro_until  := old.pro_until;     -- tentative ignorée, le reste de la mise à jour passe normalement
+    new.pro_source := old.pro_source;
+  end if;
+  return new;
+end;
+$$;
+drop trigger if exists establishments_guard_pro on establishments;
+create trigger establishments_guard_pro before update on establishments
+  for each row execute function guard_pro_columns();
 
 -- ─────────────────────────────────────────────────────────────────────────
 --  TEMPS RÉEL (Supabase Realtime) — tables écoutées par l'app via
