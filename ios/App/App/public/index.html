@@ -672,10 +672,10 @@
       </div>
       <div>
         <div class="grid grid-cols-2 gap-3">
-          <div><label for="empStart" class="text-sm font-semibold text-slate-600">Date d'entrée</label><input type="date" id="empStart" class="mt-1 w-full border border-slate-300 rounded-lg px-3 py-2" /></div>
-          <div><label for="empEnd" class="text-sm font-semibold text-slate-600">Date de sortie</label><input type="date" id="empEnd" class="mt-1 w-full border border-slate-300 rounded-lg px-3 py-2" /></div>
+          <div><label for="empStart" class="text-sm font-semibold text-slate-600">Arrivée dans l'entreprise</label><input type="date" id="empStart" class="mt-1 w-full border border-slate-300 rounded-lg px-3 py-2" /></div>
+          <div><label for="empEnd" class="text-sm font-semibold text-slate-600">Départ de l'entreprise</label><input type="date" id="empEnd" class="mt-1 w-full border border-slate-300 rounded-lg px-3 py-2" /></div>
         </div>
-        <span class="text-[11px] text-slate-400 block mt-0.5">Laisse la date de sortie vide tant que la personne fait partie de l'équipe. Ces dates servent à l'export comptable et préviennent si on planifie quelqu'un hors de sa période.</span>
+        <span class="text-[11px] text-slate-400 block mt-0.5">Pour savoir depuis quand la personne fait partie de l'entreprise. Laisse le départ vide tant qu'elle est en poste. (Ce n'est pas un pointage des heures.)</span>
       </div>
       <div id="empPayEstimate" class="rounded-lg bg-slate-50 border border-slate-200 px-3 py-2 text-sm text-slate-600"></div>
       <div>
@@ -1664,12 +1664,10 @@ function nameParts(e){
   if(e && (e.firstName||e.lastName) && fullName(e.firstName,e.lastName)===String(e.name||'').trim()) return {prenom:e.firstName||'', nom:e.lastName||''};
   return splitNameRaw(e&&e.name);
 }
-function periodLine(e){
+function periodLine(e){   // rappel informatif : arrivée / départ de l'entreprise
   if(!e || (!e.startDate && !e.endDate)) return '';
-  const st=employmentStatus(e, isoDay(new Date()));
-  const badge = st==='parti' ? ' <span class="inline-block rounded bg-slate-200 text-slate-700 px-1.5 font-semibold">Parti</span>' : st==='a-venir' ? ' <span class="inline-block rounded bg-amber-100 text-amber-800 px-1.5 font-semibold">Arrive bientôt</span>' : '';
-  const parts=[]; if(e.startDate) parts.push('Entrée '+frDate(e.startDate)); if(e.endDate) parts.push('Sortie '+frDate(e.endDate));
-  return `<div class="text-[11px] text-slate-400">📅 ${parts.join(' · ')}${badge}</div>`;
+  const parts=[]; if(e.startDate) parts.push('Arrivée le '+frDate(e.startDate)); if(e.endDate) parts.push('Départ le '+frDate(e.endDate));
+  return `<div class="text-[11px] text-slate-400">📅 ${parts.join(' · ')}</div>`;
 }
 function ensureNameParts(e){ if(!e) return e; const np=nameParts(e); e.firstName=np.prenom; e.lastName=np.nom; return e; }
 // Période de présence : true si l'employé fait partie de l'équipe ce jour-là (dates d'entrée / de sortie facultatives, bornes incluses)
@@ -2742,17 +2740,10 @@ document.getElementById('shiftForm').addEventListener('submit', ev=>{
   if((data.realStart && !data.realEnd) || (!data.realStart && data.realEnd)){
     toast('Heure réelle : renseigne le début ET la fin (ou laisse les deux vides).'); return;
   }
-  // Hors période (avant la date d'entrée ou après la date de sortie) : on prévient, sans bloquer
-  const outOfPeriod=(week, days)=>{ const emp=empId && empById(empId); if(!emp) return true;
-    const bad=days.map(d=>isoDay(addDays(week, d))).filter(iso=>!isEmployedOn(emp, iso)); if(!bad.length) return true;
-    const why = [emp.startDate?('entrée le '+frDate(emp.startDate)):'', emp.endDate?('sortie le '+frDate(emp.endDate)):''].filter(Boolean).join(', ');
-    return confirm(emp.name+' ne fait pas partie de l’équipe le '+bad.map(frDate).join(', ')+' ('+why+').\n\nEnregistrer quand même ?'); };
-  if(id){ const cur=state.shifts.find(x=>x.id===id); if(!outOfPeriod(cur.week, [data.day])) return;
-    Object.assign(cur, data); save(); renderAll(); closeShiftModal(); toast('Service enregistré ✓'); return; }
+  if(id){ Object.assign(state.shifts.find(x=>x.id===id), data); save(); renderAll(); closeShiftModal(); toast('Service enregistré ✓'); return; }
   let daysList=[...document.querySelectorAll('#repeatDays .rep-day')].filter(b=>b.classList.contains('bg-teal-600')).map(b=>parseInt(b.dataset.rd,10));
   if(!daysList.length) daysList=[data.day];
   const targetWeek = newShiftWeek || state.weekStart;
-  if(!outOfPeriod(targetWeek, daysList)) return;
   daysList.forEach(d=> state.shifts.push({ id:uid(), week:targetWeek, ...data, day:d }));
   save(); renderAll(); closeShiftModal(); toast(daysList.length>1?`${daysList.length} créneaux ajoutés ✓`:'Service enregistré ✓');
 });
@@ -2870,7 +2861,7 @@ document.getElementById('empForm').addEventListener('submit', ev=>{
   // Libellé texte conservé pour la rétrocompatibilité d'affichage/cloud
   data.contract = [contractType, (hours!=null?fmtNum(hours)+' h/'+(hoursUnit==='mois'?'mois':'sem'):null)].filter(Boolean).join(' · ') || contractType;
   if(!data.name) return;
-  if(data.startDate && data.endDate && data.endDate < data.startDate){ toast('La date de sortie doit être après la date d’entrée.'); document.getElementById('empEnd').focus(); return; }
+  if(data.startDate && data.endDate && data.endDate < data.startDate){ toast('La date de départ doit être après la date d’arrivée.'); document.getElementById('empEnd').focus(); return; }
   if(data.baseSalary===undefined) delete data.baseSalary;   // manager : ne jamais écraser le salaire de base (champ masqué)
   if(id){ Object.assign(state.employees.find(x=>x.id===id), data); }
   else { state.employees.push({ id:uid(), ...data }); }

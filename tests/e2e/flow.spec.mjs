@@ -292,7 +292,7 @@ test('équipe : une fiche employé se saisit avec prénom et nom séparés', asy
   await expect(page.locator('#empFirstName')).toBeVisible();
   await page.locator('#empFirstName').fill('Marie Anne');
   await page.locator('#empLastName').fill('Dupont');
-  // Dates d'entrée et de sortie : visibles directement dans la fiche (plus cachées dans « Infos paie »)
+  // Arrivée / départ de l'entreprise : visibles directement dans la fiche (purement informatif)
   await expect(page.locator('#empStart')).toBeVisible();
   await expect(page.locator('#empEnd')).toBeVisible();
   await page.locator('#empStart').fill('2026-03-02');
@@ -303,6 +303,6 @@ test('équipe : une fiche employé se saisit avec prénom et nom séparés', asy
   await page.locator('#empForm button[type="submit"]').click();
   const saved = await page.evaluate(() => { const e = state.employees.find(x => x.lastName === 'Dupont'); return e && [e.name, e.firstName, e.lastName, e.startDate, e.endDate]; });
   expect(saved).toEqual(['Marie Anne Dupont', 'Marie Anne', 'Dupont', '2026-03-02', '2026-11-30']);
-  await expect(page.getByText('Entrée 02/03/2026 · Sortie 30/11/2026').first()).toBeAttached();
+  await expect(page.getByText('Arrivée le 02/03/2026 · Départ le 30/11/2026').first()).toBeAttached();
   await expect(page.getByText('Marie Anne Dupont').first()).toBeAttached();
 });
