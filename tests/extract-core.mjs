@@ -11,7 +11,7 @@ export const CORE_FUNCTIONS = [
   'parseLocalDate','mondayOf','isoDay','addDays','toMin','addMin','hoursBetween',
   'breakMinutes','shiftHours','realHours','shiftSpan','coversLunch',
   'easterDate','frHolidays','isHoliday',
-  'fullName','ensureNameParts',
+  'fullName','ensureNameParts','isEmployedOn','employmentStatus',
 ];
 
 // Fonctions pures MULTI-LIGNES (moteur de paie) : extraites de `function nom(` jusqu'à la première ligne `}` en colonne 0.

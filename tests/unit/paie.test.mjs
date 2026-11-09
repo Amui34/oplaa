@@ -1,7 +1,7 @@
 // Tests unitaires — moteur de paie HCR (paliers d'heures sup, complémentaires, noms).
 import { describe, it, expect } from 'vitest';
 import core from '../extract-core.mjs';
-const { hcrTiers, payWeekSplit, payContractSup, payPeriod, splitName, dailyContractHours, fullName, splitNameRaw, nameParts, ensureNameParts } = core;
+const { hcrTiers, payWeekSplit, payContractSup, payPeriod, splitName, dailyContractHours, fullName, splitNameRaw, nameParts, ensureNameParts, isEmployedOn, employmentStatus } = core;
 const close = (a, b) => expect(Math.abs(a - b)).toBeLessThan(1e-9);
 
 describe('paliers HCR (temps plein)', () => {
@@ -64,5 +64,17 @@ describe('fiche employé : prénom et nom séparés', () => {
   });
   it('fiche renommée par une ancienne version (champs périmés) → on se fie au nom complet', () => {
     expect(nameParts({ name: 'Zoé Martin', firstName: 'Camille', lastName: 'Durand' })).toEqual({ prenom: 'Zoé', nom: 'Martin' });
+  });
+});
+
+describe('fiche employé : dates d’entrée et de sortie', () => {
+  const e = { startDate: '2026-03-02', endDate: '2026-11-30' };
+  it('présent entre l’entrée et la sortie, bornes incluses', () => {
+    expect(isEmployedOn(e, '2026-03-02')).toBe(true); expect(isEmployedOn(e, '2026-07-14')).toBe(true); expect(isEmployedOn(e, '2026-11-30')).toBe(true);
+  });
+  it('absent avant l’entrée et après la sortie', () => { expect(isEmployedOn(e, '2026-03-01')).toBe(false); expect(isEmployedOn(e, '2026-12-01')).toBe(false); });
+  it('sans dates : toujours présent', () => { expect(isEmployedOn({}, '2026-01-01')).toBe(true); expect(isEmployedOn({ startDate: '2026-03-02' }, '2030-01-01')).toBe(true); });
+  it('statut : parti / à venir / en poste', () => {
+    expect(employmentStatus(e, '2026-12-05')).toBe('parti'); expect(employmentStatus(e, '2026-02-01')).toBe('a-venir'); expect(employmentStatus(e, '2026-06-01')).toBe('');
   });
 });

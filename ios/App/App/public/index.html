@@ -670,6 +670,13 @@
           <input type="number" id="empRate" min="0" step="0.5" inputmode="decimal" placeholder="12" class="mt-1 w-full border border-slate-300 rounded-lg px-3 py-2" />
         </div>
       </div>
+      <div>
+        <div class="grid grid-cols-2 gap-3">
+          <div><label for="empStart" class="text-sm font-semibold text-slate-600">Date d'entrée</label><input type="date" id="empStart" class="mt-1 w-full border border-slate-300 rounded-lg px-3 py-2" /></div>
+          <div><label for="empEnd" class="text-sm font-semibold text-slate-600">Date de sortie</label><input type="date" id="empEnd" class="mt-1 w-full border border-slate-300 rounded-lg px-3 py-2" /></div>
+        </div>
+        <span class="text-[11px] text-slate-400 block mt-0.5">Laisse la date de sortie vide tant que la personne fait partie de l'équipe. Ces dates servent à l'export comptable et préviennent si on planifie quelqu'un hors de sa période.</span>
+      </div>
       <div id="empPayEstimate" class="rounded-lg bg-slate-50 border border-slate-200 px-3 py-2 text-sm text-slate-600"></div>
       <div>
         <label for="empConges" class="text-sm font-semibold text-slate-600">Droit à congés (jours / an)</label>
@@ -681,8 +688,6 @@
         <div class="px-3 pb-3 grid grid-cols-1 sm:grid-cols-2 gap-3">
           <div><label for="empMatricule" class="text-sm font-semibold text-slate-600">Matricule</label><input type="text" id="empMatricule" placeholder="Ex : B0143" class="mt-1 w-full border border-slate-300 rounded-lg px-3 py-2" /></div>
           <div><label for="empJobTitle" class="text-sm font-semibold text-slate-600">Poste (intitulé)</label><input type="text" id="empJobTitle" placeholder="Ex : Serveur·se" class="mt-1 w-full border border-slate-300 rounded-lg px-3 py-2" /></div>
-          <div><label for="empStart" class="text-sm font-semibold text-slate-600">Date d'entrée</label><input type="date" id="empStart" class="mt-1 w-full border border-slate-300 rounded-lg px-3 py-2" /></div>
-          <div><label for="empEnd" class="text-sm font-semibold text-slate-600">Date de sortie</label><input type="date" id="empEnd" class="mt-1 w-full border border-slate-300 rounded-lg px-3 py-2" /></div>
           <label class="flex items-center gap-2 text-sm text-slate-700 sm:col-span-1"><input type="checkbox" id="empMutuelle"> Mutuelle d'entreprise</label>
           <div class="cost-col"><label for="empBaseSalary" class="text-sm font-semibold text-slate-600">Salaire de base mensuel brut (€)</label><input type="number" id="empBaseSalary" min="0" step="1" inputmode="decimal" placeholder="Ex : 2150" class="mt-1 w-full border border-slate-300 rounded-lg px-3 py-2" /></div>
         </div>
@@ -1659,7 +1664,17 @@ function nameParts(e){
   if(e && (e.firstName||e.lastName) && fullName(e.firstName,e.lastName)===String(e.name||'').trim()) return {prenom:e.firstName||'', nom:e.lastName||''};
   return splitNameRaw(e&&e.name);
 }
+function periodLine(e){
+  if(!e || (!e.startDate && !e.endDate)) return '';
+  const st=employmentStatus(e, isoDay(new Date()));
+  const badge = st==='parti' ? ' <span class="inline-block rounded bg-slate-200 text-slate-700 px-1.5 font-semibold">Parti</span>' : st==='a-venir' ? ' <span class="inline-block rounded bg-amber-100 text-amber-800 px-1.5 font-semibold">Arrive bientôt</span>' : '';
+  const parts=[]; if(e.startDate) parts.push('Entrée '+frDate(e.startDate)); if(e.endDate) parts.push('Sortie '+frDate(e.endDate));
+  return `<div class="text-[11px] text-slate-400">📅 ${parts.join(' · ')}${badge}</div>`;
+}
 function ensureNameParts(e){ if(!e) return e; const np=nameParts(e); e.firstName=np.prenom; e.lastName=np.nom; return e; }
+// Période de présence : true si l'employé fait partie de l'équipe ce jour-là (dates d'entrée / de sortie facultatives, bornes incluses)
+function isEmployedOn(e, iso){ if(!e || !iso) return true; if(e.startDate && iso < e.startDate) return false; if(e.endDate && iso > e.endDate) return false; return true; }
+function employmentStatus(e, todayIso){ if(!e) return ''; if(e.endDate && e.endDate < todayIso) return 'parti'; if(e.startDate && e.startDate > todayIso) return 'a-venir'; return ''; }
 // Journée « contrat » moyenne (pour valoriser une absence en heures quand rien n'était planifié).
 function dailyContractHours(contract, daysPerWeek){ return (contract>0) ? (+contract)/(daysPerWeek||5) : 0; }
 function rulePay(){ const d={mealType:'nature',t10End:39,t20End:43,daysPerWeek:5}; return Object.assign(d,(state.rules&&state.rules.pay)||{}); }
@@ -2467,7 +2482,7 @@ function renderTeam(){
     const mOver = mh!=null && mPlanned>mh+0.5;
     const monthLine = (mPlanned>0 || mh!=null) ? `<div class="text-[11px] ${mOver?'text-amber-600 font-semibold':'text-slate-400'}">📅 Ce mois : ${mPlanned.toFixed(1)} h${mh!=null?` / ${Math.round(mh)} h`:''}</div>` : '';
     const salLine = mg!=null ? `<div class="cost-col text-[11px] text-slate-500">💶 ≈ ${Math.round(mg).toLocaleString('fr-FR')} €/mois${mh!=null?` · ${fmtNum(mh)} h/mois`:''}</div>` : '';
-    const contractCell = `${escapeHtml(contractLabel(e))}` + (ch!=null? `<div class="text-[11px] ${over?'text-red-600 font-semibold':'text-slate-400'}">${ph.toFixed(1)} h planifiées (sem.)${over?` ⚠ +${(ph-ch).toFixed(1)}`:''}</div>` : (ph>0?`<div class="text-[11px] text-slate-400">${ph.toFixed(1)} h planifiées (sem.)</div>`:'')) + monthLine + salLine;
+    const contractCell = `${escapeHtml(contractLabel(e))}` + (ch!=null? `<div class="text-[11px] ${over?'text-red-600 font-semibold':'text-slate-400'}">${ph.toFixed(1)} h planifiées (sem.)${over?` ⚠ +${(ph-ch).toFixed(1)}`:''}</div>` : (ph>0?`<div class="text-[11px] text-slate-400">${ph.toFixed(1)} h planifiées (sem.)</div>`:'')) + monthLine + salLine + periodLine(e);
     return `<tr class="border-t border-slate-100 hover:bg-slate-50">
       <td class="px-4 py-3 font-semibold text-slate-800">${escapeHtml(e.name)}
         ${e.email?`<div class="text-xs font-normal text-slate-400">✉️ ${escapeHtml(e.email)}</div>`:`<div class="text-xs font-normal text-amber-500 no-print">✉️ pas d’email</div>`}
@@ -2727,10 +2742,17 @@ document.getElementById('shiftForm').addEventListener('submit', ev=>{
   if((data.realStart && !data.realEnd) || (!data.realStart && data.realEnd)){
     toast('Heure réelle : renseigne le début ET la fin (ou laisse les deux vides).'); return;
   }
-  if(id){ Object.assign(state.shifts.find(x=>x.id===id), data); save(); renderAll(); closeShiftModal(); toast('Service enregistré ✓'); return; }
+  // Hors période (avant la date d'entrée ou après la date de sortie) : on prévient, sans bloquer
+  const outOfPeriod=(week, days)=>{ const emp=empId && empById(empId); if(!emp) return true;
+    const bad=days.map(d=>isoDay(addDays(week, d))).filter(iso=>!isEmployedOn(emp, iso)); if(!bad.length) return true;
+    const why = [emp.startDate?('entrée le '+frDate(emp.startDate)):'', emp.endDate?('sortie le '+frDate(emp.endDate)):''].filter(Boolean).join(', ');
+    return confirm(emp.name+' ne fait pas partie de l’équipe le '+bad.map(frDate).join(', ')+' ('+why+').\n\nEnregistrer quand même ?'); };
+  if(id){ const cur=state.shifts.find(x=>x.id===id); if(!outOfPeriod(cur.week, [data.day])) return;
+    Object.assign(cur, data); save(); renderAll(); closeShiftModal(); toast('Service enregistré ✓'); return; }
   let daysList=[...document.querySelectorAll('#repeatDays .rep-day')].filter(b=>b.classList.contains('bg-teal-600')).map(b=>parseInt(b.dataset.rd,10));
   if(!daysList.length) daysList=[data.day];
   const targetWeek = newShiftWeek || state.weekStart;
+  if(!outOfPeriod(targetWeek, daysList)) return;
   daysList.forEach(d=> state.shifts.push({ id:uid(), week:targetWeek, ...data, day:d }));
   save(); renderAll(); closeShiftModal(); toast(daysList.length>1?`${daysList.length} créneaux ajoutés ✓`:'Service enregistré ✓');
 });
@@ -2848,6 +2870,7 @@ document.getElementById('empForm').addEventListener('submit', ev=>{
   // Libellé texte conservé pour la rétrocompatibilité d'affichage/cloud
   data.contract = [contractType, (hours!=null?fmtNum(hours)+' h/'+(hoursUnit==='mois'?'mois':'sem'):null)].filter(Boolean).join(' · ') || contractType;
   if(!data.name) return;
+  if(data.startDate && data.endDate && data.endDate < data.startDate){ toast('La date de sortie doit être après la date d’entrée.'); document.getElementById('empEnd').focus(); return; }
   if(data.baseSalary===undefined) delete data.baseSalary;   // manager : ne jamais écraser le salaire de base (champ masqué)
   if(id){ Object.assign(state.employees.find(x=>x.id===id), data); }
   else { state.employees.push({ id:uid(), ...data }); }
