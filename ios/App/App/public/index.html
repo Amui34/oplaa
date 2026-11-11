@@ -491,6 +491,7 @@
     <div id="empTab-mine" class="max-w-xl">
       <div id="empGreeting" class="mb-5"></div>
       <div id="empSign" class="mb-5"></div>
+      <div id="empCounters" class="mb-5"></div>
       <div class="flex items-center justify-between mb-2">
         <h3 class="text-sm font-extrabold text-slate-800 uppercase tracking-wide">🗓️ Mes prochains services</h3>
         <span id="empWeekHours" class="text-xs font-semibold text-slate-500"></span>
@@ -682,7 +683,7 @@
       <div>
         <label for="empConges" class="text-sm font-semibold text-slate-600">Droit à congés (jours / an)</label>
         <input type="number" id="empConges" min="0" step="1" placeholder="25" class="mt-1 w-full sm:w-44 border border-slate-300 rounded-lg px-3 py-2" />
-        <span class="text-[11px] text-slate-400 block mt-0.5">Sert à calculer le solde de congés restant (25 j/an par défaut).</span>
+        <span class="text-[11px] text-slate-400 block mt-0.5">Droit annuel (25 j ouvrés par défaut). Les congés s'acquièrent au fil des jours de présence depuis l'arrivée dans l'entreprise ; le solde = acquis − pris.</span>
       </div>
       <details class="rounded-lg border border-slate-200">
         <summary class="px-3 py-2 cursor-pointer text-sm font-semibold text-slate-600 select-none">Infos paie (export comptable)</summary>
@@ -1482,12 +1483,34 @@ function empHours(empId, weeks){
   return { prevu, reel };
 }
 // Solde de congés de l'année civile en cours (droit annuel − congés pris).
+// Congés acquis à ce jour (indicatif) : le droit annuel est réparti au prorata des jours passés dans l'entreprise
+// depuis le 1er janvier (année civile, comme le reste de l'app) ou depuis l'arrivée si elle est plus récente. Pur, testé.
+function congesAcquisCalc(allow, startDate, todayIso){
+  const t=parseLocalDate(todayIso); t.setHours(0,0,0,0);
+  let start=new Date(t.getFullYear(),0,1);
+  if(startDate){ const sd=parseLocalDate(startDate); if(!isNaN(sd) && sd>start) start=sd; }
+  if(start>t) return { acquis:0, days:0 };
+  const days=Math.round((t-start)/86400000)+1;                          // jours de présence, bornes incluses
+  const inYear=((t.getFullYear()%4===0 && t.getFullYear()%100!==0) || t.getFullYear()%400===0) ? 366 : 365;
+  const acquis=Math.min(allow, Math.round(allow*days/inYear*2)/2);        // arrondi au demi-jour
+  return { acquis, days };
+}
 function congesSolde(emp){
   const allow=(emp.congesAllowance!=null)?emp.congesAllowance:25;
   const yr=new Date().getFullYear(), seen=new Set(); let taken=0;
   state.absences.forEach(a=>{ if(a.empId!==emp.id || a.type!=='conge') return; const d=addDays(a.week,a.day); if(d.getFullYear()!==yr) return; const k=a.week+'|'+a.day; if(seen.has(k)) return; seen.add(k); taken++; });
-  return { allow, taken, left: allow-taken, yr };
+  const ca=congesAcquisCalc(allow, emp.startDate, isoDay(new Date()));
+  return { allow, taken, left: allow-taken, yr, acquis: ca.acquis, solde: Math.round((ca.acquis-taken)*2)/2 };
 }
+// Heures supplémentaires (temps plein) ou complémentaires (temps partiel) cumulées sur des semaines : même moteur que l'export comptable
+function supCumul(emp, weeks){
+  const ch=contractHours(emp); const PY=rulePay();
+  const weekly=weeks.map(wk=>empHours(emp.id,[wk]).reel);
+  const pp=payPeriod(weekly, ch||0, { t10End:PY.t10End, t20End:PY.t20End });
+  return { sup:(pp.sup10||0)+(pp.sup20||0)+(pp.sup50||0), compl:(pp.compl10||0)+(pp.compl25||0), partiel: ch!=null && ch<35 };
+}
+function weeksOfMonthOf(refWk){ const ref=parseLocalDate(refWk), m=ref.getMonth(), y=ref.getFullYear(); return [...new Set(state.shifts.map(s=>s.week))].filter(w=>{ const d=parseLocalDate(w); return d.getMonth()===m && d.getFullYear()===y; }); }
+function weeksOfYearToDate(refWk){ const ref=parseLocalDate(refWk), y=ref.getFullYear(), cur=isoDay(mondayOf(ref)); return [...new Set(state.shifts.map(s=>s.week))].filter(w=>parseLocalDate(w).getFullYear()===y && w<=cur); }
 // Prochaine échéance de document (conformité, type date) : la plus proche, en retard en premier.
 function nextDocDeadline(emp){
   const items=(state.complianceItems||[]).filter(it=>it.type==='date'); let best=null;
@@ -2540,7 +2563,9 @@ function renderTeam(){
     const t=teamOf(e.role); const ch=contractHours(e); const ph=planned[e.id]||0;
     const over = ch!=null && ph>ch+0.05;
     const cs=congesSolde(e); const nd=nextDocDeadline(e);
-    const congeLine=`<div class="text-[11px] ${cs.left<=0?'text-red-500 font-semibold':'text-emerald-600'}">🌴 Congés ${cs.yr} : ${cs.left}/${cs.allow} j restants</div>`;
+    const congeLine=`<div class="text-[11px] ${cs.solde<0?'text-red-600 font-semibold':'text-emerald-700'}">🌴 Congés ${cs.yr} : ${fmtNum(cs.acquis)} j acquis · ${cs.taken} pris · <b>solde ${fmtNum(cs.solde)} j</b> <span class="text-slate-400">(droit ${cs.allow} j/an)</span></div>`;
+    const _sm=supCumul(e, weeksOfMonthOf(state.weekStart)), _sy=supCumul(e, weeksOfYearToDate(state.weekStart));
+    const supLine=(_sm.sup+_sm.compl+_sy.sup+_sy.compl)>0 ? `<div class="text-[11px] text-slate-400">⏱ ${_sm.partiel?'Heures complém.':'Heures sup.'} : ${fmtNum(_sm.sup+_sm.compl)} h ce mois · ${fmtNum(_sy.sup+_sy.compl)} h en ${cs.yr}</div>` : '';
     let docLine='';
     if(nd){ const days=Math.round((nd.date-new Date())/86400000); const cls=days<0?'text-red-600 font-semibold':(days<=RECALL_DAYS?'text-amber-600':'text-slate-400'); const tag=days<0?' ⚠️ en retard':(days<=RECALL_DAYS?` · dans ${days} j`:''); docLine=`<div class="text-[11px] ${cls}">📄 ${escapeHtml(nd.label)} : ${fmtDate(nd.date)}${tag}</div>`; }
     const mg=monthlyGross(e); const mh=monthlyHours(e);
@@ -2548,7 +2573,7 @@ function renderTeam(){
     const mOver = mh!=null && mPlanned>mh+0.5;
     const monthLine = (mPlanned>0 || mh!=null) ? `<div class="text-[11px] ${mOver?'text-amber-600 font-semibold':'text-slate-400'}">📅 Ce mois : ${mPlanned.toFixed(1)} h${mh!=null?` / ${Math.round(mh)} h`:''}</div>` : '';
     const salLine = mg!=null ? `<div class="cost-col text-[11px] text-slate-500">💶 ≈ ${Math.round(mg).toLocaleString('fr-FR')} €/mois${mh!=null?` · ${fmtNum(mh)} h/mois`:''}</div>` : '';
-    const contractCell = `${escapeHtml(contractLabel(e))}` + (ch!=null? `<div class="text-[11px] ${over?'text-red-600 font-semibold':'text-slate-400'}">${ph.toFixed(1)} h planifiées (sem.)${over?` ⚠ +${(ph-ch).toFixed(1)}`:''}</div>` : (ph>0?`<div class="text-[11px] text-slate-400">${ph.toFixed(1)} h planifiées (sem.)</div>`:'')) + monthLine + salLine + periodLine(e);
+    const contractCell = `${escapeHtml(contractLabel(e))}` + (ch!=null? `<div class="text-[11px] ${over?'text-red-600 font-semibold':'text-slate-400'}">${ph.toFixed(1)} h planifiées (sem.)${over?` ⚠ +${(ph-ch).toFixed(1)}`:''}</div>` : (ph>0?`<div class="text-[11px] text-slate-400">${ph.toFixed(1)} h planifiées (sem.)</div>`:'')) + monthLine + supLine + salLine + periodLine(e);
     return `<tr class="border-t border-slate-100 hover:bg-slate-50">
       <td class="px-4 py-3 font-semibold text-slate-800">${escapeHtml(e.name)}
         ${e.email?`<div class="text-xs font-normal text-slate-400">✉️ ${escapeHtml(e.email)}</div>`:`<div class="text-xs font-normal text-amber-500 no-print">✉️ pas d’email</div>`}
@@ -3239,6 +3264,16 @@ function renderEmploye(){
       ? `<div class="rounded-2xl border border-emerald-200 bg-emerald-50 p-4"><div class="font-bold text-emerald-800">✔ Heures signées</div><div class="text-sm text-emerald-700 mt-0.5">Tu as validé <b>${r.toFixed(1)} h</b> le ${fmtStamp(sig.at)}.</div></div>`
       : `<div class="rounded-2xl border p-4" style="border-color:var(--o-300);background:var(--o-50)"><div class="font-bold text-slate-800">✍️ Valide tes heures de la semaine</div><div class="text-sm text-slate-600 mt-0.5 mb-3">Ton responsable a arrêté <b>${r.toFixed(1)} h</b> pour cette semaine. Relis et signe pour confirmer.</div><button id="empSignBtn" class="w-full px-4 py-2.5 rounded-xl bg-teal-600 text-white font-semibold hover:bg-teal-700">✍️ Je signe mes heures (${r.toFixed(1)} h)</button></div>`;
   } else signBox.innerHTML='';
+  // Compteurs personnels : congés (acquis / pris / solde) et heures sup. du mois et de l'année — jamais de salaire ici
+  const cnt=document.getElementById('empCounters');
+  if(cnt){ const cs=congesSolde(emp), sm=supCumul(emp, weeksOfMonthOf(state.weekStart)), sy=supCumul(emp, weeksOfYearToDate(state.weekStart)); const lbl=sm.partiel?'heures complém.':'heures sup.';
+    cnt.innerHTML = `<div class="rounded-2xl border border-slate-200 bg-white p-4"><div class="text-[11px] font-bold uppercase tracking-wide text-slate-400 mb-2">Mes compteurs</div>
+      <div class="grid grid-cols-3 gap-2 text-center">
+        <div><div class="text-xl font-extrabold text-slate-800">${fmtNum(cs.solde)} j</div><div class="text-[11px] text-slate-500">congés disponibles<br>${fmtNum(cs.acquis)} acquis · ${cs.taken} pris</div></div>
+        <div><div class="text-xl font-extrabold text-slate-800">${fmtNum(sm.sup+sm.compl)} h</div><div class="text-[11px] text-slate-500">${lbl}<br>ce mois</div></div>
+        <div><div class="text-xl font-extrabold text-slate-800">${fmtNum(sy.sup+sy.compl)} h</div><div class="text-[11px] text-slate-500">${lbl}<br>en ${cs.yr}</div></div>
+      </div>
+      <div class="text-[10px] text-slate-400 mt-2">Indicatif : ${fmtNum(cs.allow)} j de congés par an acquis au fil des jours de présence ; heures sup. calculées sur les heures réellement travaillées. Le décompte officiel reste celui de la fiche de paie.</div></div>`; }
   const mine = state.shifts.filter(s=>s.week===state.weekStart && s.empId===emp.id).sort((a,b)=> a.day-b.day || a.start.localeCompare(b.start));
   const hrs = mine.reduce((a,s)=>a+shiftHours(s),0);
   document.getElementById('empWeekHours').textContent = hrs>0? `${hrs.toFixed(1)} h` : '';

@@ -325,3 +325,13 @@ test('planning : les alertes légales s’affichent (repos < 11 h) et se désact
   await page.locator('#settingsForm button[type="submit"], #saveSettings').first().click();
   await expect(page.locator('#legalBanner')).toBeHidden();
 });
+
+test('compteurs : congés acquis / pris / solde dans l’équipe et « Mes compteurs » dans l’espace employé', async ({ page }) => {
+  await page.locator('#welcomeDemo').click();
+  await page.locator('.tab-btn[data-view="equipe"]').click();
+  await expect(page.locator('#view-equipe')).toContainText(/j acquis · \d+ pris · solde/);
+  await page.evaluate(() => { setView('employe'); renderEmploye(); });
+  await expect(page.locator('#empCounters')).toContainText('Mes compteurs');
+  await expect(page.locator('#empCounters')).toContainText('congés disponibles');
+  await expect(page.locator('#empCounters')).toContainText('ce mois');
+});

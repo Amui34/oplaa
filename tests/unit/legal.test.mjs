@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import core from '../extract-core.mjs';
-const { legalAlerts } = core;
+const { legalAlerts, congesAcquisCalc } = core;
 // Semaine du lundi 2026-11-02 ; day 0 = lundi … 6 = dimanche
 const W='2026-11-02', PREV='2026-10-26', NEXT='2026-11-09';
 const sh=(o)=>Object.assign({ id:'s'+Math.random().toString(36).slice(2,8), week:W, empId:'e1', breaks:[] }, o);
@@ -52,4 +52,13 @@ describe('alertes légales', () => {
   it('les extras (sans fiche employé) sont ignorés', () => {
     expect(legalAlerts([ sh({ empId:'', extraName:'Renfort', day:0, start:'08:00', end:'20:00' }) ], W)).toEqual([]);
   });
+});
+
+describe('congés acquis (prorata des jours de présence, année civile)', () => {
+  it('toute l’année → le droit annuel complet', () => { expect(congesAcquisCalc(25, null, '2026-12-31').acquis).toBe(25); });
+  it('au 1er juillet → à peu près la moitié, arrondie au demi-jour', () => { expect(congesAcquisCalc(25, null, '2026-07-01').acquis).toBe(12.5); });
+  it('arrivée récente : compte depuis la date d’arrivée', () => { expect(congesAcquisCalc(25, '2026-10-02', '2026-11-11').acquis).toBe(3); });
+  it('arrivée dans le futur → rien d’acquis', () => { expect(congesAcquisCalc(25, '2027-01-15', '2026-11-11').acquis).toBe(0); });
+  it('arrivée avant le 1er janvier → compte depuis le 1er janvier', () => { expect(congesAcquisCalc(30, '2020-03-01', '2026-12-31').acquis).toBe(30); });
+  it('ne dépasse jamais le droit annuel', () => { expect(congesAcquisCalc(25, '2025-01-01', '2026-12-31').acquis).toBe(25); });
 });
