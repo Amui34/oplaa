@@ -501,6 +501,35 @@ drop policy if exists pay_items_admin_all on pay_items;
 create policy pay_items_admin_all on pay_items for all using (is_owner(establishment_id)) with check (is_owner(establishment_id));
 
 -- ─────────────────────────────────────────────────────────────────────────
+--  NOTIFICATIONS (vague 1, 2026-11) — jetons d'appareil + publications de planning
+-- ─────────────────────────────────────────────────────────────────────────
+create table if not exists push_tokens (
+  token             text primary key,                       -- jeton APNs de l'appareil
+  user_id           uuid not null references auth.users(id) on delete cascade,
+  establishment_id  uuid references establishments(id) on delete set null,
+  platform          text not null default 'ios',
+  updated_at        timestamptz not null default now()
+);
+create index if not exists push_tokens_user_idx on push_tokens (user_id);
+alter table push_tokens enable row level security;
+drop policy if exists push_tokens_own on push_tokens;
+create policy push_tokens_own on push_tokens for all using (user_id = auth.uid()) with check (user_id = auth.uid());
+-- La fonction serveur « notify » lit cette table avec la clé de service (jamais côté client).
+
+create table if not exists week_publications (
+  establishment_id  uuid not null references establishments(id) on delete cascade,
+  week              date not null,
+  published_at      timestamptz not null default now(),
+  published_by      uuid references auth.users(id) on delete set null,
+  primary key (establishment_id, week)
+);
+alter table week_publications enable row level security;
+drop policy if exists weekpub_select on week_publications;
+create policy weekpub_select on week_publications for select using (is_member(establishment_id));
+drop policy if exists weekpub_staff_write on week_publications;
+create policy weekpub_staff_write on week_publications for all using (is_staff(establishment_id)) with check (is_staff(establishment_id));
+
+-- ─────────────────────────────────────────────────────────────────────────
 --  TEMPS RÉEL (Supabase Realtime) — tables écoutées par l'app via
 --  postgres_changes avec le filtre `establishment_id=eq.<id>` :
 --    admin/manager  : day_off_requests (demandes en direct) + shifts/absences/notes/employees/establishments (co-édition)
