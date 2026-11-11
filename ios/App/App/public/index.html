@@ -280,6 +280,8 @@
         </div>
         <button id="nextWeek" aria-label="Semaine suivante" class="w-9 h-9 rounded-lg bg-white border border-slate-300 hover:bg-slate-50 font-bold">›</button>
         <button id="todayBtn" class="px-3 py-2 text-xs rounded-lg bg-teal-50 text-teal-700 font-semibold border border-teal-200 hover:bg-teal-100">Cette semaine</button>
+        <button id="btnPublish" class="manager-only no-print px-3 py-2 text-xs rounded-lg bg-teal-600 text-white font-semibold hover:bg-teal-700" title="Envoyer le planning de la semaine à l'équipe (notification)">📣 Publier</button>
+        <span id="publishedAt" class="manager-only no-print text-[11px] text-slate-400"></span>
       </div>
     </div>
 
@@ -2031,7 +2033,8 @@ function migrate(s){
   if(!/^#[0-9a-fA-F]{6}$/.test(s.accent||'')) s.accent='#C4562F';   // couleur principale
   if(s.theme!=='dark' && s.theme!=='light') s.theme='light';   // thème d'affichage
   if(!Array.isArray(s.absences)) s.absences=[];   // congés / absences [{id,week,empId,day,type}]
-  if(!Array.isArray(s.payItems)) s.payItems=[];   // primes / avances [{id,empId,month:'YYYY-MM',code,label,amount}] — admins seulement
+  if(!Array.isArray(s.payItems)) s.payItems=[];
+  if(!s.published || typeof s.published!=='object') s.published={};   // { [lundi ISO]: date ISO de publication du planning }   // primes / avances [{id,empId,month:'YYYY-MM',code,label,amount}] — admins seulement
   if(!s.timesheets || typeof s.timesheets!=='object') s.timesheets={};   // feuilles d'heures { [week]: {real:{shiftId:h}, validatedAt, signatures:{empId:{at}}} }
   Object.values(s.timesheets).forEach(t=>{ if(t&&typeof t==='object'){ t.real=t.real||{}; t.signatures=t.signatures||{}; if(!t.byShift){ t.real={}; t.byShift=true; } } });   // réel = par service (ancien format par employé réinitialisé)
   if(typeof s.logo!=='string') s.logo='';   // logo de l'établissement (data URL, optionnel)
@@ -2374,6 +2377,11 @@ function renderGrid(){
       lb.classList.remove('hidden');
     } else { lb.classList.add('hidden'); lb.innerHTML=''; }
   }
+
+  // Publication de la semaine (notification à l'équipe)
+  const pbl=document.getElementById('publishedAt');
+  if(pbl){ const t=state.published && state.published[start]; const d=t?new Date(t):null;
+    pbl.textContent = (d && !isNaN(d)) ? ('Publié le '+d.toLocaleDateString('fr-FR',{day:'numeric',month:'short'})+' à '+d.toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'})) : 'Pas encore publié'; }
 
   // Libellés
   const ws=parseLocalDate(start), we=addDays(start,6);
@@ -3315,7 +3323,8 @@ function renderEmploye(){
   const emp=empById(empViewSel);
   document.getElementById('empGreeting').innerHTML = `<div class="rounded-2xl p-4 text-white" style="background:linear-gradient(135deg,var(--o-600),var(--o-800))">
     <div class="text-lg font-extrabold">Bonjour ${escapeHtml(emp.name.split(' ')[0])} 👋</div>
-    <div class="text-sm opacity-90">Ta semaine du ${fmtDate(parseLocalDate(state.weekStart))} au ${fmtDate(addDays(state.weekStart,6))} chez ${escapeHtml(state.restaurant)}.</div></div>`;
+    <div class="text-sm opacity-90">Ta semaine du ${fmtDate(parseLocalDate(state.weekStart))} au ${fmtDate(addDays(state.weekStart,6))} chez ${escapeHtml(state.restaurant)}.</div>
+    ${(()=>{ const t=state.published&&state.published[state.weekStart]; const d=t?new Date(t):null; return (d&&!isNaN(d)) ? `<div class="text-[11px] opacity-80 mt-1">📣 Planning publié le ${d.toLocaleDateString('fr-FR',{day:'numeric',month:'long'})} à ${d.toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'})}</div>` : ''; })()}</div>`;
   // Bannière de signature des heures (si la semaine est validée par le manager)
   const ts=state.timesheets[state.weekStart];
   const signBox=document.getElementById('empSign');
@@ -3434,6 +3443,7 @@ document.getElementById('offReqSend').addEventListener('click', async ()=>{
   if(!(sb && cloudMembership)){ err.textContent='Connexion requise.'; err.classList.remove('hidden'); return; }
   const details = date + (reason?` — ${reason}`:'');
   const { error } = await sb.from('day_off_requests').insert({ establishment_id:cloudMembership.establishment_id, employee_id:cloudMembership.employee_id, details, status:'pending' });
+  if(!error && typeof notifyServer==='function') notifyServer({ type:'leave_requested', details });   // prévient les admins / managers (silencieux si non activé)
   if(error){ err.textContent='Échec : '+error.message; err.classList.remove('hidden'); return; }
   closeOffReq(); toast('Demande envoyée à ton responsable ✓');
 });
@@ -3470,9 +3480,10 @@ document.getElementById('btnOffInbox').addEventListener('click',openOffInbox);
 document.getElementById('offInboxList').addEventListener('click', async e=>{
   const ref=e.target.closest('.off-refuse'), app=e.target.closest('.off-approve'); if(!ref&&!app) return;
   const id=(ref||app).dataset.id;
-  if(ref){ const { error }=await sb.from('day_off_requests').update({status:'refused'}).eq('id',id); if(error){ toast('Échec : '+error.message); return; } }
+  if(ref){ const { error }=await sb.from('day_off_requests').update({status:'refused'}).eq('id',id); if(error){ toast('Échec : '+error.message); return; } if(typeof notifyServer==='function') notifyServer({ type:'leave_refused', request_id:id }); }
   else {
     const { error }=await sb.from('day_off_requests').update({status:'approved'}).eq('id',id); if(error){ toast('Échec : '+error.message); return; }
+    if(typeof notifyServer==='function') notifyServer({ type:'leave_approved', request_id:id });
     // Pose le congé automatiquement si la date est connue
     const iso=app.dataset.iso, empRemote=app.dataset.emp;
     if(iso){ const d=parseLocalDate(iso), wk=isoDay(mondayOf(d)), day=(d.getDay()+6)%7;
@@ -4698,6 +4709,7 @@ async function refreshCloud(){
   }
   _membersCache=null; if(typeof renderManageBanner==='function') renderManageBanner();
   if(typeof renderProBox==='function') renderProBox();
+  if(cloudMembership && typeof pushSetup==='function') pushSetup();   // notifications (app iPhone) : enregistre l'appareil
   setSyncStatus(canAutoPush() ? 'ok' : null);   // indicateur d'en-tête : « Synchronisé ✓ » pour le patron connecté
 }
 
@@ -4826,6 +4838,7 @@ async function pullForEmployee(){
   if(e){ state.restaurant=e.name||state.restaurant; if(e.teams&&e.teams.length)state.teams=e.teams; if(e.periods&&e.periods.length)state.periods=e.periods; if(e.compliance)state.complianceItems=e.compliance; state.teamWord=e.team_word||state.teamWord; state.accent=e.accent||state.accent; state.logo=e.logo||''; state.empScope=e.emp_scope||'all'; state.profile=e.profile||state.profile; state.proUntil=e.pro_until||null; state.proSource=e.pro_source||null; state.siret=e.siret||state.siret||''; if(e.rules&&typeof e.rules==='object'&&Object.keys(e.rules).length) state.rules=Object.assign({}, state.rules||{}, e.rules); syncGlobals(); setAccent(state.accent); applyLogo(); }
   const { data:team } = await sb.from('team_members_public').select('*').eq('establishment_id', est);
   state.employees = (team||[]).map(t=>({ id:t.id, name:t.name, role:t.role, contract:'', rate:0, phone:'', email:'', archived:!!t.archived, compliance:{} }));
+  try{ const { data:pub, error } = await sb.from('week_publications').select('week,published_at').eq('establishment_id', est); if(!error && Array.isArray(pub)){ state.published={}; pub.forEach(p=>{ state.published[p.week]=p.published_at; }); } }catch(e){}
   const { data:shifts } = await sb.from('shifts').select('*').eq('establishment_id', est);
   state.shifts = (shifts||[]).map(s=>({ id:s.id, week:s.week, day:s.day, team:s.team, period:s.period, start:s.start_t, end:s.end_t, empId:s.employee_id||'', extraName:s.extra_name||'', realStart:s.real_start||'', realEnd:s.real_end||'', breaks:s.breaks||[], note:s.note||'' }));
   const { data:abs } = await sb.from('absences').select('*').eq('establishment_id', est);
@@ -4856,6 +4869,7 @@ async function pullForOwner(){
     state.absences = (abs||[]).map(a=>({ id:a.local_id||a.id, week:a.week, day:a.day, empId:remoteToLocal[a.employee_id]||'', type:a.type, hours:(a.hours||undefined) })).filter(a=>a.empId);
     const { data:notes } = await sb.from('notes').select('*').eq('establishment_id', est);
     state.notes = (notes||[]).map(n=>({ id:n.local_id||n.id, week:n.week, day:n.day, text:n.text, level:n.level||'info' }));
+    try{ const { data:pub, error } = await sb.from('week_publications').select('week,published_at').eq('establishment_id', est); if(!error && Array.isArray(pub)){ state.published={}; pub.forEach(p=>{ state.published[p.week]=p.published_at; }); } }catch(e){}
     if(canSeeSalaries()){   // primes / avances (table réservée aux admins ; absente → on garde le local)
       try{ const { data:pis, error } = await sb.from('pay_items').select('*').eq('establishment_id', est);
         if(!error && Array.isArray(pis)){ state.payItems = pis.map(i=>({ id:i.local_id||i.id, empId:remoteToLocal[i.employee_id]||'', month:i.month, code:i.code, label:i.label||'', amount:+i.amount||0 })).filter(i=>i.empId); _knownPayItemIds=new Set(state.payItems.map(i=>i.id)); }
@@ -5314,6 +5328,55 @@ try{
   a11yEnhance(document);
   new MutationObserver(()=>{ clearTimeout(_a11yTimer); _a11yTimer=setTimeout(()=>a11yEnhance(document), 120); }).observe(document.body, { childList:true, subtree:true });
 }catch(e){}
+
+/* ============ NOTIFICATIONS (publication du planning, congés) ============
+   Côté app : bouton « Publier » (admins / managers) → la semaine est poussée au cloud, datée, et la fonction serveur
+   « notify » prévient les appareils de l'équipe (APNs). Tout est silencieux tant que la fonction et les tables
+   (week_publications, push_tokens) ne sont pas déployées : le planning reste visible dans l'app comme aujourd'hui. */
+async function notifyServer(payload){
+  if(!sb || !cloudSession || !cloudMembership) return { skipped:'hors-ligne' };
+  try{
+    const { data, error } = await sb.functions.invoke('notify', { body: Object.assign({ establishment_id: cloudMembership.establishment_id }, payload) });
+    if(error) return { error: (error.message||String(error)) };
+    return data || {};
+  }catch(e){ return { error: e.message||String(e) }; }
+}
+let _publishing=false;
+async function publishWeek(){
+  if(_publishing) return;
+  const wk=state.weekStart;
+  if(state.demo){ toast('Mode démo : en vrai, chaque employé reçoit une notification « Planning publié ».'); return; }
+  if(!cloudMembership || !['owner','manager'].includes(cloudMembership.role)){ toast('Connecte-toi à ton compte pour publier et prévenir l’équipe.'); openCloud(); return; }
+  const btn=document.getElementById('btnPublish'); _publishing=true; if(btn){ btn.disabled=true; btn.textContent='Publication…'; }
+  try{
+    try{ await pushToCloud(); }catch(e){}                                   // l'équipe doit recevoir la dernière version
+    const concerned=new Set(state.shifts.filter(s=>s.week===wk && s.empId).map(s=>s.empId)).size;
+    const when=new Date().toISOString(); state.published=state.published||{}; state.published[wk]=when; saveQuiet();
+    try{ await sb.from('week_publications').upsert({ establishment_id:cloudMembership.establishment_id, week:wk, published_at:when, published_by:cloudSession.user.id }, { onConflict:'establishment_id,week' }); }catch(e){}
+    const r=await notifyServer({ type:'planning_published', week:wk });
+    if(r && r.sent>0) toast(`Planning publié ✓ — ${r.sent} personne${r.sent>1?'s':''} prévenue${r.sent>1?'s':''}`);
+    else if(r && r.error) toast('Planning publié ✓ — les notifications ne sont pas encore activées, l’équipe le voit en ouvrant l’app.');
+    else toast(`Planning publié ✓ — ${concerned} personne${concerned>1?'s':''} concernée${concerned>1?'s':''}`);
+    renderGrid();
+  } finally { _publishing=false; if(btn){ btn.disabled=false; btn.textContent='📣 Publier'; } }
+}
+document.getElementById('btnPublish').addEventListener('click', publishWeek);
+// App iPhone : demande la permission et enregistre le jeton de l'appareil (table push_tokens, une ligne par appareil)
+let _pushDone=false;
+async function pushSetup(){
+  const P=window.Capacitor && window.Capacitor.Plugins && window.Capacitor.Plugins.PushNotifications; if(!P || !sb || _pushDone) return; _pushDone=true;
+  try{
+    let perm=await P.checkPermissions();
+    if(perm.receive==='prompt' || perm.receive==='prompt-with-rationale') perm=await P.requestPermissions();
+    if(perm.receive!=='granted') return;
+    if(P.removeAllListeners) await P.removeAllListeners();
+    await P.addListener('registration', async (t)=>{ try{ if(cloudSession && t && t.value) await sb.from('push_tokens').upsert({ user_id:cloudSession.user.id, token:t.value, platform:'ios', establishment_id:(cloudMembership&&cloudMembership.establishment_id)||null, updated_at:new Date().toISOString() }, { onConflict:'token' }); }catch(e){} });
+    await P.addListener('registrationError', (e)=>{ console.warn('push registration', e); });
+    await P.addListener('pushNotificationReceived', (n)=>{ toast(((n&&n.title)||'Oplaa')+(n&&n.body?' — '+n.body:'')); try{ onAppResume(); }catch(e){} });
+    await P.addListener('pushNotificationActionPerformed', ()=>{ try{ onAppResume(); }catch(e){} });
+    await P.register();
+  }catch(e){ console.warn('push', e); }
+}
 
 /* ============ PRIMES / AVANCES ============ */
 const payItemModal=document.getElementById('payItemModal');
