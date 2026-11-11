@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<title>Oplaa face à Combo</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="description" content="Étude comparative Oplaa / Combo (novembre 2026) : ce qui manque à Oplaa pour être aussi complet, classé par priorité et par effort.">
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,700;12..96,800&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --terre:#C4562F; --terre-d:#A8471F; --craie:#FBF6F1; --ink:#2A1D16; --muted:#6E655C; --line:#E7DBCE;
+    --page:#F6ECE2; --card:#ffffff; --soft:#FBF6F1; --ok:#3F6B4A; --okbg:#EAF0E8; --warn:#8A6516; --warnbg:#F7EEDA; --ko:#9E2B2B; --kobg:#F8E6E3;
+    --p1:#9E2B2B; --p2:#8A6516; --p3:#4C5BAF;
+    --disp:'Bricolage Grotesque',system-ui,sans-serif;
+    --ui:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;
+  }
+  @media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--page:#1B120C;--card:#241A13;--soft:#2C2017;--ink:#F6ECE2;--muted:#B8A797;--line:#3A2A20;--okbg:#213126;--warnbg:#3A2E12;--kobg:#3A1F1C;--ok:#A9C5A2;--warn:#E4C577;--ko:#E0A9A1}}
+  :root[data-theme="dark"]{--page:#1B120C;--card:#241A13;--soft:#2C2017;--ink:#F6ECE2;--muted:#B8A797;--line:#3A2A20;--okbg:#213126;--warnbg:#3A2E12;--kobg:#3A1F1C;--ok:#A9C5A2;--warn:#E4C577;--ko:#E0A9A1}
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--page);color:var(--ink);font-family:var(--ui);line-height:1.6}
+  .wrap{max-width:980px;margin:0 auto;padding:40px 16px 80px}
+  .brand{display:flex;align-items:center;gap:12px;margin-bottom:26px}
+  .brand svg{width:40px;height:40px;filter:drop-shadow(0 5px 14px rgba(196,86,47,.25))}
+  .brand .wm{font-family:var(--disp);font-weight:800;font-size:26px;letter-spacing:-.045em;color:var(--terre);line-height:1}
+  .brand .sub{font-size:12px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--muted)}
+  h1{font-family:var(--disp);font-weight:800;font-size:clamp(28px,5vw,40px);letter-spacing:-.02em;margin:0 0 6px;text-wrap:balance}
+  .date{color:var(--muted);font-size:14px;margin-bottom:26px}
+  h2{font-family:var(--disp);font-weight:700;font-size:22px;letter-spacing:-.01em;margin:40px 0 10px}
+  h3{font-size:16px;font-weight:700;margin:22px 0 6px}
+  p,li{font-size:16px}
+  p{margin:10px 0}
+  .lead{font-size:18px;color:var(--muted)}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:18px 20px;margin:18px 0}
+  .kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;margin:18px 0}
+  .kpi{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:14px 16px}
+  .kpi b{display:block;font-family:var(--disp);font-size:30px;font-weight:800;letter-spacing:-.03em;color:var(--terre);line-height:1.1}
+  .kpi span{font-size:13px;color:var(--muted)}
+  .bar{height:10px;border-radius:99px;background:var(--line);overflow:hidden;margin-top:8px}
+  .bar i{display:block;height:100%;background:var(--terre);border-radius:99px}
+  table{width:100%;border-collapse:collapse;font-size:14.5px;margin:12px 0;background:var(--card);border:1px solid var(--line);border-radius:14px;overflow:hidden}
+  th,td{text-align:left;padding:10px 12px;border-bottom:1px solid var(--line);vertical-align:top}
+  th{font-size:11.5px;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);background:var(--soft)}
+  tr:last-child td{border-bottom:0}
+  .tag{display:inline-block;font-size:11.5px;font-weight:700;padding:2px 8px;border-radius:99px;white-space:nowrap}
+  .ok{background:var(--okbg);color:var(--ok)} .warn{background:var(--warnbg);color:var(--warn)} .ko{background:var(--kobg);color:var(--ko)}
+  .P1{background:var(--kobg);color:var(--p1)} .P2{background:var(--warnbg);color:var(--p2)} .P3{background:#E8EAF6;color:var(--p3)}
+  @media (prefers-color-scheme:dark){:root:not([data-theme="light"]) .P3{background:#232A4A;color:#B8C0F0}}
+  .scroll{overflow-x:auto;-webkit-overflow-scrolling:touch}
+  .wave{border-left:4px solid var(--terre);padding:4px 0 4px 16px;margin:16px 0}
+  .wave h3{margin-top:0}
+  .muted{color:var(--muted)}
+  .legend{font-size:13px;color:var(--muted)}
+  footer{margin-top:48px;padding-top:18px;border-top:1px solid var(--line);color:var(--muted);font-size:13px}
+  footer a{color:var(--terre)}
+  @media (max-width:640px){th,td{padding:8px 8px;font-size:13.5px}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="brand">
+    <svg viewBox="0 0 128 128" role="img" aria-label="Oplaa"><rect width="128" height="128" rx="30" fill="#C4562F"/><circle cx="64" cy="64" r="33" fill="none" stroke="#FBF6F1" stroke-width="8"/><circle cx="64" cy="64" r="29" fill="#FBF6F1"/><path d="M64 64 L44.14 85.14 A29 29 0 0 1 64 35 Z" fill="#C4562F"/></svg>
+    <div><div class="wm">oplaa</div><div class="sub">Étude comparative</div></div>
+  </div>
+
+  <h1>Oplaa face à Combo : ce qui nous manque</h1>
+  <p class="date">Novembre 2026 · pour Noa et Lucas · sources : site de Combo (offres, fonctionnalités), tests indépendants 2026, code d'Oplaa au 11 novembre 2026</p>
+
+  <p class="lead">Combo est devenu un logiciel RH complet pour les équipes de terrain : planning, pointeuse, congés, paie, documents, pilotage, multi-sites. Oplaa couvre très bien le cœur, le planning et la préparation de la paie d'un établissement, pour dix fois moins cher. L'écart se concentre sur six familles de fonctions, dont trois seulement comptent vraiment pour un restaurateur indépendant.</p>
+
+  <div class="kpis">
+    <div class="kpi"><b>≈ 90 %</b><span>du quotidien planning d'un restaurant indépendant couvert par Oplaa</span><div class="bar"><i style="width:90%"></i></div></div>
+    <div class="kpi"><b>≈ 55 %</b><span>du périmètre complet de Combo (Time + People + options)</span><div class="bar"><i style="width:55%"></i></div></div>
+    <div class="kpi"><b>7,99 €</b><span>par mois et par établissement, contre 68 à 89 € chez Combo, hors options</span></div>
+    <div class="kpi"><b>3 vagues</b><span>pour rattraper l'essentiel : 4, puis 6, puis 8 semaines de travail estimées</span></div>
+  </div>
+
+  <h2>1. Les offres Combo en bref</h2>
+  <div class="scroll"><table>
+    <tr><th>Offre</th><th>Prix</th><th>Contenu</th></tr>
+    <tr><td><b>Time</b></td><td>68 € / mois / établissement</td><td>Planning collaboratif, ratios de productivité en temps réel, suivi des heures, messagerie, export paie simplifié, intégration aux caisses, planification prédictive par IA annoncée</td></tr>
+    <tr><td><b>People</b></td><td>89 € / mois / établissement</td><td>Time + signature électronique, gestion avancée des congés et absences, modulation du temps de travail, export comptable et paie, tableau de bord RH, API partenaire</td></tr>
+    <tr><td><b>Combo Pay</b></td><td>19 € / employé / mois</td><td>Paie native : bulletins, DSN, soldes de tout compte, support expert paie</td></tr>
+    <tr><td>Options</td><td>2 € / employé / mois (pointeuse) · 1,2 € (bulletins) · 1,5 € (transfert Silae)</td><td>Pointeuse digitale, distribution des bulletins, export Silae</td></tr>
+  </table></div>
+  <p class="muted">Un restaurant de 12 salariés avec planning, pointeuse et export Silae paie chez Combo environ 68 + 24 + 18 = 110 € par mois. Chez Oplaa : 7,99 €. Essai Combo : 7 jours (promotion « 3 mois gratuits » en cours jusqu'à fin 2026). Oplaa : 30 jours sans carte.</p>
+
+  <h2>2. Comparatif module par module</h2>
+  <p class="legend">Couverture Oplaa : <span class="tag ok">complet</span> <span class="tag warn">partiel</span> <span class="tag ko">absent</span>. Priorité pour notre cible (restaurant indépendant, 5 à 30 salariés) : <span class="tag P1">P1 indispensable</span> <span class="tag P2">P2 différenciant</span> <span class="tag P3">P3 plus tard</span>. Effort : S = 1 à 2 jours, M = 3 à 5 jours, L = 1 à 2 semaines, XL = plus.</p>
+
+  <h3>Planning</h3>
+  <div class="scroll"><table>
+    <tr><th>Fonction</th><th>Combo</th><th>Oplaa</th><th>Couverture</th><th>Priorité</th><th>Effort</th></tr>
+    <tr><td>Planning par service et par équipe, vue jour / semaine, par équipe / par employé</td><td>Oui</td><td>Oui</td><td><span class="tag ok">complet</span></td><td>—</td><td>—</td></tr>
+    <tr><td>Duplication de semaines, modèles, copie du planning d'un employé, répétition sur plusieurs jours</td><td>Oui (horaires favoris, duplication)</td><td>Oui</td><td><span class="tag ok">complet</span></td><td>—</td><td>—</td></tr>
+    <tr><td>Coût et masse salariale en temps réel, charge de la semaine</td><td>Oui (ratios)</td><td>Oui</td><td><span class="tag ok">complet</span></td><td>—</td><td>—</td></tr>
+    <tr><td>Co-édition à plusieurs admins / managers en direct</td><td>Oui</td><td>Oui (temps réel)</td><td><span class="tag ok">complet</span></td><td>—</td><td>—</td></tr>
+    <tr><td>Notes et événements, jours fériés, impression / PDF</td><td>Oui</td><td>Oui</td><td><span class="tag ok">complet</span></td><td>—</td><td>—</td></tr>
+    <tr><td><b>Alertes légales automatiques</b> : repos de 11 h, 48 h par semaine, 6 jours consécutifs, 10 h par jour, pause de 20 min, règles HCR</td><td>Oui, selon la convention collective</td><td>Non (seul le dépassement du contrat est signalé)</td><td><span class="tag ko">absent</span></td><td><span class="tag P1">P1</span></td><td>M</td></tr>
+    <tr><td><b>Publication du planning avec notification</b> aux salariés (push, e-mail, SMS) et alerte en cas de modification</td><td>Oui</td><td>Envoi manuel par e-mail ou WhatsApp ; l'employé voit son planning dans l'app sans être prévenu</td><td><span class="tag warn">partiel</span></td><td><span class="tag P1">P1</span></td><td>M</td></tr>
+    <tr><td>Disponibilités et indisponibilités déclarées par les salariés, prises en compte au planning</td><td>Oui (via l'app employé)</td><td>Non</td><td><span class="tag ko">absent</span></td><td><span class="tag P2">P2</span></td><td>M</td></tr>
+    <tr><td>Remplacements : shift proposé à l'équipe, échange entre salariés avec validation du manager</td><td>Oui</td><td>Non</td><td><span class="tag ko">absent</span></td><td><span class="tag P2">P2</span></td><td>L</td></tr>
+    <tr><td>Planification prédictive par IA, prévision d'activité</td><td>Annoncé (« bientôt »)</td><td>Non</td><td><span class="tag ko">absent</span></td><td><span class="tag P3">P3</span></td><td>XL</td></tr>
+  </table></div>
+
+  <h3>Temps de travail et pointage</h3>
+  <div class="scroll"><table>
+    <tr><th>Fonction</th><th>Combo</th><th>Oplaa</th><th>Couverture</th><th>Priorité</th><th>Effort</th></tr>
+    <tr><td>Heures planifiées, heures réelles, pauses, heures supplémentaires par paliers HCR</td><td>Oui</td><td>Oui (heures réelles saisies à la main)</td><td><span class="tag ok">complet</span></td><td>—</td><td>—</td></tr>
+    <tr><td>Feuille d'heures à valider, export CSV</td><td>Oui</td><td>Oui</td><td><span class="tag ok">complet</span></td><td>—</td><td>—</td></tr>
+    <tr><td><b>Pointeuse</b> : tablette ou mobile, photo aléatoire, géolocalisation, hors ligne, signature, retards en temps réel, oublis détectés, écarts planifié / réel</td><td>Oui (option 2 € / salarié)</td><td>Non</td><td><span class="tag ko">absent</span></td><td><span class="tag P2">P2</span> <span class="muted">décision Noa : plus tard</span></td><td>L</td></tr>
+    <tr><td><b>Compteurs</b> : heures supplémentaires cumulées, repos compensateur, congés acquis / pris avec les règles légales (2,5 jours par mois), modulation annuelle</td><td>Oui (modulation dans People)</td><td>Solde de congés simple (droit annuel moins jours pris)</td><td><span class="tag warn">partiel</span></td><td><span class="tag P1">P1</span></td><td>M</td></tr>
+  </table></div>
+
+  <h3>Congés et absences</h3>
+  <div class="scroll"><table>
+    <tr><th>Fonction</th><th>Combo</th><th>Oplaa</th><th>Couverture</th><th>Priorité</th><th>Effort</th></tr>
+    <tr><td>Demande de congé par le salarié, validation par le manager</td><td>Oui</td><td>Oui</td><td><span class="tag ok">complet</span></td><td>—</td><td>—</td></tr>
+    <tr><td>Types d'absence complets pour la paie (17 types, heures d'absence)</td><td>Oui</td><td>Oui</td><td><span class="tag ok">complet</span></td><td>—</td><td>—</td></tr>
+    <tr><td>Justificatifs joints (arrêt maladie en photo), relances</td><td>Oui</td><td>Non</td><td><span class="tag ko">absent</span></td><td><span class="tag P2">P2</span></td><td>S</td></tr>
+    <tr><td>Calendrier des absences de l'équipe, conflits (trop d'absents le même jour)</td><td>Oui</td><td>Partiel (absences visibles dans le planning)</td><td><span class="tag warn">partiel</span></td><td><span class="tag P2">P2</span></td><td>S</td></tr>
+  </table></div>
+
+  <h3>Paie et comptabilité</h3>
+  <div class="scroll"><table>
+    <tr><th>Fonction</th><th>Combo</th><th>Oplaa</th><th>Couverture</th><th>Priorité</th><th>Effort</th></tr>
+    <tr><td>Export comptable des éléments variables (heures, sup, absences, repas, paniers)</td><td>Oui</td><td>Oui, au format Combo exact (3 feuilles, 72 colonnes)</td><td><span class="tag ok">complet</span></td><td>—</td><td>—</td></tr>
+    <tr><td>Import des données d'un autre outil</td><td>Non documenté</td><td>Oui, import d'un export Combo</td><td><span class="tag ok">avantage Oplaa</span></td><td>—</td><td>—</td></tr>
+    <tr><td>Primes, avances, acomptes saisis par employé et par mois</td><td>Oui</td><td>Non</td><td><span class="tag ko">absent</span></td><td><span class="tag P1">P1</span></td><td>S</td></tr>
+    <tr><td>Formats natifs des logiciels de paie : Silae, PayFit, Cegid, Sage, ADP</td><td>Oui</td><td>Non (Excel et CSV génériques)</td><td><span class="tag ko">absent</span></td><td><span class="tag P2">P2</span></td><td>M par format</td></tr>
+    <tr><td>Distribution des bulletins de paie aux salariés dans l'app</td><td>Oui (option)</td><td>Non</td><td><span class="tag ko">absent</span></td><td><span class="tag P3">P3</span></td><td>M</td></tr>
+    <tr><td>Paie native, DSN, soldes de tout compte</td><td>Oui (Combo Pay, 19 € / salarié)</td><td>Non</td><td><span class="tag ko">absent</span></td><td>hors cible</td><td>XL</td></tr>
+  </table></div>
+
+  <h3>Administration RH et documents</h3>
+  <div class="scroll"><table>
+    <tr><th>Fonction</th><th>Combo</th><th>Oplaa</th><th>Couverture</th><th>Priorité</th><th>Effort</th></tr>
+    <tr><td>Fiche salarié complète (contrat, heures, taux, matricule, poste, arrivée / départ, mutuelle, salaire de base)</td><td>Oui</td><td>Oui</td><td><span class="tag ok">complet</span></td><td>—</td><td>—</td></tr>
+    <tr><td>Échéances de conformité (visite médicale, titre de séjour) avec alertes, dossier verrouillé par code</td><td>Oui</td><td>Oui</td><td><span class="tag ok">complet</span></td><td>—</td><td>—</td></tr>
+    <tr><td><b>Coffre-fort documentaire</b> par salarié (contrat, avenants, pièce d'identité, attestations), accessible au salarié</td><td>Oui</td><td>Non</td><td><span class="tag ko">absent</span></td><td><span class="tag P2">P2</span></td><td>M</td></tr>
+    <tr><td>Génération de contrats et avenants depuis des modèles, signature électronique avec relances</td><td>Oui (People)</td><td>Non</td><td><span class="tag ko">absent</span></td><td><span class="tag P3">P3</span></td><td>L</td></tr>
+    <tr><td>DPAE envoyée automatiquement à l'URSSAF, registre du personnel</td><td>Oui</td><td>Non</td><td><span class="tag ko">absent</span></td><td><span class="tag P3">P3</span></td><td>L (agrément URSSAF)</td></tr>
+    <tr><td>Rappels de fin de période d'essai, onboarding du nouvel arrivant</td><td>Oui</td><td>Non</td><td><span class="tag ko">absent</span></td><td><span class="tag P2">P2</span></td><td>S</td></tr>
+  </table></div>
+
+  <h3>Communication et application employé</h3>
+  <div class="scroll"><table>
+    <tr><th>Fonction</th><th>Combo</th><th>Oplaa</th><th>Couverture</th><th>Priorité</th><th>Effort</th></tr>
+    <tr><td>Espace employé : son planning seulement, ses congés, ses demandes</td><td>Oui</td><td>Oui (iOS et web)</td><td><span class="tag ok">complet</span></td><td>—</td><td>—</td></tr>
+    <tr><td><b>Notifications push</b> (planning publié, modifié, congé accepté)</td><td>Oui</td><td>Non</td><td><span class="tag ko">absent</span></td><td><span class="tag P1">P1</span></td><td>M</td></tr>
+    <tr><td>Messagerie et annonces à l'équipe, accusé de lecture</td><td>Oui (chat intégré)</td><td>Non</td><td><span class="tag ko">absent</span></td><td><span class="tag P2">P2</span></td><td>M</td></tr>
+    <tr><td>Synchronisation avec l'agenda personnel du salarié (iCal)</td><td>Oui</td><td>Non</td><td><span class="tag ko">absent</span></td><td><span class="tag P2">P2</span></td><td>S</td></tr>
+    <tr><td>Application Android</td><td>Oui</td><td>Site web mobile uniquement</td><td><span class="tag warn">partiel</span></td><td><span class="tag P2">P2</span></td><td>M</td></tr>
+  </table></div>
+
+  <h3>Pilotage, multi-sites et intégrations</h3>
+  <div class="scroll"><table>
+    <tr><th>Fonction</th><th>Combo</th><th>Oplaa</th><th>Couverture</th><th>Priorité</th><th>Effort</th></tr>
+    <tr><td><b>Plusieurs établissements</b> sous un même compte, vue consolidée, comparaison entre sites</td><td>Oui (cœur de cible franchisés)</td><td>Un compte = un établissement</td><td><span class="tag ko">absent</span></td><td><span class="tag P2">P2</span></td><td>M</td></tr>
+    <tr><td>Ratio masse salariale / chiffre d'affaires, productivité</td><td>Oui (caisse connectée)</td><td>Masse salariale seule</td><td><span class="tag warn">partiel</span></td><td><span class="tag P2">P2</span></td><td>S (CA saisi) puis L (caisses)</td></tr>
+    <tr><td>Intégration des caisses (Lightspeed, L'Addition, Zelty, SumUp)</td><td>Oui</td><td>Non</td><td><span class="tag ko">absent</span></td><td><span class="tag P3">P3</span></td><td>L</td></tr>
+    <tr><td>Tableau de bord RH : turnover, absentéisme, heures sup par site</td><td>Oui (People)</td><td>Non</td><td><span class="tag ko">absent</span></td><td><span class="tag P3">P3</span></td><td>M</td></tr>
+    <tr><td>API ouverte, connecteurs partenaires</td><td>Oui (People, sur devis)</td><td>Non</td><td><span class="tag ko">absent</span></td><td><span class="tag P3">P3</span></td><td>L</td></tr>
+    <tr><td>Support : chat, formations hebdomadaires, permanence juridique</td><td>Oui</td><td>E-mail et FAQ</td><td><span class="tag warn">partiel</span></td><td><span class="tag P3">P3</span></td><td>organisation, pas du code</td></tr>
+  </table></div>
+
+  <h2>3. Là où Oplaa est devant</h2>
+  <div class="card">
+    <ul>
+      <li><b>Le prix</b> : 7,99 € tout compris contre 68 à 110 € selon les options. Pas de tarif par salarié, pas de devis.</li>
+      <li><b>La simplicité</b> : un compte, un établissement, une formule. Prise en main sans formation, démo sans compte, création de compte par code en une minute.</li>
+      <li><b>La compatibilité Combo</b> : export comptable au format exact de Combo et import d'un fichier Combo. Un restaurateur peut changer d'outil sans que son comptable ne voie la différence.</li>
+      <li><b>La co-édition en direct</b> entre admins et managers, et l'accessibilité (audit automatique sans défaut sur 33 écrans).</li>
+      <li><b>Les avis mobiles</b> : l'application Combo est notée 3,2 sur l'App Store. Une app simple et rapide est un argument.</li>
+    </ul>
+  </div>
+
+  <h2>4. Feuille de route proposée</h2>
+  <p>Trois vagues, du plus utile au plus ambitieux. Les efforts sont des estimations de développement, tests compris, hors validation par vous.</p>
+
+  <div class="wave">
+    <h3>Vague 1 : le quotidien irréprochable <span class="muted">(≈ 4 semaines)</span></h3>
+    <ul>
+      <li><b>Notifications push</b> : planning publié ou modifié, congé accepté ou refusé, demande reçue par le manager. Bouton « Publier le planning » qui prévient l'équipe en un geste.</li>
+      <li><b>Alertes légales dans le planning</b> : repos de 11 h entre deux services, 48 h par semaine, 6 jours consécutifs, 10 h par jour, pause de 20 min au-delà de 6 h, règles HCR. Affichées en orange, jamais bloquantes.</li>
+      <li><b>Compteurs</b> : congés acquis automatiquement (2,5 jours par mois travaillé), heures supplémentaires cumulées par mois et par année, affichés dans la fiche et l'espace employé.</li>
+      <li><b>Primes et avances</b> saisissables par employé et par mois, reprises dans l'export comptable.</li>
+    </ul>
+  </div>
+
+  <div class="wave">
+    <h3>Vague 2 : ce qui fait rester <span class="muted">(≈ 6 semaines)</span></h3>
+    <ul>
+      <li><b>Pointage simple</b>, quand vous le déciderez : « Je commence / Je termine » sur le téléphone du salarié, mode tablette commune au comptoir avec code, écart planifié / réel alimenté automatiquement, retards signalés au manager.</li>
+      <li><b>Disponibilités et remplacements</b> : le salarié déclare ses indisponibilités ; un shift peut être proposé à l'équipe, le premier qui accepte le prend après validation.</li>
+      <li><b>Plusieurs établissements</b> sous un compte : sélecteur, un abonnement par site, vue consolidée.</li>
+      <li><b>Coffre-fort documentaire</b> par salarié, justificatifs d'absence joints, rappels de fin de période d'essai, synchronisation agenda.</li>
+      <li><b>Export Silae</b> en premier, puis PayFit, selon ce que demandent les comptables de vos premiers clients.</li>
+    </ul>
+  </div>
+
+  <div class="wave">
+    <h3>Vague 3 : le pilotage <span class="muted">(≈ 8 semaines)</span></h3>
+    <ul>
+      <li><b>Chiffre d'affaires et ratio masse salariale / CA</b> : saisie du CA du jour d'abord, puis connexion aux caisses les plus courantes.</li>
+      <li><b>Messagerie et annonces</b> avec accusé de lecture.</li>
+      <li><b>Application Android</b>, tableau de bord RH, génération de contrats depuis des modèles.</li>
+    </ul>
+  </div>
+
+  <h2>5. Ce que nous ne devrions pas copier</h2>
+  <div class="card">
+    <ul>
+      <li><b>La paie native (Combo Pay)</b> : métier à part, responsabilité juridique lourde, 19 € par salarié. Rester l'outil qui prépare la paie pour le comptable.</li>
+      <li><b>Les formules par modules et les options au salarié</b> : notre force est un prix unique lisible.</li>
+      <li><b>La DPAE automatique et la signature électronique</b> avant d'avoir des clients qui les réclament : coûts d'intégration élevés, bénéfice faible pour un indépendant qui embauche quelques fois par an.</li>
+      <li><b>L'IA de planification</b> : Combo l'annonce sans la livrer. Des alertes légales fiables valent plus qu'une promesse.</li>
+    </ul>
+  </div>
+
+  <h2>6. Décisions à prendre</h2>
+  <ol>
+    <li>Valider l'ordre de la vague 1, ou en retirer un point.</li>
+    <li>Confirmer la place du pointage : vague 2 comme proposé, ou plus tard.</li>
+    <li>Choisir le premier format de paie natif en interrogeant le comptable qui valide l'export actuel.</li>
+  </ol>
+
+  <footer>
+    Sources : <a href="https://combohr.com/fr/nos-offres">offres Combo</a>, <a href="https://combohr.com/fr/fonctionnalites/pointeuse-digitale">pointeuse Combo</a>, <a href="https://combohr.com/fr/fonctionnalites/gestion-plannings">planning Combo</a>, <a href="https://combohr.com/fr/fonctionnalites/application-employes">application employés Combo</a>, <a href="https://tool-advisor.fr/logiciel-rh/combo/">test Tool Advisor 2026</a>, <a href="https://independant.io/avis/combo/">avis Independant.io</a>. Les fonctions de Combo sont celles annoncées publiquement ; certaines peuvent différer à l'usage. Oplaa : état du code au 11 novembre 2026.<br><br>
+    Oplaa — SAS NOMAD. Document interne, préparé avec Claude.
+  </footer>
+</div>
+</body>
+</html>
