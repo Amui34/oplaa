@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import core from '../extract-core.mjs';
-const { legalAlerts, congesAcquisCalc } = core;
+const { legalAlerts, congesAcquisCalc, payItemsTotals } = core;
 // Semaine du lundi 2026-11-02 ; day 0 = lundi … 6 = dimanche
 const W='2026-11-02', PREV='2026-10-26', NEXT='2026-11-09';
 const sh=(o)=>Object.assign({ id:'s'+Math.random().toString(36).slice(2,8), week:W, empId:'e1', breaks:[] }, o);
@@ -61,4 +61,26 @@ describe('congés acquis (prorata des jours de présence, année civile)', () =>
   it('arrivée dans le futur → rien d’acquis', () => { expect(congesAcquisCalc(25, '2027-01-15', '2026-11-11').acquis).toBe(0); });
   it('arrivée avant le 1er janvier → compte depuis le 1er janvier', () => { expect(congesAcquisCalc(30, '2020-03-01', '2026-12-31').acquis).toBe(30); });
   it('ne dépasse jamais le droit annuel', () => { expect(congesAcquisCalc(25, '2025-01-01', '2026-12-31').acquis).toBe(25); });
+});
+
+describe('primes / avances : totaux par employé et colonnes Combo', () => {
+  const items=[
+    { id:'1', empId:'a', month:'2026-11', code:'prime_exceptionnelle', amount:150 },
+    { id:'2', empId:'a', month:'2026-11', code:'prime_exceptionnelle', amount:50 },
+    { id:'3', empId:'a', month:'2026-11', code:'avance', amount:200 },
+    { id:'4', empId:'a', month:'2026-10', code:'prime_transport', amount:30 },      // autre mois → ignoré
+    { id:'5', empId:'b', month:'2026-11', code:'autre', label:'Prime objectif', amount:100 },
+    { id:'6', empId:'b', month:'2026-11', code:'autre', label:'Prime objectif', amount:20 },
+    { id:'7', empId:'b', month:'2026-11', code:'autre', label:'Prime froid', amount:10 },
+  ];
+  it('cumule par colonne et ignore les autres mois', () => {
+    const t=payItemsTotals(items, ['2026-11']);
+    expect(t.a.cols).toEqual({ 'Prime exceptionnelle':200, 'Avance sur salaire ':200 });
+  });
+  it('les primes à libellé libre occupent Prime 4, 5, 6 en gardant leur libellé', () => {
+    const t=payItemsTotals(items, ['2026-11']);
+    expect(t.b.cols).toEqual({ 'Prime 4':120, 'Prime 5':10 });
+    expect(t.b.autres.map(a=>a.label)).toEqual(['Prime objectif','Prime froid']);
+  });
+  it('rien pour un employé sans élément', () => { expect(payItemsTotals(items, ['2026-11']).c).toBeUndefined(); });
 });

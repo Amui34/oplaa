@@ -481,6 +481,26 @@ $$;
 grant execute on function redeem_licence(uuid, text) to authenticated;
 
 -- ─────────────────────────────────────────────────────────────────────────
+--  PRIMES / AVANCES (vague 1, 2026-11) — par employé et par mois, données de salaire : ADMINS seulement
+-- ─────────────────────────────────────────────────────────────────────────
+create table if not exists pay_items (
+  id                uuid primary key default gen_random_uuid(),
+  establishment_id  uuid not null references establishments(id) on delete cascade,
+  employee_id       uuid not null references employees(id) on delete cascade,
+  local_id          text,
+  month             text not null check (month ~ '^[0-9]{4}-[0-9]{2}$'),   -- 'YYYY-MM'
+  code              text not null,                                          -- prime_exceptionnelle | prime_transport | prime_blanchissage | avance | autre
+  label             text,
+  amount            numeric(10,2) not null default 0,
+  created_at        timestamptz not null default now()
+);
+create unique index if not exists pay_items_est_local_uq on pay_items (establishment_id, local_id);
+create index if not exists pay_items_est_month_idx on pay_items (establishment_id, month);
+alter table pay_items enable row level security;
+drop policy if exists pay_items_admin_all on pay_items;
+create policy pay_items_admin_all on pay_items for all using (is_owner(establishment_id)) with check (is_owner(establishment_id));
+
+-- ─────────────────────────────────────────────────────────────────────────
 --  TEMPS RÉEL (Supabase Realtime) — tables écoutées par l'app via
 --  postgres_changes avec le filtre `establishment_id=eq.<id>` :
 --    admin/manager  : day_off_requests (demandes en direct) + shifts/absences/notes/employees/establishments (co-édition)

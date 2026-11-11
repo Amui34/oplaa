@@ -407,6 +407,7 @@
             <th class="text-right px-3 py-3 font-semibold">Réel</th>
             <th class="text-right px-3 py-3 font-semibold">Écart</th>
             <th class="text-right px-3 py-3 font-semibold hidden sm:table-cell">vs Contrat</th>
+            <th class="cost-col text-right px-3 py-3 font-semibold">Primes / avances</th>
             <th class="cost-col text-right px-4 py-3 font-semibold">Coût</th>
           </tr>
         </thead>
@@ -999,6 +1000,35 @@
   </div>
 </div>
 
+<!-- ============ MODALE PRIMES / AVANCES (par employé et par mois, admins) ============ -->
+<div id="payItemModal" class="no-print fixed inset-0 bg-black/40 z-50 hidden items-center justify-center p-4">
+  <div class="bg-white rounded-2xl shadow-xl w-full max-w-md p-5 max-h-[90vh] overflow-y-auto">
+    <div class="flex items-center justify-between mb-1">
+      <h3 class="text-lg font-bold">💶 Primes et avances</h3>
+      <button type="button" class="closePayItem text-slate-400 hover:text-slate-600 text-2xl leading-none" aria-label="Fermer">&times;</button>
+    </div>
+    <p id="payItemWho" class="text-sm text-slate-500 mb-3"></p>
+    <div id="payItemList" class="space-y-1.5 mb-4"></div>
+    <form id="payItemForm" class="rounded-xl border border-slate-200 p-3 space-y-2">
+      <input type="hidden" id="payItemEmp"><input type="hidden" id="payItemMonth">
+      <div>
+        <label for="payItemCode" class="text-sm font-semibold text-slate-600">Type</label>
+        <select id="payItemCode" class="mt-1 w-full border border-slate-300 rounded-lg px-3 py-2"></select>
+      </div>
+      <div id="payItemLabelWrap" hidden>
+        <label for="payItemLabel" class="text-sm font-semibold text-slate-600">Libellé</label>
+        <input type="text" id="payItemLabel" maxlength="40" placeholder="Ex : prime d'objectif" class="mt-1 w-full border border-slate-300 rounded-lg px-3 py-2">
+      </div>
+      <div>
+        <label for="payItemAmount" class="text-sm font-semibold text-slate-600">Montant brut (€)</label>
+        <input type="number" id="payItemAmount" min="0" step="0.01" inputmode="decimal" placeholder="Ex : 150" required class="mt-1 w-full border border-slate-300 rounded-lg px-3 py-2">
+      </div>
+      <button type="submit" class="w-full px-3 py-3 rounded-xl bg-teal-600 text-white font-semibold hover:bg-teal-700">Ajouter</button>
+      <p class="text-[11px] text-slate-400">Repris dans l'export comptable du mois (colonnes Combo « Prime exceptionnelle », « Prime transport », « Prime blanchissage », « Avance sur salaire », « Prime 4 à 6 »). Visible des admins uniquement.</p>
+    </form>
+  </div>
+</div>
+
 <!-- ============ MODALE CONFORMITÉ (par salarié) ============ -->
 <div id="confModal" class="no-print fixed inset-0 bg-black/40 z-50 hidden items-center justify-center p-4">
   <div class="bg-white rounded-2xl shadow-xl w-full max-w-lg p-5 max-h-[90vh] overflow-y-auto">
@@ -1510,6 +1540,34 @@ function supCumul(emp, weeks){
   return { sup:(pp.sup10||0)+(pp.sup20||0)+(pp.sup50||0), compl:(pp.compl10||0)+(pp.compl25||0), partiel: ch!=null && ch<35 };
 }
 function weeksOfMonthOf(refWk){ const ref=parseLocalDate(refWk), m=ref.getMonth(), y=ref.getFullYear(); return [...new Set(state.shifts.map(s=>s.week))].filter(w=>{ const d=parseLocalDate(w); return d.getMonth()===m && d.getFullYear()===y; }); }
+// Primes, avances et acomptes : saisis par employé et par mois, repris dans l'export comptable (colonnes Combo)
+const PAY_ITEM_TYPES=[
+  { key:'prime_exceptionnelle', label:'Prime exceptionnelle', combo:'Prime exceptionnelle' },
+  { key:'prime_transport',      label:'Prime transport',      combo:'Prime transport' },
+  { key:'prime_blanchissage',   label:'Prime blanchissage',   combo:'Prime blanchissage ' },
+  { key:'avance',               label:'Avance sur salaire / acompte', combo:'Avance sur salaire ' },
+  { key:'autre',                label:'Autre prime (libellé libre)',  combo:null },
+];
+function payItemType(key){ return PAY_ITEM_TYPES.find(t=>t.key===key)||PAY_ITEM_TYPES[0]; }
+function monthKeyOf(refWk){ const d=parseLocalDate(refWk); return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0'); }
+function monthLabelOf(mk){ const [y,m]=mk.split('-').map(Number); return new Date(y,m-1,1).toLocaleDateString('fr-FR',{month:'long',year:'numeric'}); }
+// Fonction PURE (testée) : totaux par employé et par colonne Combo sur une liste de mois ('YYYY-MM').
+// Les « autres primes » (libellé libre) occupent Prime 4, Prime 5, Prime 6 dans l'ordre de saisie, et gardent leur libellé.
+function payItemsTotals(items, months){
+  const types={ prime_exceptionnelle:'Prime exceptionnelle', prime_transport:'Prime transport', prime_blanchissage:'Prime blanchissage ', avance:'Avance sur salaire ' };
+  const out={};
+  (items||[]).forEach(it=>{
+    if(!it || !it.empId || !months.includes(it.month) || !(+it.amount>0)) return;
+    const e=(out[it.empId]=out[it.empId]||{ cols:{}, autres:[] });
+    const col=types[it.code];
+    if(col){ e.cols[col]=(e.cols[col]||0)+(+it.amount); }
+    else { const prev=e.autres.find(a=>a.label===(it.label||'Autre prime')); if(prev) prev.amount+=(+it.amount); else e.autres.push({ label:it.label||'Autre prime', amount:+it.amount }); }
+  });
+  Object.values(out).forEach(e=>{ e.autres.slice(0,3).forEach((a,i)=>{ e.cols['Prime '+(4+i)]=a.amount; }); });
+  return out;
+}
+function payItemsFor(empId, mk){ return (state.payItems||[]).filter(i=>i.empId===empId && i.month===mk); }
+function payItemsTotal(empId, mk){ return payItemsFor(empId, mk).reduce((a,i)=>a+(+i.amount||0),0); }
 function weeksOfYearToDate(refWk){ const ref=parseLocalDate(refWk), y=ref.getFullYear(), cur=isoDay(mondayOf(ref)); return [...new Set(state.shifts.map(s=>s.week))].filter(w=>parseLocalDate(w).getFullYear()===y && w<=cur); }
 // Prochaine échéance de document (conformité, type date) : la plus proche, en retard en premier.
 function nextDocDeadline(emp){
@@ -1973,6 +2031,7 @@ function migrate(s){
   if(!/^#[0-9a-fA-F]{6}$/.test(s.accent||'')) s.accent='#C4562F';   // couleur principale
   if(s.theme!=='dark' && s.theme!=='light') s.theme='light';   // thème d'affichage
   if(!Array.isArray(s.absences)) s.absences=[];   // congés / absences [{id,week,empId,day,type}]
+  if(!Array.isArray(s.payItems)) s.payItems=[];   // primes / avances [{id,empId,month:'YYYY-MM',code,label,amount}] — admins seulement
   if(!s.timesheets || typeof s.timesheets!=='object') s.timesheets={};   // feuilles d'heures { [week]: {real:{shiftId:h}, validatedAt, signatures:{empId:{at}}} }
   Object.values(s.timesheets).forEach(t=>{ if(t&&typeof t==='object'){ t.real=t.real||{}; t.signatures=t.signatures||{}; if(!t.byShift){ t.real={}; t.byShift=true; } } });   // réel = par service (ancien format par employé réinitialisé)
   if(typeof s.logo!=='string') s.logo='';   // logo de l'établissement (data URL, optionnel)
@@ -2681,6 +2740,7 @@ function renderSuivi(){
       <td class="px-3 py-3 text-right text-slate-800 font-medium">${reel.toFixed(1)} h</td>
       <td class="px-3 py-3 text-right">${chip(reel-prevu)}</td>
       <td class="px-3 py-3 text-right hidden sm:table-cell">${vsC==null?'<span class="text-slate-400">—</span>':chip(vsC,'h','text-emerald-600','text-red-500')}</td>
+      <td class="cost-col px-3 py-3 text-right">${(()=>{ const mk=monthKeyOf(state.weekStart), tot=payItemsTotal(e.id, mk); return `<button type="button" class="payItemsBtn text-sm font-semibold ${tot?'text-slate-800':'text-teal-700'} hover:underline" data-id="${e.id}" aria-label="Primes et avances de ${escapeHtml(e.name)}">${tot?fmtNum(tot)+' €':'+ ajouter'}</button>`; })()}</td>
       <td class="cost-col px-4 py-3 text-right text-slate-700">${cost?cost.toFixed(0)+' €':'—'}</td>
     </tr>`;
   }).join('');
@@ -2693,6 +2753,7 @@ function renderSuivi(){
       <td class="px-3 py-3 text-right">${tR.toFixed(1)} h</td>
       <td class="px-3 py-3 text-right">${chip(tR-tP)}</td>
       <td class="hidden sm:table-cell"></td>
+      <td class="cost-col px-3 py-3 text-right">${(()=>{ const mk=monthKeyOf(state.weekStart); const t=activeEmployees().reduce((a,e)=>a+payItemsTotal(e.id,mk),0); return t?fmtNum(t)+' €':'—'; })()}</td>
       <td class="cost-col px-4 py-3 text-right">${tC?tC.toFixed(0)+' €':'—'}</td>
     </tr>` : '';
   // Résumé : heures supplémentaires + congés cumulés sur la période
@@ -4375,6 +4436,12 @@ function buildComptaExport(weeks){
     // Repas & paniers
     let meals=0, panier=0; weeks.forEach(wk=>{ const byDay={}; state.shifts.filter(s=>s.week===wk && s.empId===e.id && !isAbsentDay(e.id,wk,s.day)).forEach(s=>(byDay[s.day]=byDay[s.day]||[]).push(s)); Object.values(byDay).forEach(l=>meals+=mealsForDayShifts(l)); panier+=weekExtra(e.id,wk).panierN||0; });
     if(meals){ set(mealCode, meals); evpPush(mealCode, meals); } if(panier){ set('Repas: prime panier', panier); evpPush('Repas: prime panier', panier); }
+    // Primes, avances et acomptes du ou des mois couverts par la période
+    const months=[...new Set(weeks.flatMap(wk=>[monthKeyOf(wk), monthKeyOf(isoDay(addDays(wk,6)))]))];
+    const pit=payItemsTotals(state.payItems, months)[e.id];
+    if(pit){ Object.keys(pit.cols).forEach(col=>{ set(col, r2(pit.cols[col])); }); 
+      Object.keys(pit.cols).filter(c=>!/^Prime [456]$/.test(c)).forEach(col=>evpPush(col.trim(), pit.cols[col]));
+      pit.autres.slice(0,3).forEach(a=>evpPush(a.label, a.amount)); }
     synth.push(row);
   });
   // Ligne TOTAL : formules SUM sur les colonnes numériques (à partir de « Heures contrat hebdo. »)
@@ -4721,6 +4788,14 @@ async function pushToCloud(){
     if(abs.length){ await sb.from('absences').upsert(abs,{onConflict:'establishment_id,local_id'}); }
     const notes = state.notes.map(n=>({ establishment_id:est, local_id:n.id, week:n.week, day:(n.day==null?null:n.day), text:n.text, level:n.level||'info' }));
     if(notes.length){ await sb.from('notes').upsert(notes,{onConflict:'establishment_id,local_id'}); }
+    if(canSeeSalaries()){   // primes / avances : données de salaire → jamais envoyées par un manager
+      try{
+        const pis=(state.payItems||[]).map(i=>({ establishment_id:est, local_id:i.id, employee_id: map[i.empId]||null, month:i.month, code:i.code, label:i.label||null, amount:+i.amount||0 })).filter(i=>i.employee_id);
+        if(pis.length){ const r=await sb.from('pay_items').upsert(pis,{onConflict:'establishment_id,local_id'}); if(r.error && !/pay_items/.test(r.error.message||'')) console.warn('pay_items', r.error.message); }
+        const keep=new Set((state.payItems||[]).map(i=>i.id)); const gone=[..._knownPayItemIds].filter(id=>!keep.has(id));
+        if(gone.length){ await sb.from('pay_items').delete().eq('establishment_id', est).in('local_id', gone); _knownPayItemIds=new Set(keep); }
+      }catch(e){ /* table pas encore créée côté serveur : on garde les données en local */ }
+    }
     // Réconcilie : supprime côté cloud les services retirés localement
     const localIds=new Set(state.shifts.map(s=>s.id));
     const { data:remShifts } = await sb.from('shifts').select('id,local_id').eq('establishment_id', est);
@@ -4737,6 +4812,7 @@ async function pushToCloud(){
 }
 let _localToRemoteEmp = {};
 let _knownShiftLocalIds = new Set(), _lastPushAt = 0;   // co-édition entre managers
+let _knownPayItemIds = new Set();                       // primes / avances vues depuis le cloud (pour ne supprimer que ce qu'on connaît)
 // RGPD : journal des accès (best-effort ; silencieux si la table n'existe pas encore)
 async function logAccess(action){
   try{ if(sb && cloudSession && cloudMembership) await sb.from('access_log').insert({ establishment_id: cloudMembership.establishment_id, action }); }catch(e){}
@@ -4780,6 +4856,11 @@ async function pullForOwner(){
     state.absences = (abs||[]).map(a=>({ id:a.local_id||a.id, week:a.week, day:a.day, empId:remoteToLocal[a.employee_id]||'', type:a.type, hours:(a.hours||undefined) })).filter(a=>a.empId);
     const { data:notes } = await sb.from('notes').select('*').eq('establishment_id', est);
     state.notes = (notes||[]).map(n=>({ id:n.local_id||n.id, week:n.week, day:n.day, text:n.text, level:n.level||'info' }));
+    if(canSeeSalaries()){   // primes / avances (table réservée aux admins ; absente → on garde le local)
+      try{ const { data:pis, error } = await sb.from('pay_items').select('*').eq('establishment_id', est);
+        if(!error && Array.isArray(pis)){ state.payItems = pis.map(i=>({ id:i.local_id||i.id, empId:remoteToLocal[i.employee_id]||'', month:i.month, code:i.code, label:i.label||'', amount:+i.amount||0 })).filter(i=>i.empId); _knownPayItemIds=new Set(state.payItems.map(i=>i.id)); }
+      }catch(e){}
+    }
     migrate(state); syncGlobals(); setAccent(state.accent); applyLogo();
     firstRun=false; _applyingRemote=true; save(); _applyingRemote=false;   // on vient de tirer du cloud → pas de re-push
     renderAll();
@@ -5233,6 +5314,44 @@ try{
   a11yEnhance(document);
   new MutationObserver(()=>{ clearTimeout(_a11yTimer); _a11yTimer=setTimeout(()=>a11yEnhance(document), 120); }).observe(document.body, { childList:true, subtree:true });
 }catch(e){}
+
+/* ============ PRIMES / AVANCES ============ */
+const payItemModal=document.getElementById('payItemModal');
+function renderPayItems(){
+  const empId=document.getElementById('payItemEmp').value, mk=document.getElementById('payItemMonth').value, emp=empById(empId); if(!emp) return;
+  document.getElementById('payItemWho').textContent = emp.name+' — '+monthLabelOf(mk);
+  const items=payItemsFor(empId, mk), tot=items.reduce((a,i)=>a+(+i.amount||0),0);
+  document.getElementById('payItemList').innerHTML = items.length ? items.map(i=>`<div class="flex items-center justify-between gap-2 rounded-lg bg-slate-50 border border-slate-200 px-3 py-2 text-sm">
+      <span class="min-w-0 truncate"><b>${escapeHtml(i.code==='autre' ? (i.label||'Autre prime') : payItemType(i.code).label)}</b></span>
+      <span class="shrink-0 font-semibold">${fmtNum(+i.amount||0)} €</span>
+      <button type="button" class="payItemDel shrink-0 text-red-600 hover:text-red-700 px-1" data-id="${i.id}" aria-label="Supprimer ${escapeHtml(payItemType(i.code).label)}">✕</button></div>`).join('')
+      + `<div class="text-right text-sm text-slate-600 pr-1">Total du mois : <b>${fmtNum(tot)} €</b></div>`
+    : `<p class="text-sm text-slate-400">Aucune prime ni avance ce mois-ci.</p>`;
+}
+function openPayItems(empId, mk){
+  if(!canSeeSalaries()){ toast('Réservé aux admins.'); return; }
+  document.getElementById('payItemEmp').value=empId; document.getElementById('payItemMonth').value=mk||monthKeyOf(state.weekStart);
+  const sel=document.getElementById('payItemCode'); sel.innerHTML=PAY_ITEM_TYPES.map(t=>`<option value="${t.key}">${t.label}</option>`).join('');
+  document.getElementById('payItemLabelWrap').hidden=true; document.getElementById('payItemLabel').value=''; document.getElementById('payItemAmount').value='';
+  renderPayItems(); payItemModal.classList.remove('hidden'); payItemModal.classList.add('flex');
+  setTimeout(()=>document.getElementById('payItemAmount').focus(), 100);
+}
+function closePayItems(){ payItemModal.classList.add('hidden'); payItemModal.classList.remove('flex'); }
+document.querySelectorAll('.closePayItem').forEach(b=>b.addEventListener('click', closePayItems));
+payItemModal.addEventListener('click', e=>{ if(e.target===payItemModal) closePayItems(); });
+document.getElementById('payItemCode').addEventListener('change', e=>{ document.getElementById('payItemLabelWrap').hidden = e.target.value!=='autre'; });
+document.getElementById('payItemForm').addEventListener('submit', ev=>{
+  ev.preventDefault();
+  const empId=document.getElementById('payItemEmp').value, mk=document.getElementById('payItemMonth').value;
+  const code=document.getElementById('payItemCode').value, label=document.getElementById('payItemLabel').value.trim();
+  const amount=Math.round((parseFloat(String(document.getElementById('payItemAmount').value).replace(',','.'))||0)*100)/100;
+  if(!(amount>0)){ toast('Indique un montant.'); return; }
+  if(code==='autre' && !label){ toast('Donne un libellé à cette prime.'); document.getElementById('payItemLabel').focus(); return; }
+  state.payItems.push({ id:uid(), empId, month:mk, code, label: code==='autre'?label:'', amount });
+  save(); renderPayItems(); renderSuivi(); document.getElementById('payItemAmount').value=''; toast('Ajouté ✓');
+});
+document.getElementById('payItemList').addEventListener('click', e=>{ const b=e.target.closest('.payItemDel'); if(!b) return; state.payItems=state.payItems.filter(i=>i.id!==b.dataset.id); save(); renderPayItems(); renderSuivi(); });
+document.getElementById('suiviBody').addEventListener('click', e=>{ const b=e.target.closest('.payItemsBtn'); if(b) openPayItems(b.dataset.id, monthKeyOf(state.weekStart)); });
 
 /* ============ INIT ============ */
 function renderAll(){ renderTeamFilter(); renderGrid(); renderTeam(); renderSuivi(); }

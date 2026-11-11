@@ -21,11 +21,11 @@ const base = 'http://localhost:' + server.address().port + '/';
 
 const MIN_TARGET = 44;   // recommandation Apple (points) pour une cible tactile
 const MODALS = ['shiftModal','empModal','absModal','noteModal','confModal','settingsModal','historyModal','dupModal','tplModal','copyPlanModal',
-  'sendEmpModal','sheetModal','accessModal','estbModal','importModal','offInboxModal','offReqModal','profileModal','teamsModal','paywallModal','onboardModal','wizardModal'];
+  'sendEmpModal','sheetModal','accessModal','estbModal','importModal','offInboxModal','offReqModal','profileModal','teamsModal','paywallModal','onboardModal','wizardModal','payItemModal'];
 const OPENERS = { shiftModal:'openShiftModal', empModal:'openEmpModal', absModal:'openAbsModal', noteModal:'openNoteModal', settingsModal:'openSettings',
   historyModal:'openHistory', dupModal:'openDup', tplModal:'openTpl', copyPlanModal:'openCopyPlan', sheetModal:'openSheet', accessModal:'openAccess',
   estbModal:'openEstb', offInboxModal:'openOffInbox', profileModal:'openProfileModal', teamsModal:'openTeams', paywallModal:'openPaywall',
-  onboardModal:'openOnboard', wizardModal:'openWizard' };
+  onboardModal:'openOnboard', wizardModal:'openWizard', payItemModal:'openPayItems' };
 
 async function fresh(browser) {
   const ctx = await browser.newContext({ viewport: { width: 390, height: 844 }, deviceScaleFactor: 1, hasTouch: true, isMobile: true });
@@ -109,7 +109,7 @@ const add = (scene, r) => { report.push({ scene, ...r }); };
     const how = await page.evaluate(({ id, fn }) => {
       document.querySelectorAll('[id$="Modal"]').forEach(m => { m.classList.add('hidden'); m.classList.remove('flex'); });
       let via = 'forcé';
-      try { if (fn && typeof window[fn] === 'function') { const a = (id === 'absModal' || id === 'profileModal' || id === 'confModal' || id === 'sendEmpModal') ? [state.employees[0] && state.employees[0].id] : []; window[fn](...a); via = fn + '()'; } } catch (e) { via = 'forcé (' + e.message.slice(0, 40) + ')'; }
+      try { if (fn && typeof window[fn] === 'function') { const a = (id === 'absModal' || id === 'profileModal' || id === 'confModal' || id === 'sendEmpModal' || id === 'payItemModal') ? [state.employees[0] && state.employees[0].id] : []; window[fn](...a); via = fn + '()'; } } catch (e) { via = 'forcé (' + e.message.slice(0, 40) + ')'; }
       const m = document.getElementById(id); if (m.classList.contains('hidden')) { m.classList.remove('hidden'); m.classList.add('flex'); if (via.endsWith('()')) via += ' + forcé'; }
       return via;
     }, { id, fn: OPENERS[id] });

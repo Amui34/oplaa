@@ -15,7 +15,7 @@ export const CORE_FUNCTIONS = [
 ];
 
 // Fonctions pures MULTI-LIGNES (moteur de paie) : extraites de `function nom(` jusqu'à la première ligne `}` en colonne 0.
-export const CORE_BLOCKS = ['hcrTiers','payWeekSplit','payContractSup','payPeriod','splitName','dailyContractHours','splitNameRaw','nameParts','legalAlerts','congesAcquisCalc'];
+export const CORE_BLOCKS = ['hcrTiers','payWeekSplit','payContractSup','payPeriod','splitName','dailyContractHours','splitNameRaw','nameParts','legalAlerts','congesAcquisCalc','payItemsTotals'];
 
 let src = '';
 for (const name of CORE_FUNCTIONS) {

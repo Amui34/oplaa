@@ -335,3 +335,28 @@ test('compteurs : congés acquis / pris / solde dans l’équipe et « Mes compt
   await expect(page.locator('#empCounters')).toContainText('congés disponibles');
   await expect(page.locator('#empCounters')).toContainText('ce mois');
 });
+
+test('primes / avances : saisie dans le Suivi et reprise dans l’export comptable', async ({ page }) => {
+  await page.locator('#welcomeDemo').click();
+  await page.locator('.tab-btn[data-view="suivi"]').click();
+  await page.locator('.payItemsBtn').first().click();
+  await expect(page.locator('#payItemModal')).toBeVisible();
+  await page.locator('#payItemCode').selectOption('prime_exceptionnelle');
+  await page.locator('#payItemAmount').fill('150');
+  await page.locator('#payItemForm button[type="submit"]').click();
+  await expect(page.locator('#payItemList')).toContainText('150 €');
+  await page.locator('#payItemCode').selectOption('avance');
+  await page.locator('#payItemAmount').fill('200');
+  await page.locator('#payItemForm button[type="submit"]').click();
+  await expect(page.locator('#payItemList')).toContainText('Total du mois : 350 €');
+  await page.locator('.closePayItem').click();
+  await expect(page.locator('.payItemsBtn').first()).toHaveText('350 €');
+  // Export comptable du mois : la ligne de l'employé porte bien les montants dans les colonnes Combo
+  const cells = await page.evaluate(() => {
+    const emp = activeEmployees()[0]; setScope('mois');
+    const d = buildComptaExport(weeksOfScope()); const hdr = d.synth[1];
+    const row = d.synth.slice(2).find(r => r[hdr.indexOf('Prénom')] === nameParts(emp).prenom || r[hdr.indexOf('Nom')] === nameParts(emp).nom.toUpperCase());
+    return { prime: row[hdr.indexOf('Prime exceptionnelle')], avance: row[hdr.indexOf('Avance sur salaire ')], evp: d.evp.filter(r => r[3] === 'Prime exceptionnelle' || r[3] === 'Avance sur salaire').length };
+  });
+  expect(cells.prime).toBe(150); expect(cells.avance).toBe(200); expect(cells.evp).toBe(2);
+});
