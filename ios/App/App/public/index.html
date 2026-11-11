@@ -319,6 +319,7 @@
 
     <!-- Bannière de conflits -->
     <div id="conflictBanner" class="hidden mb-3 rounded-xl border border-red-200 bg-red-50 text-red-700 text-sm px-4 py-3"></div>
+    <div id="legalBanner" class="no-print hidden mb-3 rounded-xl border border-amber-200 bg-amber-50 text-amber-800 text-sm px-4 py-3"></div>
 
     <div id="gridScroll" tabindex="0" role="region" aria-label="Planning de la semaine" class="print-container bg-white rounded-2xl border border-slate-200 overflow-x-auto thin-scroll">
       <table class="w-full border-collapse" id="grid">
@@ -1301,6 +1302,15 @@
       <div>
         <span class="text-xs font-bold uppercase tracking-wide text-slate-400">Règles &amp; avantages</span>
         <p class="text-xs text-slate-400 mt-1 mb-2">Ces éléments se calculent automatiquement et n'apparaissent que sur la <b>feuille d'heures</b> (le document signé).</p>
+        <label class="flex items-start gap-2 border border-slate-300 rounded-lg px-3 py-2 cursor-pointer mb-2">
+          <input type="checkbox" id="setLegalOn" class="mt-1">
+          <span class="flex-1"><span class="font-semibold text-slate-700">Alertes légales dans le planning</span>
+            <span class="block text-xs text-slate-400">Signale en orange, sans bloquer : un repos entre deux journées inférieur à
+              <input type="number" id="setLegalRest" min="0" max="24" step="1" aria-label="Repos minimum entre deux journées (heures)" class="w-12 border border-slate-300 rounded px-1 py-0.5 text-xs text-center"> h, plus de
+              <input type="number" id="setLegalDay" min="1" max="24" step="1" aria-label="Maximum d'heures par jour" class="w-12 border border-slate-300 rounded px-1 py-0.5 text-xs text-center"> h dans la journée, plus de
+              <input type="number" id="setLegalWeek" min="1" max="80" step="1" aria-label="Maximum d'heures par semaine" class="w-12 border border-slate-300 rounded px-1 py-0.5 text-xs text-center"> h dans la semaine, plus de
+              <input type="number" id="setLegalDays" min="1" max="7" step="1" aria-label="Maximum de jours travaillés d'affilée" class="w-12 border border-slate-300 rounded px-1 py-0.5 text-xs text-center"> jours d'affilée. La pause légale ci-dessous est aussi vérifiée.</span></span>
+        </label>
         <label class="flex items-start gap-2 border border-slate-300 rounded-lg px-3 py-2 cursor-pointer">
           <input type="checkbox" id="setBreakOn" class="mt-1">
           <span class="flex-1"><span class="font-semibold text-slate-700">Pause légale</span>
@@ -2068,6 +2078,43 @@ function weekConflicts(wk){
   return { conflictIds, pairs };
 }
 
+// ── Alertes légales (repères du Code du travail / convention HCR) ─────────────────────────────────────────
+function ruleLegal(){ const d={ enabled:true, restHours:11, maxDay:10, maxWeek:48, maxConsecutive:6 }; return Object.assign(d,(state.rules&&state.rules.legal)||{}); }
+function legalRules(){ const LB=ruleBreak(), LG=ruleLegal(); return Object.assign({}, LG, { breakEnabled: LB.enabled!==false, breakAfterHours: LB.afterHours||6, minBreakMin: LB.minMinutes||20 }); }
+// Fonction PURE (testée) : shifts = tous les créneaux ({week, day, start, end, breaks, empId}), weekStart = lundi ISO affiché.
+// Regarde aussi la semaine précédente et la suivante (repos du dimanche au lundi, séries de jours à cheval).
+// Retourne [{ empId, day (0-6 dans la semaine affichée, ou null = toute la semaine), shiftId (ou null), code, text }].
+function legalAlerts(shifts, weekStart, rules){
+  const R=Object.assign({ restHours:11, maxDay:10, maxWeek:48, maxConsecutive:6, breakEnabled:true, breakAfterHours:6, minBreakMin:20 }, rules||{});
+  const prev=isoDay(addDays(weekStart,-7)), next=isoDay(addDays(weekStart,7));
+  const off={}; off[prev]=-7; off[weekStart]=0; off[next]=7;
+  const byEmp={};
+  for(const s of (shifts||[])){
+    if(!s || !s.empId || !(s.week in off) || !/^\d{2}:\d{2}$/.test(s.start||'') || !/^\d{2}:\d{2}$/.test(s.end||'')) continue;
+    const abs=off[s.week]+s.day; const st=abs*1440+toMin(s.start); let en=abs*1440+toMin(s.end); if(en<=st) en+=1440;
+    (byEmp[s.empId]=byEmp[s.empId]||[]).push({ s, abs, st, en, h:shiftHours(s) });
+  }
+  const DN=['lundi','mardi','mercredi','jeudi','vendredi','samedi','dimanche'];
+  const dayName=abs=>DN[((abs%7)+7)%7], inWeek=abs=>abs>=0&&abs<7, f1=x=>(Math.round(x*10)/10).toString().replace('.',',');
+  const dLabel=abs=>{ const iso=isoDay(addDays(weekStart,abs)); return dayName(abs)+' '+iso.slice(8,10)+'/'+iso.slice(5,7); };   // « lundi 02/11 »
+  const out=[];
+  for(const empId of Object.keys(byEmp)){
+    const list=byEmp[empId].sort((a,b)=>a.st-b.st);
+    for(let i=1;i<list.length;i++){ const a=list[i-1], b=list[i]; if(a.abs===b.abs) continue;   // une coupure dans la journée n'est pas un repos quotidien
+      const gap=(b.st-a.en)/60;
+      if(gap>=0 && gap<R.restHours && inWeek(b.abs)) out.push({ empId, day:b.abs, shiftId:b.s.id, code:'rest', text:'Repos de '+f1(gap)+' h seulement entre '+dLabel(a.abs)+' '+a.s.end+' et '+dLabel(b.abs)+' '+b.s.start+' (minimum '+R.restHours+' h)' }); }
+    const perDay={}; list.forEach(x=>{ perDay[x.abs]=(perDay[x.abs]||0)+x.h; });
+    Object.keys(perDay).forEach(k=>{ const d=+k, h=perDay[k]; if(inWeek(d) && h>R.maxDay+1e-9) out.push({ empId, day:d, shiftId:null, code:'day', text:f1(h)+' h de travail '+dayName(d)+' (maximum '+R.maxDay+' h par jour)' }); });
+    const wk=list.filter(x=>inWeek(x.abs)).reduce((a,x)=>a+x.h,0);
+    if(wk>R.maxWeek+1e-9) out.push({ empId, day:null, shiftId:null, code:'week', text:f1(wk)+' h dans la semaine (maximum '+R.maxWeek+' h)' });
+    const days=[...new Set(list.map(x=>x.abs))].sort((a,b)=>a-b); let run=[];
+    const flush=()=>{ if(run.length>R.maxConsecutive){ const inW=run.filter(inWeek); if(inW.length){ const d=run[R.maxConsecutive]; out.push({ empId, day:(inWeek(d)?d:inW[inW.length-1]), shiftId:null, code:'consecutive', text:run.length+' jours travaillés d\'affilée (maximum '+R.maxConsecutive+', du '+dLabel(run[0])+' au '+dLabel(run[run.length-1])+')' }); } } run=[]; };
+    for(const d of days){ if(run.length && d!==run[run.length-1]+1) flush(); run.push(d); } flush();
+    if(R.breakEnabled!==false) list.forEach(x=>{ if(!inWeek(x.abs)) return; const span=hoursBetween(x.s.start,x.s.end); if(span>R.breakAfterHours+1e-9 && breakMinutes(x.s)<R.minBreakMin) out.push({ empId, day:x.abs, shiftId:x.s.id, code:'break', text:f1(span)+' h de service '+dayName(x.abs)+' sans pause de '+R.minBreakMin+' min' }); });
+  }
+  return out;
+}
+
 /* ============ GRILLE PLANNING ============ */
 // Colonnes affichées : 1 jour en mode Jour, sinon un ruban continu de plusieurs semaines (traverse dimanche→lundi sans coupure).
 // On raisonne en index (jour 0..6 = Lundi..Dimanche, convention de l'app), pas en jour calendaire réel → robuste au fuseau
@@ -2098,6 +2145,12 @@ function renderGrid(){
   const conflictIds = new Set();
   weeksInView.forEach(w=>{ weekConflicts(w).conflictIds.forEach(id=>conflictIds.add(id)); });
   const { pairs } = weekConflicts(start);
+  // Alertes légales : badge ⚖ sur les cartes concernées (semaines visibles) + bannière détaillée sur la semaine affichée
+  const legalOn = ruleLegal().enabled!==false;
+  const legalByShift=new Map(), legalByEmpDay=new Map(); let legalWeek=[];
+  if(legalOn){ const LRULES=legalRules(); weeksInView.forEach(w=>{ const al=legalAlerts(state.shifts, w, LRULES); if(w===start) legalWeek=al;
+    al.forEach(a=>{ if(a.shiftId){ if(!legalByShift.has(a.shiftId)) legalByShift.set(a.shiftId,[]); legalByShift.get(a.shiftId).push(a.text); }
+      else if(a.day!=null){ const k=a.empId+'|'+w+'|'+a.day; if(!legalByEmpDay.has(k)) legalByEmpDay.set(k,[]); legalByEmpDay.get(k).push(a.text); } }); }); }
   const sepCls = (c,idx)=> (viewMode!=='jour' && c.day===0 && idx>0) ? ' border-l-2 border-slate-300' : '';
 
   // En-tête : une colonne par jour (ruban continu)
@@ -2126,9 +2179,11 @@ function renderGrid(){
     const note = s.note ? `<div class="text-[10px] text-teal-600 truncate" title="${(s.note||'').replace(/"/g,'&quot;')}">📝 ${escapeHtml(s.note)}</div>` : '';
     const bm=breakMinutes(s); const brk = bm ? `<span class="text-slate-400">· ${(s.breaks||[]).map(b=>breakType(b.type).emoji).join('')} ${bm}′</span>` : '';
     const extraTag = isExtra ? `<span title="Extra / renfort" class="shrink-0 text-[8px] font-bold uppercase tracking-wide text-amber-700 bg-amber-100 rounded px-1 py-0.5 leading-none">extra</span>` : '';
+    const legal = (legalByShift.get(s.id)||[]).concat(legalByEmpDay.get((s.empId||'')+'|'+s.week+'|'+s.day)||[]);
+    const lw = legal.length ? `<span title="${legal.join(' • ').replace(/"/g,'&quot;')}" aria-label="Alerte légale : ${legal.join(' ; ').replace(/"/g,'&quot;')}" class="shrink-0 text-amber-700 text-[11px] leading-none">⚖</span>` : '';
     return `<div draggable="true" class="shift-card card bg-white rounded-lg border ${conflict?'border-red-300 ring-1 ring-red-200':isExtra?'border-amber-300 border-dashed':'border-slate-200'} px-1.5 py-1 mb-1 hover:shadow-sm flex items-start gap-1 cursor-grab active:cursor-grabbing" data-shift="${s.id}" data-emp="${s.empId||''}">
               <div class="min-w-0 flex-1"><div class="text-[11px] font-semibold text-slate-800 leading-tight truncate flex items-center gap-1">${escapeHtml(name)}${extraTag}</div>
-              <div class="text-[10px] text-slate-500">${s.start}–${s.end} ${brk}</div>${note}</div>${warn||realMark}
+              <div class="text-[10px] text-slate-500">${s.start}–${s.end} ${brk}</div>${note}</div>${warn||realMark}${lw}
             </div>`;
   };
   const grpLabel = (txt,extra='')=>`<div class="text-[9px] font-bold uppercase tracking-wide text-slate-400 mt-1 mb-0.5 ${extra}">${txt}</div>`;
@@ -2224,6 +2279,19 @@ function renderGrid(){
       return `<button data-day="${i}" class="daypick-btn px-2.5 py-1.5 rounded-lg text-xs font-semibold border ${a?'bg-teal-600 text-white border-teal-600':'bg-white text-slate-600 border-slate-300 hover:bg-slate-50'}">${DAYS_SHORT[i]} ${date.getDate()}</button>`;
     }).join('');
   } else { dp.classList.add('hidden'); dp.classList.remove('flex'); }
+
+  // Bannière des alertes légales (semaine affichée)
+  const lb=document.getElementById('legalBanner');
+  if(lb){
+    if(legalWeek.length){
+      const byEmp={}; legalWeek.forEach(a=>{ const e=empById(a.empId); const n=e?e.name:'?'; (byEmp[n]=byEmp[n]||[]).push(a.text); });
+      const n=legalWeek.length;
+      lb.innerHTML = `⚖️ <b>${n} alerte${n>1?'s':''} légale${n>1?'s':''}</b> cette semaine — repos, durées maximales, pause (indicatif, rien n'est bloqué)
+        <ul class="mt-1 ml-4 list-disc">${Object.keys(byEmp).map(k=>`<li><b>${escapeHtml(k)}</b> : ${byEmp[k].map(escapeHtml).join(' · ')}</li>`).join('')}</ul>
+        <div class="text-[11px] mt-1">Repères du Code du travail et de la convention HCR. Seuils modifiables dans ⋯ Menu → Réglages → Règles.</div>`;
+      lb.classList.remove('hidden');
+    } else { lb.classList.add('hidden'); lb.innerHTML=''; }
+  }
 
   // Libellés
   const ws=parseLocalDate(start), we=addDays(start,6);
@@ -3979,7 +4047,10 @@ function openSettings(){
   document.getElementById('setTeams').innerHTML = state.teams.map(teamRowHtml).join('');
   document.getElementById('setPeriods').innerHTML = state.periods.map(periodRowHtml).join('');
   document.getElementById('setCompl').innerHTML = (state.complianceItems||[]).map(complRowHtml).join('');
-  const LB=ruleBreak(), ML=ruleMeal();
+  const LB=ruleBreak(), ML=ruleMeal(), LG=ruleLegal();
+  document.getElementById('setLegalOn').checked = LG.enabled!==false;
+  document.getElementById('setLegalRest').value = LG.restHours; document.getElementById('setLegalDay').value = LG.maxDay;
+  document.getElementById('setLegalWeek').value = LG.maxWeek; document.getElementById('setLegalDays').value = LG.maxConsecutive;
   document.getElementById('setBreakOn').checked = LB.enabled!==false;
   document.getElementById('setBreakAfter').value = LB.afterHours||6;
   document.getElementById('setBreakMin').value = LB.minMinutes||20;
@@ -4086,6 +4157,7 @@ document.getElementById('settingsForm').addEventListener('submit',ev=>{
   COMPLIANCE_ITEMS=newCompl;
   state.employees.forEach(e=>{ const c={}; newCompl.forEach(it=>{ c[it.key]= (e.compliance&&e.compliance[it.key]) || (it.type==='bool'?{done:false}:{date:''}); }); e.compliance=c; });
   state.rules = state.rules || {};
+  state.rules.legal = { enabled: document.getElementById('setLegalOn').checked, restHours: parseFloat(document.getElementById('setLegalRest').value)||11, maxDay: parseFloat(document.getElementById('setLegalDay').value)||10, maxWeek: parseFloat(document.getElementById('setLegalWeek').value)||48, maxConsecutive: parseInt(document.getElementById('setLegalDays').value,10)||6 };
   state.rules.legalBreak = { enabled: document.getElementById('setBreakOn').checked, afterHours: parseFloat(document.getElementById('setBreakAfter').value)||6, minMinutes: parseInt(document.getElementById('setBreakMin').value,10)||20 };
   state.rules.meal = { enabled: document.getElementById('setMealOn').checked, mode: document.getElementById('setMealMode').value||'lunch', minHours: parseFloat(document.getElementById('setMealMin').value)||5 };
   state.rules.night = { enabled: document.getElementById('setNightOn').checked, start: document.getElementById('setNightStart').value||'21:00', end: document.getElementById('setNightEnd').value||'06:00', pct: parseFloat(document.getElementById('setNightPct').value)||0 };

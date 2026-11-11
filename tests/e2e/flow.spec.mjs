@@ -306,3 +306,22 @@ test('équipe : une fiche employé se saisit avec prénom et nom séparés', asy
   await expect(page.getByText('Arrivée le 02/03/2026 · Départ le 30/11/2026').first()).toBeAttached();
   await expect(page.getByText('Marie Anne Dupont').first()).toBeAttached();
 });
+
+test('planning : les alertes légales s’affichent (repos < 11 h) et se désactivent dans les réglages', async ({ page }) => {
+  await page.locator('#welcomeDemo').click();
+  await page.evaluate(() => {
+    const e = state.employees[0]; const w = state.weekStart;
+    state.shifts = state.shifts.filter(s => s.empId !== e.id);
+    state.shifts.push({ id: 'tA', week: w, day: 0, team: e.role, period: 'soir', start: '18:00', end: '23:30', breaks: [], empId: e.id });
+    state.shifts.push({ id: 'tB', week: w, day: 1, team: e.role, period: 'midi', start: '07:00', end: '12:00', breaks: [], empId: e.id });
+    renderAll();
+  });
+  await expect(page.locator('#legalBanner')).toBeVisible();
+  await expect(page.locator('#legalBanner')).toContainText('Repos de 7,5 h');
+  await expect(page.locator('#legalBanner')).toContainText(/alertes? légales?/);
+  // Désactivation dans Réglages → Règles
+  await page.evaluate(() => openSettings());
+  await page.locator('#setLegalOn').uncheck();
+  await page.locator('#settingsForm button[type="submit"], #saveSettings').first().click();
+  await expect(page.locator('#legalBanner')).toBeHidden();
+});
