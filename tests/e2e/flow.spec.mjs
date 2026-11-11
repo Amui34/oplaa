@@ -360,3 +360,11 @@ test('primes / avances : saisie dans le Suivi et reprise dans l’export comptab
   });
   expect(cells.prime).toBe(150); expect(cells.avance).toBe(200); expect(cells.evp).toBe(2);
 });
+
+test('planning : bouton « Publier » (démo : simulation, mention « Pas encore publié »)', async ({ page }) => {
+  await page.locator('#welcomeDemo').click();
+  await expect(page.locator('#btnPublish')).toBeVisible();
+  await expect(page.locator('#publishedAt')).toHaveText('Pas encore publié');
+  await page.locator('#btnPublish').click();
+  await expect(page.locator('#toast')).toContainText('Mode démo');
+});

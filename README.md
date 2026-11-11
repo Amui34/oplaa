@@ -47,6 +47,17 @@ Pour voir l'app : `python3 -m http.server 8795` dans `www/` → http://localhost
 - contrastes : le ton 600 de l'accent est assombri automatiquement (`setAccent`) pour garder un texte blanc lisible, quel que soit l'accent choisi ; gris secondaire `--s-400` ≥ 4,5:1 ;
 - tout nouveau bouton sans texte doit porter un `aria-label`, tout nouveau champ un `<label for>`.
 
+## Notifications (publication du planning, congés)
+
+Côté app (`www/index.html`, bloc « NOTIFICATIONS ») : bouton **📣 Publier** sur le planning (admins / managers) → envoi au cloud, date de publication (`week_publications`), appel de la fonction serveur **`notify`** qui prévient les appareils de l'équipe par APNs. Les décisions de congé et les nouvelles demandes appellent aussi `notify`. L'app iPhone enregistre son jeton dans `push_tokens` (`pushSetup()`, plugin `@capacitor/push-notifications`, entitlement `aps-environment`). **Tout est silencieux tant que le serveur n'est pas déployé** : le planning reste visible dans l'app comme avant.
+
+Mise en service (une fois) :
+1. Appliquer les blocs `push_tokens` / `week_publications` de `supabase/schema.sql` (GO prod).
+2. Créer une **clé APNs** dans developer.apple.com → Certificates, Identifiers & Profiles → Keys (cocher « Apple Push Notifications service »), télécharger le `.p8` (téléchargeable une seule fois).
+3. Supabase → Edge Functions : déployer `supabase/functions/notify`, secrets `APNS_KEY_ID`, `APNS_TEAM_ID` (772LDD7BCT), `APNS_P8` (contenu du .p8), `APNS_BUNDLE_ID` (com.oplaa.app), `APNS_ENV` (production).
+4. Vérifier que l'App ID `com.oplaa.app` a la capacité « Push Notifications » (ajoutée automatiquement à l'archive grâce à l'entitlement + `-allowProvisioningUpdates`, sinon la cocher dans Identifiers).
+5. Publier une version iOS contenant le plugin, puis tester : publier une semaine → notification reçue par un employé.
+
 ## Export comptable & import (format Combo)
 
 - **Suivi → Export comptable (Excel)** (admins) : fichier `.xlsx` à 3 feuilles au format de l'export comptable Combo — `Synthèse` (72 colonnes, sections identiques, ligne TOTAL en formules), `Éléments Variables de Paie`, `Absences` — pour la période affichée (semaine ou mois). Calculs HCR : heures sup au contrat / hors contrat par paliers (+10 % / +20 % / +50 %, seuils réglables), complémentaires temps partiel (+10 % / +25 %), heures manquantes, jours fériés travaillés, absences valorisées (saisie > planifié > journée contrat moyenne), entrée/sortie, repas (avantage en nature / titre / indemnité) et paniers. Réglages → « Paie & export comptable » (SIRET, type de repas, paliers, jours/semaine).

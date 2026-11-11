@@ -4,6 +4,7 @@
 	"webDir": "www",
 	"packageClassList": [
 		"FilesystemPlugin",
+		"PushNotificationsPlugin",
 		"SharePlugin"
 	]
 }
