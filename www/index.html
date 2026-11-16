@@ -65,6 +65,12 @@
   }
   .btn-ink { background-color:var(--ink); color:#fff; }
   .btn-ink:hover { background-color:var(--ink-hover); }
+  /* Fiches employé (vue Équipe) : blocs lisibles, jamais de texte coupé */
+  .emp-cap{ font-size:10px; font-weight:800; text-transform:uppercase; letter-spacing:.06em; color:var(--s-400,#9ca3af); margin-bottom:2px; }
+  .emp-col{ min-width:0; }
+  .emp-col > div{ overflow-wrap:anywhere; line-height:1.45; }
+  .emp-btn{ display:inline-flex; align-items:center; gap:.3rem; padding:.4rem .75rem; border-radius:.6rem; border:1px solid var(--s-300,#d6d3d1); background:var(--surface,#fff); font-size:13px; font-weight:600; white-space:nowrap; }
+  .emp-btn:hover{ background:var(--s-50,#f8fafc); }
   /* Coûts / taux : réservés à la vue manager (masqués pour l'employé) */
   body.simple-mode .cost-col { display:none !important; }
   body.simple-mode .manager-only { display:none !important; }
@@ -244,7 +250,7 @@
         <button id="btnSettings" class="mi w-full text-left px-4 py-2 hover:bg-slate-50"><span class="ic" data-ic="settings"></span>Réglages &amp; plus…</button>
         <button id="btnGuide" class="mi w-full text-left px-4 py-2 hover:bg-slate-50"><span class="ic" data-ic="bulb"></span>Aide (guide de démarrage)</button>
         <div class="mi px-4 py-1.5 text-[10px] text-emerald-600 leading-snug"><span class="ic" data-ic="cloud" data-ic-size="13" style="align-self:flex-start;margin-top:1px"></span><span>Tout est enregistré et synchronisé automatiquement.</span></div>
-        <div class="px-4 pt-0.5 pb-1.5 text-[10px] text-slate-400">Oplaa v1.0.11 · © 2026 SAS NOMAD · Conçu et développé par Noa Madar</div>
+        <div class="px-4 pt-0.5 pb-1.5 text-[10px] text-slate-400">Oplaa v1.0.12 · © 2026 SAS NOMAD · Conçu et développé par Noa Madar</div>
       </div>
       <input type="file" id="importFile" accept="application/json" class="hidden" />
     </div>
@@ -358,20 +364,7 @@
       <button type="button" id="btnInviteTeam" class="px-4 py-2 rounded-xl bg-teal-600 text-white font-semibold text-sm hover:bg-teal-700">＋ Inviter quelqu'un</button>
       <button type="button" id="btnManageAccess" class="px-3 py-2 rounded-xl bg-white border border-teal-300 text-teal-700 font-semibold text-sm hover:bg-teal-50">Gérer les accès</button>
     </div>
-    <div tabindex="0" role="region" aria-label="Tableau défilant" class="print-container bg-white rounded-2xl border border-slate-200 overflow-x-auto thin-scroll">
-      <table class="w-full text-sm min-w-[320px] sm:min-w-[560px]">
-        <thead class="bg-slate-50 text-slate-500 text-xs uppercase tracking-wide">
-          <tr>
-            <th class="text-left px-4 py-3 font-semibold">Employé</th>
-            <th class="text-left px-4 py-3 font-semibold">Équipe</th>
-            <th class="text-left px-4 py-3 font-semibold">Contrat</th>
-            <th class="cost-col text-right px-4 py-3 font-semibold hidden sm:table-cell">Taux</th>
-            <th class="text-right px-4 py-3 font-semibold no-print">Actions</th>
-          </tr>
-        </thead>
-        <tbody id="empBody"></tbody>
-      </table>
-    </div>
+    <div id="empBody" class="print-container bg-white rounded-2xl border border-slate-200 divide-y divide-slate-100 overflow-hidden" aria-label="Liste des employés"></div>
     <p id="empEmpty" class="hidden text-center text-slate-400 py-10">Aucun employé. Cliquez sur « Ajouter ».</p>
     <div id="extrasSection" class="mt-6 hidden">
       <h3 class="text-sm font-extrabold text-slate-800 uppercase tracking-wide mb-2">🟠 Extras / renforts</h3>
@@ -405,12 +398,12 @@
             <th class="text-center px-3 py-3 font-semibold hidden sm:table-cell">Jours trav.</th>
             <th class="text-center px-3 py-3 font-semibold hidden sm:table-cell">Congés/Abs.</th>
             <th class="text-center px-3 py-3 font-semibold hidden sm:table-cell">Jours off</th>
-            <th class="text-right px-3 py-3 font-semibold">Prévu</th>
-            <th class="text-right px-3 py-3 font-semibold">Réel</th>
-            <th class="text-right px-3 py-3 font-semibold">Écart</th>
+            <th class="text-right px-2 sm:px-3 py-3 font-semibold whitespace-nowrap">Prévu</th>
+            <th class="text-right px-2 sm:px-3 py-3 font-semibold whitespace-nowrap">Réel</th>
+            <th class="text-right px-3 py-3 font-semibold hidden sm:table-cell">Écart</th>
             <th class="text-right px-3 py-3 font-semibold hidden sm:table-cell">vs Contrat</th>
-            <th class="cost-col text-right px-3 py-3 font-semibold">Primes / avances</th>
-            <th class="cost-col text-right px-4 py-3 font-semibold">Coût</th>
+            <th class="cost-col text-right px-2 sm:px-3 py-3 font-semibold whitespace-nowrap"><span class="sm:hidden">Primes</span><span class="hidden sm:inline">Primes / avances</span></th>
+            <th class="cost-col text-right px-3 sm:px-4 py-3 font-semibold">Coût</th>
           </tr>
         </thead>
         <tbody id="suiviBody"></tbody>
@@ -1467,7 +1460,7 @@ let STORAGE_KEY = wsDataKey(wsActiveId());
 const DAYS = ['Lundi','Mardi','Mercredi','Jeudi','Vendredi','Samedi','Dimanche'];
 const DAYS_SHORT = ['Lun','Mar','Mer','Jeu','Ven','Sam','Dim'];
 const RECALL_DAYS = 60; // seuil d'alerte "bientôt à échéance"
-const APP_VERSION = '1.0.11';
+const APP_VERSION = '1.0.12';
 const CONTACT_EMAIL = 'noamadar.noa@gmail.com';   // adresse qui reçoit les retours des testeurs (modifiable)
 const ASSISTANCE_URL = 'https://oplaa.pro/assistance.html';   // page Aide/FAQ (oplaa.pro)
 /* ---- Oplaa Pro — abonnement (v1.1). Signé : Noa Madar. ---- */
@@ -2630,29 +2623,54 @@ function renderTeam(){
     const t=teamOf(e.role); const ch=contractHours(e); const ph=planned[e.id]||0;
     const over = ch!=null && ph>ch+0.05;
     const cs=congesSolde(e); const nd=nextDocDeadline(e);
-    const congeLine=`<div class="text-[11px] ${cs.solde<0?'text-red-600 font-semibold':'text-emerald-700'}">🌴 Congés ${cs.yr} : ${fmtNum(cs.acquis)} j acquis · ${cs.taken} pris · <b>solde ${fmtNum(cs.solde)} j</b> <span class="text-slate-400">(droit ${cs.allow} j/an)</span></div>`;
-    const _sm=supCumul(e, weeksOfMonthOf(state.weekStart)), _sy=supCumul(e, weeksOfYearToDate(state.weekStart));
-    const supLine=(_sm.sup+_sm.compl+_sy.sup+_sy.compl)>0 ? `<div class="text-[11px] text-slate-400">⏱ ${_sm.partiel?'Heures complém.':'Heures sup.'} : ${fmtNum(_sm.sup+_sm.compl)} h ce mois · ${fmtNum(_sy.sup+_sy.compl)} h en ${cs.yr}</div>` : '';
-    let docLine='';
-    if(nd){ const days=Math.round((nd.date-new Date())/86400000); const cls=days<0?'text-red-600 font-semibold':(days<=RECALL_DAYS?'text-amber-600':'text-slate-400'); const tag=days<0?' ⚠️ en retard':(days<=RECALL_DAYS?` · dans ${days} j`:''); docLine=`<div class="text-[11px] ${cls}">📄 ${escapeHtml(nd.label)} : ${fmtDate(nd.date)}${tag}</div>`; }
+    const line=(txt,cls='text-slate-600')=>`<div class="${cls}">${txt}</div>`; const h1=v=>(+v).toFixed(1).replace('.',',');
+    // — Contact
+    const contact=[
+      e.email ? line(`✉️ ${escapeHtml(e.email)}`) : line('✉️ pas d’email','text-amber-600 no-print'),
+      e.phone ? line(`📞 <a href="tel:${encodeURIComponent(e.phone.replace(/\s/g,''))}" class="hover:underline">${escapeHtml(e.phone)}</a>`) : '',
+      periodLine(e)
+    ].join('');
+    // — Heures
     const mg=monthlyGross(e); const mh=monthlyHours(e);
     const mPlanned = empShiftsMonth(e.id, state.weekStart).filter(s=>!isAbsentDay(s.empId,s.week,s.day)).reduce((a,s)=>a+shiftHours(s),0);
     const mOver = mh!=null && mPlanned>mh+0.5;
-    const monthLine = (mPlanned>0 || mh!=null) ? `<div class="text-[11px] ${mOver?'text-amber-600 font-semibold':'text-slate-400'}">📅 Ce mois : ${mPlanned.toFixed(1)} h${mh!=null?` / ${Math.round(mh)} h`:''}</div>` : '';
-    const salLine = mg!=null ? `<div class="cost-col text-[11px] text-slate-500">💶 ≈ ${Math.round(mg).toLocaleString('fr-FR')} €/mois${mh!=null?` · ${fmtNum(mh)} h/mois`:''}</div>` : '';
-    const contractCell = `${escapeHtml(contractLabel(e))}` + (ch!=null? `<div class="text-[11px] ${over?'text-red-600 font-semibold':'text-slate-400'}">${ph.toFixed(1)} h planifiées (sem.)${over?` ⚠ +${(ph-ch).toFixed(1)}`:''}</div>` : (ph>0?`<div class="text-[11px] text-slate-400">${ph.toFixed(1)} h planifiées (sem.)</div>`:'')) + monthLine + supLine + salLine + periodLine(e);
-    return `<tr class="border-t border-slate-100 hover:bg-slate-50">
-      <td class="px-4 py-3 font-semibold text-slate-800">${escapeHtml(e.name)}
-        ${e.email?`<div class="text-xs font-normal text-slate-400">✉️ ${escapeHtml(e.email)}</div>`:`<div class="text-xs font-normal text-amber-500 no-print">✉️ pas d’email</div>`}
-        ${e.phone?`<div class="text-xs font-normal text-slate-400">📞 <a href="tel:${encodeURIComponent(e.phone.replace(/\s/g,''))}" class="hover:underline">${escapeHtml(e.phone)}</a></div>`:''}
-        ${congeLine}${docLine}
-      </td>
-      <td class="px-4 py-3" style="--c:${t.color}"><span class="inline-flex items-center gap-1.5"><span class="dot"></span>${t.label}</span></td>
-      <td class="px-4 py-3 text-slate-600 align-top">${contractCell}</td>
-      <td class="cost-col px-4 py-3 text-right text-slate-600 hidden sm:table-cell align-top">${e.rate?e.rate.toFixed(2).replace('.',',')+' €':'—'}</td>
-      <td class="px-4 py-3 text-right no-print align-top whitespace-nowrap"><button class="sendEmp text-teal-600 font-semibold hover:underline text-sm mr-3" data-id="${e.id}">📤 Envoyer</button><button class="editEmp text-slate-500 font-semibold hover:underline text-sm" data-id="${e.id}">Modifier</button></td>
-    </tr>`;
-  }).join('') : `<tr><td colspan="5" class="px-4 py-6 text-center text-slate-400">Aucun employé ne correspond à « ${escapeHtml(q)} ».</td></tr>`;
+    const _sm=supCumul(e, weeksOfMonthOf(state.weekStart)), _sy=supCumul(e, weeksOfYearToDate(state.weekStart));
+    const hours=[
+      (ch!=null || ph>0) ? line(`Cette semaine : <b>${h1(ph)} h</b> planifiées${ch!=null?` <span class="text-slate-400">(contrat ${fmtNum(ch)} h)</span>`:''}${over?` <span class="text-red-600 font-semibold">⚠ +${h1(ph-ch)} h</span>`:''}`) : '',
+      (mPlanned>0 || mh!=null) ? line(`Ce mois : <b>${h1(mPlanned)} h</b>${mh!=null?` <span class="text-slate-400">/ ${Math.round(mh)} h</span>`:''}${mOver?' <span class="text-amber-600 font-semibold">au-dessus du contrat</span>':''}`) : '',
+      (_sm.sup+_sm.compl+_sy.sup+_sy.compl)>0 ? line(`${_sm.partiel?'Heures complém.':'Heures sup.'} : ${fmtNum(_sm.sup+_sm.compl)} h ce mois · ${fmtNum(_sy.sup+_sy.compl)} h en ${cs.yr}`) : ''
+    ].join('') || line('Aucune heure planifiée','text-slate-400');
+    // — Compteurs & suivi
+    let docLine='';
+    if(nd){ const days=Math.round((nd.date-new Date())/86400000); const cls=days<0?'text-red-600 font-semibold':(days<=RECALL_DAYS?'text-amber-600 font-semibold':'text-slate-600'); const tag=days<0?' ⚠️ en retard':(days<=RECALL_DAYS?` · dans ${days} j`:''); docLine=line(`📄 ${escapeHtml(nd.label)} : ${fmtDate(nd.date)}${tag}`, cls); }
+    const counters=[
+      line(`🌴 Congés ${cs.yr} : ${fmtNum(cs.acquis)} j acquis · ${cs.taken} pris · <b>solde ${fmtNum(cs.solde)} j</b> <span class="text-slate-400">(droit ${cs.allow} j/an)</span>`, cs.solde<0?'text-red-600 font-semibold':'text-emerald-700'),
+      docLine
+    ].join('');
+    // — Paie (patron uniquement : .cost-col)
+    const pay=[
+      line(`Taux : <b>${e.rate?e.rate.toFixed(2).replace('.',',')+' €/h':'—'}</b>`),
+      mg!=null ? line(`≈ ${Math.round(mg).toLocaleString('fr-FR')} €/mois${mh!=null?` <span class="text-slate-400">· ${fmtNum(mh)} h/mois</span>`:''}`) : ''
+    ].join('');
+    const block=(cap,html,extra='')=> html ? `<div class="emp-col ${extra}"><div class="emp-cap">${cap}</div>${html}</div>` : '';
+    return `<article class="px-4 py-3 sm:px-5 sm:py-4 hover:bg-slate-50/60" data-id="${e.id}">
+      <div class="flex flex-wrap items-center gap-x-3 gap-y-2">
+        <span class="font-bold text-slate-900 text-[15px] leading-tight">${escapeHtml(e.name)}</span>
+        <span class="inline-flex items-center gap-1.5 text-xs font-semibold text-slate-700 bg-slate-100 rounded-full px-2.5 py-0.5" style="--c:${t.color}"><span class="dot"></span>${t.label}</span>
+        <span class="text-xs font-semibold text-slate-500">${escapeHtml(contractLabel(e))}</span>
+        <span class="no-print ml-auto flex items-center gap-2">
+          <button type="button" class="sendEmp emp-btn text-teal-700" data-id="${e.id}">📤 Envoyer</button>
+          <button type="button" class="editEmp emp-btn text-slate-700" data-id="${e.id}">✏️ Modifier</button>
+        </span>
+      </div>
+      <div class="mt-2.5 grid gap-x-6 gap-y-2.5 text-[12px] sm:grid-cols-2 lg:grid-cols-4">
+        ${block('Contact', contact)}
+        ${block('Heures', hours)}
+        ${block('Compteurs', counters)}
+        ${block('Paie', pay, 'cost-col')}
+      </div>
+    </article>`;
+  }).join('') : `<div class="px-4 py-6 text-center text-slate-400">Aucun employé ne correspond à « ${escapeHtml(q)} ».</div>`;
 }
 // Extras / renforts : noms libres utilisés dans les shifts (sans fiche employé)
 function knownExtrasDetailed(){
@@ -2744,12 +2762,12 @@ function renderSuivi(){
       <td class="px-3 py-3 text-center text-slate-700 hidden sm:table-cell">${workedDays}</td>
       <td class="px-3 py-3 text-center text-sm hidden sm:table-cell" title="${absTitle}">${absCell}</td>
       <td class="px-3 py-3 text-center hidden sm:table-cell"><span class="font-semibold ${off<=0?'text-red-500':'text-slate-700'}">${off}</span></td>
-      <td class="px-3 py-3 text-right text-slate-600">${prevu.toFixed(1)} h</td>
-      <td class="px-3 py-3 text-right text-slate-800 font-medium">${reel.toFixed(1)} h</td>
-      <td class="px-3 py-3 text-right">${chip(reel-prevu)}</td>
+      <td class="px-2 sm:px-3 py-3 text-right text-slate-600 whitespace-nowrap">${prevu.toFixed(1)} h</td>
+      <td class="px-2 sm:px-3 py-3 text-right text-slate-800 font-medium whitespace-nowrap">${reel.toFixed(1)} h</td>
+      <td class="px-3 py-3 text-right hidden sm:table-cell">${chip(reel-prevu)}</td>
       <td class="px-3 py-3 text-right hidden sm:table-cell">${vsC==null?'<span class="text-slate-400">—</span>':chip(vsC,'h','text-emerald-600','text-red-500')}</td>
-      <td class="cost-col px-3 py-3 text-right">${(()=>{ const mk=monthKeyOf(state.weekStart), tot=payItemsTotal(e.id, mk); return `<button type="button" class="payItemsBtn text-sm font-semibold ${tot?'text-slate-800':'text-teal-700'} hover:underline" data-id="${e.id}" aria-label="${tot?fmtNum(tot)+' €':'+ ajouter'} — primes et avances de ${escapeHtml(e.name)}">${tot?fmtNum(tot)+' €':'+ ajouter'}</button>`; })()}</td>
-      <td class="cost-col px-4 py-3 text-right text-slate-700">${cost?cost.toFixed(0)+' €':'—'}</td>
+      <td class="cost-col px-2 sm:px-3 py-3 text-right whitespace-nowrap">${(()=>{ const mk=monthKeyOf(state.weekStart), tot=payItemsTotal(e.id, mk); return `<button type="button" class="payItemsBtn text-sm font-semibold ${tot?'text-slate-800':'text-teal-700'} hover:underline" data-id="${e.id}" aria-label="${tot?fmtNum(tot)+' €':'+ ajouter'} — primes et avances de ${escapeHtml(e.name)}">${tot?fmtNum(tot)+' €':'+ ajouter'}</button>`; })()}</td>
+      <td class="cost-col px-3 sm:px-4 py-3 text-right text-slate-700 whitespace-nowrap">${cost?cost.toFixed(0)+' €':'—'}</td>
     </tr>`;
   }).join('');
 
@@ -2757,11 +2775,11 @@ function renderSuivi(){
       <td class="px-4 py-3">Total</td><td class="hidden sm:table-cell"></td>
       <td class="px-3 py-3 text-center hidden sm:table-cell">${tAbs||'<span class="text-slate-400">—</span>'}</td>
       <td class="hidden sm:table-cell"></td>
-      <td class="px-3 py-3 text-right">${tP.toFixed(1)} h</td>
-      <td class="px-3 py-3 text-right">${tR.toFixed(1)} h</td>
-      <td class="px-3 py-3 text-right">${chip(tR-tP)}</td>
+      <td class="px-2 sm:px-3 py-3 text-right whitespace-nowrap">${tP.toFixed(1)} h</td>
+      <td class="px-2 sm:px-3 py-3 text-right whitespace-nowrap">${tR.toFixed(1)} h</td>
+      <td class="px-3 py-3 text-right hidden sm:table-cell">${chip(tR-tP)}</td>
       <td class="hidden sm:table-cell"></td>
-      <td class="cost-col px-3 py-3 text-right">${(()=>{ const mk=monthKeyOf(state.weekStart); const t=activeEmployees().reduce((a,e)=>a+payItemsTotal(e.id,mk),0); return t?fmtNum(t)+' €':'—'; })()}</td>
+      <td class="cost-col px-2 sm:px-3 py-3 text-right whitespace-nowrap">${(()=>{ const mk=monthKeyOf(state.weekStart); const t=activeEmployees().reduce((a,e)=>a+payItemsTotal(e.id,mk),0); return t?fmtNum(t)+' €':'—'; })()}</td>
       <td class="cost-col px-4 py-3 text-right">${tC?tC.toFixed(0)+' €':'—'}</td>
     </tr>` : '';
   // Résumé : heures supplémentaires + congés cumulés sur la période
@@ -4694,9 +4712,11 @@ async function refreshCloud(){
   applyRole();
   if(cloudMembership && ['owner','manager'].includes(cloudMembership.role)){ try{ await loadOffRequests(); }catch(_){} }
   if(cloudMembership && cloudMembership.role==='employee') await pullForEmployee();
-  else if(cloudMembership && ['owner','manager'].includes(cloudMembership.role) && !state.employees.length && !state.shifts.length){
-    // Appareil / site vierge (ex. 1re connexion sur le web) → on récupère automatiquement les données du cloud
-    await pullForOwner();
+  else if(cloudMembership && ['owner','manager'].includes(cloudMembership.role)){
+    // Patron / manager : on repart TOUJOURS de la version du cloud (autre ordinateur, autre appareil, app restée fermée),
+    // sauf si des modifications locales attendent encore d'être envoyées — elles partent d'abord.
+    if(!state.employees.length && !state.shifts.length) await pullForOwner();   // appareil vierge
+    else await staffRefresh('open');
   }
   if(cloudMembership) startRealtime();   // temps réel
   if(_welcomeIntent && cloudMembership){
@@ -4734,6 +4754,22 @@ function remoteChanged(retry){
   }, retry?300:1500);
 }
 setInterval(()=>{ if(_rtDirty && !_rtPulling) remoteChanged(true); }, 5000);   // réessai quand la saisie/l'envoi est terminé
+// ── Patron / manager : récupération du cloud à l'ouverture, au retour au premier plan, à la reconnexion.
+//    Sans cela, un ordinateur resté fermé rouvrait avec un planning périmé et pouvait le renvoyer par-dessus celui des autres.
+let _lastStaffPull=0;
+async function staffRefresh(reason){
+  if(!sb || !cloudSession || !cloudMembership || !['owner','manager'].includes(cloudMembership.role)) return false;
+  if(state && state.demo) return false;
+  if(_autoPushBusy || _autoPushPending || _autoPushTimer || _pushFailed) return false;   // des modifs locales attendent → elles passent d'abord
+  if(_rtPulling) return false;
+  if(reason==='resume' && Date.now()-_lastStaffPull<15000) return false;            // pas à chaque clic de fenêtre
+  if(reason!=='open' && anyModalOpen()) return false;                                 // jamais pendant une saisie
+  _rtPulling=true;
+  try{ const r=await pullForOwner(); if(r && !r.error){ _lastStaffPull=Date.now(); _rtDirty=false; setSyncStatus('ok'); return true; } }
+  catch(e){} finally{ _rtPulling=false; }
+  return false;
+}
+window.addEventListener('online', ()=>{ if(_pushFailed && canAutoPush()) scheduleAutoPush(); else staffRefresh('online'); });
 function startRealtime(){
   stopRealtime();
   if(!(sb && cloudMembership && typeof sb.channel==='function')) return;
@@ -4758,7 +4794,12 @@ function startRealtime(){
            .on('postgres_changes', sub('absences'), pull)
            .on('postgres_changes', sub('notes'), pull);
     }
-    _rtChannel=ch.subscribe();
+    let first=true;
+    _rtChannel=ch.subscribe((status)=>{
+      if(status!=='SUBSCRIBED') return;
+      if(!first){ if(isStaff) staffRefresh('reconnect'); else pullForEmployee().catch(()=>{}); }   // connexion rétablie → rattrapage
+      first=false;
+    });
   }catch(e){}
 }
 // Aiguillage par rôle : l'employé est verrouillé sur son espace ; patron/manager = app complète
@@ -5032,7 +5073,7 @@ document.getElementById('btnInviteTeam').addEventListener('click', async ()=>{
 document.getElementById('btnManageAccess').addEventListener('click', ()=>openAccess());
 /* ============ SYNCHRONISATION CLOUD AUTOMATIQUE (patron) ============ */
 let _applyingRemote=false;                 // true pendant qu'on applique des données venues du cloud (évite l'écho pull→push)
-let _autoPushTimer=null, _autoPushBusy=false, _autoPushPending=false;
+let _autoPushTimer=null, _autoPushBusy=false, _autoPushPending=false, _pushFailed=false;   // _pushFailed : des modifs locales n'ont pas pu partir (hors-ligne)
 function canAutoPush(){
   return !!(sb && cloudSession && cloudMembership
     && ['owner','manager'].includes(cloudMembership.role)
@@ -5060,6 +5101,8 @@ async function runAutoPush(){
   let r; try{ r=await pushToCloud(); }catch(e){ r={error:String(e)}; }
   _autoPushBusy=false;
   setSyncStatus(r && r.error ? 'error' : 'ok');
+  _pushFailed=!!(r && r.error);
+  if(_pushFailed) setTimeout(()=>{ if(_pushFailed && canAutoPush() && !_autoPushTimer) scheduleAutoPush(); }, 30000);   // on réessaie, les modifs locales ne sont pas perdues
   if(_autoPushPending){ _autoPushPending=false; scheduleAutoPush(); }
   else if(_rtDirty) remoteChanged(true);   // un collègue a modifié pendant notre envoi → on récupère maintenant
 }
@@ -5469,6 +5512,7 @@ async function onAppResume(){
       if(session){
         if(!cloudMembership) await loadMembership();
         if(cloudMembership && cloudMembership.role==='employee') await pullForEmployee();
+        else if(cloudMembership && ['owner','manager'].includes(cloudMembership.role)) await staffRefresh('resume');   // patron / manager : version du cloud
       }
     }
   }catch(e){}
