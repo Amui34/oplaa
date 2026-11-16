@@ -47,6 +47,13 @@ Pour voir l'app : `python3 -m http.server 8795` dans `www/` → http://localhost
 - contrastes : le ton 600 de l'accent est assombri automatiquement (`setAccent`) pour garder un texte blanc lisible, quel que soit l'accent choisi ; gris secondaire `--s-400` ≥ 4,5:1 ;
 - tout nouveau bouton sans texte doit porter un `aria-label`, tout nouveau champ un `<label for>`.
 
+## Synchronisation multi-appareils (patron / manager)
+
+- Chaque modification part vers le cloud ~1,5 s après la saisie (`scheduleAutoPush` → `pushToCloud`). Un échec (hors-ligne) est mémorisé (`_pushFailed`) et renvoyé automatiquement (30 s, retour du réseau).
+- **Le cloud est la vérité au démarrage** : `staffRefresh()` tire tout (`pullForOwner`) à l'ouverture de l'app, au retour au premier plan, à la reconnexion du temps réel et au retour du réseau — sauf si des modifications locales attendent d'être envoyées ou si une saisie est en cours (modale ouverte).
+- Pendant l'utilisation, le temps réel (`startRealtime`) déclenche `remoteChanged()` → récupération différée, jamais pendant une saisie.
+- Les employés récupèrent leur planning à chaque retour au premier plan (`pullForEmployee`). Le bouton « Publier » ne synchronise rien : il marque la semaine comme publiée et prévient l'équipe.
+
 ## Notifications (publication du planning, congés)
 
 Côté app (`www/index.html`, bloc « NOTIFICATIONS ») : bouton **📣 Publier** sur le planning (admins / managers) → envoi au cloud, date de publication (`week_publications`), appel de la fonction serveur **`notify`** qui prévient les appareils de l'équipe par APNs. Les décisions de congé et les nouvelles demandes appellent aussi `notify`. L'app iPhone enregistre son jeton dans `push_tokens` (`pushSetup()`, plugin `@capacitor/push-notifications`, entitlement `aps-environment`). **Tout est silencieux tant que le serveur n'est pas déployé** : le planning reste visible dans l'app comme avant.
