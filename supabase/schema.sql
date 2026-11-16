@@ -178,6 +178,8 @@ alter table employees add column if not exists start_date  date;
 alter table employees add column if not exists end_date    date;
 alter table employees add column if not exists mutuelle    boolean not null default false;
 alter table employees add column if not exists base_salary numeric default 0;   -- SENSIBLE (admins seulement côté app)
+-- Couleur par employé (2026-11-16) : clé de palette (ex. 'bleu'), vide = attribution automatique côté app
+alter table employees add column if not exists color text;
 alter table establishments add column if not exists siret text;
 alter table establishments add column if not exists rules jsonb not null default '{}';   -- pauses, repas, nuit, dimanche, panier, paie
 alter table absences add column if not exists hours numeric;                            -- null = journée contrat moyenne
@@ -300,11 +302,12 @@ create policy log_staff_select on access_log for select
 --  C'est ce que voient les employés pour l'affichage « L'équipe ».
 --  Pas de taux, pas d'email, pas de téléphone, pas de conformité.
 -- ─────────────────────────────────────────────────────────────────────────
+alter table employees add column if not exists color text;   -- (déclaré ici pour que la vue ci-dessous puisse l'exposer)
 -- IMPORTANT : le WHERE is_member(...) limite la vue aux établissements DONT
 -- l'utilisateur est membre → il ne voit jamais les employés des autres.
 create or replace view team_members_public
 with (security_invoker = false, security_barrier = true) as
-  select id, establishment_id, name, role, archived
+  select id, establishment_id, name, role, archived, color
   from employees
   where is_member(establishment_id);
 

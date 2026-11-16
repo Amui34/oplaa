@@ -67,6 +67,15 @@
   .btn-ink:hover { background-color:var(--ink-hover); }
   /* Fiches employé (vue Équipe) : blocs lisibles, jamais de texte coupé */
   .emp-cap{ font-size:10px; font-weight:800; text-transform:uppercase; letter-spacing:.06em; color:var(--s-400,#9ca3af); margin-bottom:2px; }
+  /* Couleur par employé : pastille avec initiales (planning, équipe, suivi, espace employé) */
+  .emp-av{ display:inline-flex; align-items:center; justify-content:center; width:22px; height:22px; border-radius:9999px; background:var(--ec,#64748b); color:#fff; font-size:9px; font-weight:800; letter-spacing:.02em; line-height:1; flex-shrink:0; vertical-align:middle; }
+  .emp-av.sm{ width:16px; height:16px; font-size:7px; }
+  .emp-av.lg{ width:40px; height:40px; font-size:14px; box-shadow:0 0 0 2px rgba(255,255,255,.75); }
+  .emp-sw{ display:inline-flex; align-items:center; justify-content:center; width:34px; height:34px; border-radius:9999px; cursor:pointer; border:2px solid transparent; }
+  .emp-sw:has(input:checked){ border-color:var(--o-600); background:var(--o-50); }
+  .emp-sw:has(input:focus-visible){ outline:2px solid var(--o-600); outline-offset:2px; }
+  .emp-sw .emp-av{ width:24px; height:24px; }
+  @media (hover:none), (pointer:coarse) { .emp-sw{ width:44px; height:44px; } }
   .emp-col{ min-width:0; }
   .emp-col > div{ overflow-wrap:anywhere; line-height:1.45; }
   .emp-btn{ display:inline-flex; align-items:center; gap:.3rem; padding:.4rem .75rem; border-radius:.6rem; border:1px solid var(--s-300,#d6d3d1); background:var(--surface,#fff); font-size:13px; font-weight:600; white-space:nowrap; }
@@ -651,6 +660,10 @@
             <option>Intérim</option><option>Autre</option>
           </select>
         </div>
+      </div>
+      <div>
+        <div class="text-sm font-semibold text-slate-600">Couleur <span class="font-normal text-slate-400">— sa pastille dans le planning</span></div>
+        <div id="empColorRow" class="mt-1 flex flex-wrap gap-1" role="radiogroup" aria-label="Couleur de l'employé"></div>
       </div>
       <div class="grid grid-cols-[1fr_auto] sm:grid-cols-3 gap-3 items-end">
         <div>
@@ -1756,6 +1769,19 @@ function periodLine(e){   // rappel informatif : arrivée / départ de l'entrepr
   return `<div class="text-[11px] text-slate-400">📅 ${parts.join(' · ')}</div>`;
 }
 function ensureNameParts(e){ if(!e) return e; const np=nameParts(e); e.firstName=np.prenom; e.lastName=np.nom; return e; }
+// ── Couleur par employé : 14 teintes lisibles en blanc dessus (contraste ≥ 4,5:1). Attribution automatique stable
+//    (empreinte du nom → identique sur tous les appareils, même sans synchro), modifiable dans la fiche (`e.color`).
+const EMP_PALETTE=[
+  {k:'rouge',hex:'#B91C1C',label:'Rouge'},   {k:'orange',hex:'#C2410C',label:'Orange'}, {k:'ambre',hex:'#B45309',label:'Ambre'},
+  {k:'olive',hex:'#4D7C0F',label:'Olive'},   {k:'vert',hex:'#15803D',label:'Vert'},     {k:'sarcelle',hex:'#0F766E',label:'Sarcelle'},
+  {k:'cyan',hex:'#0E7490',label:'Cyan'},     {k:'bleu',hex:'#1D4ED8',label:'Bleu'},     {k:'indigo',hex:'#4338CA',label:'Indigo'},
+  {k:'violet',hex:'#6D28D9',label:'Violet'}, {k:'fuchsia',hex:'#A21CAF',label:'Fuchsia'},{k:'rose',hex:'#BE185D',label:'Rose'},
+  {k:'brun',hex:'#78350F',label:'Brun'},     {k:'gris',hex:'#374151',label:'Gris'} ];
+function hashStr(str){ let h=0; const t=String(str||''); for(let i=0;i<t.length;i++) h=(h*31 + t.charCodeAt(i))>>>0; return h; }
+function empColorKey(e){ if(!e) return 'gris'; if(e.color && EMP_PALETTE.some(c=>c.k===e.color)) return e.color; return EMP_PALETTE[hashStr(String(e.name||'').trim().toLowerCase()) % EMP_PALETTE.length].k; }
+function empColor(e){ const k=empColorKey(e); return (EMP_PALETTE.find(c=>c.k===k)||EMP_PALETTE[EMP_PALETTE.length-1]).hex; }
+function initialsOf(name){ const p=String(name||'').trim().split(/[\s-]+/).filter(Boolean); if(!p.length) return '?'; return ((p[0][0]||'')+(p.length>1?(p[p.length-1][0]||''):(p[0][1]||''))).toUpperCase(); }
+function empAvatar(e, size){ if(!e) return ''; return `<span class="emp-av${size?' '+size:''}" style="--ec:${empColor(e)}" aria-hidden="true">${escapeHtml(initialsOf(e.name))}</span>`; }
 // Période de présence : true si l'employé fait partie de l'équipe ce jour-là (dates d'entrée / de sortie facultatives, bornes incluses)
 function isEmployedOn(e, iso){ if(!e || !iso) return true; if(e.startDate && iso < e.startDate) return false; if(e.endDate && iso > e.endDate) return false; return true; }
 function employmentStatus(e, todayIso){ if(!e) return ''; if(e.endDate && e.endDate < todayIso) return 'parti'; if(e.startDate && e.startDate > todayIso) return 'a-venir'; return ''; }
@@ -2259,8 +2285,8 @@ function renderGrid(){
     const extraTag = isExtra ? `<span title="Extra / renfort" class="shrink-0 text-[8px] font-bold uppercase tracking-wide text-amber-700 bg-amber-100 rounded px-1 py-0.5 leading-none">extra</span>` : '';
     const legal = (legalByShift.get(s.id)||[]).concat(legalByEmpDay.get((s.empId||'')+'|'+s.week+'|'+s.day)||[]);
     const lw = legal.length ? `<span title="${legal.join(' • ').replace(/"/g,'&quot;')}" aria-label="Alerte légale : ${legal.join(' ; ').replace(/"/g,'&quot;')}" class="shrink-0 text-amber-700 text-[11px] leading-none">⚖</span>` : '';
-    return `<div draggable="true" class="shift-card card bg-white rounded-lg border ${conflict?'border-red-300 ring-1 ring-red-200':isExtra?'border-amber-300 border-dashed':'border-slate-200'} px-1.5 py-1 mb-1 hover:shadow-sm flex items-start gap-1 cursor-grab active:cursor-grabbing" data-shift="${s.id}" data-emp="${s.empId||''}">
-              <div class="min-w-0 flex-1"><div class="text-[11px] font-semibold text-slate-800 leading-tight truncate flex items-center gap-1">${escapeHtml(name)}${extraTag}</div>
+    return `<div draggable="true" class="shift-card card bg-white rounded-lg border ${conflict?'border-red-300 ring-1 ring-red-200':isExtra?'border-amber-300 border-dashed':'border-slate-200'} px-1.5 py-1 mb-1 hover:shadow-sm flex items-start gap-1 cursor-grab active:cursor-grabbing" data-shift="${s.id}" data-emp="${s.empId||''}"${emp?` style="border-left:3px solid ${empColor(emp)}"`:''}>
+              <div class="min-w-0 flex-1"><div class="text-[11px] font-semibold text-slate-800 leading-tight truncate flex items-center gap-1">${emp?empAvatar(emp,'sm'):''}${escapeHtml(name)}${extraTag}</div>
               <div class="text-[10px] text-slate-500">${s.start}–${s.end} ${brk}</div>${note}</div>${warn||realMark}${lw}
             </div>`;
   };
@@ -2655,7 +2681,7 @@ function renderTeam(){
     const block=(cap,html,extra='')=> html ? `<div class="emp-col ${extra}"><div class="emp-cap">${cap}</div>${html}</div>` : '';
     return `<article class="px-4 py-3 sm:px-5 sm:py-4 hover:bg-slate-50/60" data-id="${e.id}">
       <div class="flex flex-wrap items-center gap-x-3 gap-y-2">
-        <span class="font-bold text-slate-900 text-[15px] leading-tight">${escapeHtml(e.name)}</span>
+        <span class="inline-flex items-center gap-2 font-bold text-slate-900 text-[15px] leading-tight">${empAvatar(e)}${escapeHtml(e.name)}</span>
         <span class="inline-flex items-center gap-1.5 text-xs font-semibold text-slate-700 bg-slate-100 rounded-full px-2.5 py-0.5" style="--c:${t.color}"><span class="dot"></span>${t.label}</span>
         <span class="text-xs font-semibold text-slate-500">${escapeHtml(contractLabel(e))}</span>
         <span class="no-print ml-auto flex items-center gap-2">
@@ -2758,7 +2784,7 @@ function renderSuivi(){
     const absCell = absDays ? ABSENCE_TYPES.filter(ty=>absInfo.by[ty.key]).map(ty=>`${ty.emoji}${absInfo.by[ty.key]}`).join(' ') : '<span class="text-slate-400">—</span>';
     const absTitle = absDays ? ABSENCE_TYPES.filter(ty=>absInfo.by[ty.key]).map(ty=>`${absInfo.by[ty.key]} ${ty.label.toLowerCase()}`).join(', ') : 'Aucune absence';
     return `<tr class="border-t border-slate-100 hover:bg-slate-50">
-      <td class="px-4 py-3 font-semibold text-slate-800" style="--c:${t.color}"><span class="inline-flex items-center gap-1.5"><span class="dot"></span>${escapeHtml(e.name)}</span></td>
+      <td class="px-4 py-3 font-semibold text-slate-800"><span class="inline-flex items-center gap-2">${empAvatar(e)}${escapeHtml(e.name)}</span></td>
       <td class="px-3 py-3 text-center text-slate-700 hidden sm:table-cell">${workedDays}</td>
       <td class="px-3 py-3 text-center text-sm hidden sm:table-cell" title="${absTitle}">${absCell}</td>
       <td class="px-3 py-3 text-center hidden sm:table-cell"><span class="font-semibold ${off<=0?'text-red-500':'text-slate-700'}">${off}</span></td>
@@ -2969,9 +2995,18 @@ document.getElementById('shiftPeriod').addEventListener('change', function(){
 /* ============ MODALE EMPLOYÉ ============ */
 const empModal=document.getElementById('empModal');
 function fillEmpSelects(){ document.getElementById('empRole').innerHTML = TEAMS.map(t=>`<option value="${t.key}">${t.label}</option>`).join(''); }
+function renderEmpColorRow(emp){
+  const row=document.getElementById('empColorRow'); if(!row) return;
+  const cur=(emp&&emp.color&&EMP_PALETTE.some(c=>c.k===emp.color))?emp.color:'';
+  const autoK=empColorKey(Object.assign({}, emp||{}, {color:''}));
+  const sw=(k,hex,label,checked,ini)=>`<label class="emp-sw" title="${label}"><input type="radio" name="empColor" value="${k}" class="sr-only" aria-label="${label}"${checked?' checked':''}><span class="emp-av" style="--ec:${hex}" aria-hidden="true">${ini}</span></label>`;
+  const autoHex=(EMP_PALETTE.find(c=>c.k===autoK)||EMP_PALETTE[0]).hex;
+  row.innerHTML = sw('', autoHex, 'Automatique', !cur, 'A') + EMP_PALETTE.map(c=>sw(c.k,c.hex,c.label,cur===c.k,'')).join('');
+}
 function openEmpModal(emp){
   if(!ensurePro()) return;
   fillEmpSelects();
+  renderEmpColorRow(emp);
   const del=document.getElementById('deleteEmpBtn'), arch=document.getElementById('archiveEmpBtn');
   if(emp){
     document.getElementById('empModalTitle').textContent='Modifier l’employé';
@@ -3034,6 +3069,7 @@ document.getElementById('empForm').addEventListener('submit', ev=>{
     role:document.getElementById('empRole').value,
     contractType, hours, hoursUnit,
     rate:parseFloat(String(document.getElementById('empRate').value).replace(',','.'))||0,
+    color:(document.querySelector('input[name="empColor"]:checked')||{}).value||'',
     congesAllowance:(function(){ const cv=document.getElementById('empConges').value.trim(); return cv===''?25:Math.max(0,parseInt(cv,10)||0); })(),
     matricule:document.getElementById('empMatricule').value.trim(), jobTitle:document.getElementById('empJobTitle').value.trim(), startDate:document.getElementById('empStart').value||'', endDate:document.getElementById('empEnd').value||'', mutuelle:document.getElementById('empMutuelle').checked,
     baseSalary:(canSeeSalaries()?(parseFloat(String(document.getElementById('empBaseSalary').value).replace(',','.'))||0):undefined),
@@ -3340,7 +3376,7 @@ function renderEmploye(){
   sel.value=empViewSel;
   const emp=empById(empViewSel);
   document.getElementById('empGreeting').innerHTML = `<div class="rounded-2xl p-4 text-white" style="background:linear-gradient(135deg,var(--o-600),var(--o-800))">
-    <div class="text-lg font-extrabold">Bonjour ${escapeHtml(emp.name.split(' ')[0])} 👋</div>
+    <div class="text-lg font-extrabold flex items-center gap-3">${empAvatar(emp,'lg')}<span>Bonjour ${escapeHtml(emp.name.split(' ')[0])} 👋</span></div>
     <div class="text-sm opacity-90">Ta semaine du ${fmtDate(parseLocalDate(state.weekStart))} au ${fmtDate(addDays(state.weekStart,6))} chez ${escapeHtml(state.restaurant)}.</div>
     ${(()=>{ const t=state.published&&state.published[state.weekStart]; const d=t?new Date(t):null; return (d&&!isNaN(d)) ? `<div class="text-[11px] opacity-80 mt-1">📣 Planning publié le ${d.toLocaleDateString('fr-FR',{day:'numeric',month:'long'})} à ${d.toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'})}</div>` : ''; })()}</div>`;
   // Bannière de signature des heures (si la semaine est validée par le manager)
@@ -3426,7 +3462,7 @@ function renderEmpTeam(){
       const cell=state.shifts.filter(s=>s.week===wk && s.team===t.key && s.day===i).sort((a,b)=>a.start.localeCompare(b.start)).map(s=>{
         const e2=empById(s.empId); const nm=e2?e2.name.split(' ')[0]:(s.extraName?s.extraName+' (extra)':'—');
         const mine=s.empId===emp.id;
-        return `<div class="rounded-md border ${mine?'border-teal-300 bg-teal-50':'border-slate-200 bg-white'} px-1.5 py-1 mb-1"><div class="text-[11px] font-semibold ${mine?'text-teal-800':'text-slate-800'} truncate">${escapeHtml(nm)}${mine?' (toi)':''}</div><div class="text-[10px] text-slate-500">${s.start}–${s.end}</div></div>`;
+        return `<div class="rounded-md border ${mine?'border-teal-300 bg-teal-50':'border-slate-200 bg-white'} px-1.5 py-1 mb-1"><div class="text-[11px] font-semibold ${mine?'text-teal-800':'text-slate-800'} truncate flex items-center gap-1">${e2?empAvatar(e2,'sm'):''}${escapeHtml(nm)}${mine?' (toi)':''}</div><div class="text-[10px] text-slate-500">${s.start}–${s.end}</div></div>`;
       }).join('');
       body+=`<td class="px-1.5 py-1.5 border-b border-l border-slate-100 align-top">${cell||'<span class="text-slate-200 text-xs">·</span>'}</td>`;
     });
@@ -4824,13 +4860,13 @@ async function pushToCloud(){
   try{
     const estUpd = await sb.from('establishments').update({ name:state.restaurant, teams:state.teams, periods:state.periods, compliance:state.complianceItems, team_word:state.teamWord, accent:state.accent, logo:state.logo||null, emp_scope:state.empScope, profile:state.profile, siret:state.siret||null, rules:state.rules||{} }).eq('id', est);
     if(estUpd.error) return {error:'Réglages non synchronisés : '+estUpd.error.message};
-    const emps = state.employees.map(e=>{ const o={ establishment_id:est, local_id:e.id, name:e.name, role:e.role||'', contract:String(e.contract||''), phone:e.phone||'', email:e.email||'', archived:!!e.archived, compliance:e.compliance||{}, conges_allowance:(e.congesAllowance!=null?e.congesAllowance:25), hours:(e.hours!=null&&e.hours!==''&&!isNaN(parseFloat(e.hours))?parseFloat(e.hours):null), hours_unit:(e.hoursUnit==='mois'?'mois':'semaine'), contract_type:e.contractType||null, matricule:e.matricule||null, job_title:e.jobTitle||null, start_date:e.startDate||null, end_date:e.endDate||null, mutuelle:!!e.mutuelle, first_name:(nameParts(e).prenom||null), last_name:(nameParts(e).nom||null) };
+    const emps = state.employees.map(e=>{ const o={ establishment_id:est, local_id:e.id, name:e.name, role:e.role||'', contract:String(e.contract||''), phone:e.phone||'', email:e.email||'', archived:!!e.archived, compliance:e.compliance||{}, conges_allowance:(e.congesAllowance!=null?e.congesAllowance:25), hours:(e.hours!=null&&e.hours!==''&&!isNaN(parseFloat(e.hours))?parseFloat(e.hours):null), hours_unit:(e.hoursUnit==='mois'?'mois':'semaine'), contract_type:e.contractType||null, matricule:e.matricule||null, job_title:e.jobTitle||null, start_date:e.startDate||null, end_date:e.endDate||null, mutuelle:!!e.mutuelle, first_name:(nameParts(e).prenom||null), last_name:(nameParts(e).nom||null), color:(e.color||null) };
       if(canSeeSalaries()){ o.rate=e.rate||0; o.base_salary=e.baseSalary||0; }   // un manager n'envoie JAMAIS le taux → ne peut pas écraser les salaires
       return o; });
     if(emps.length){
       let {error}=await sb.from('employees').upsert(emps,{onConflict:'establishment_id,local_id'});
       // Base pas encore migrée (colonnes prénom/nom absentes) → on renvoie sans ces deux champs plutôt que de bloquer la synchro
-      if(error && /first_name|last_name/.test(error.message||'')){ emps.forEach(o=>{ delete o.first_name; delete o.last_name; }); ({error}=await sb.from('employees').upsert(emps,{onConflict:'establishment_id,local_id'})); }
+      if(error && /first_name|last_name|color/.test(error.message||'')){ emps.forEach(o=>{ delete o.first_name; delete o.last_name; delete o.color; }); ({error}=await sb.from('employees').upsert(emps,{onConflict:'establishment_id,local_id'})); }
       if(error) return {error:error.message};
     }
     const { data:remEmps } = await sb.from('employees').select('id,local_id').eq('establishment_id', est);
@@ -4878,7 +4914,7 @@ async function pullForEmployee(){
   const { data:e } = await sb.from('establishments').select('*').eq('id', est).maybeSingle();
   if(e){ state.restaurant=e.name||state.restaurant; if(e.teams&&e.teams.length)state.teams=e.teams; if(e.periods&&e.periods.length)state.periods=e.periods; if(e.compliance)state.complianceItems=e.compliance; state.teamWord=e.team_word||state.teamWord; state.accent=e.accent||state.accent; state.logo=e.logo||''; state.empScope=e.emp_scope||'all'; state.profile=e.profile||state.profile; state.proUntil=e.pro_until||null; state.proSource=e.pro_source||null; state.siret=e.siret||state.siret||''; if(e.rules&&typeof e.rules==='object'&&Object.keys(e.rules).length) state.rules=Object.assign({}, state.rules||{}, e.rules); syncGlobals(); setAccent(state.accent); applyLogo(); }
   const { data:team } = await sb.from('team_members_public').select('*').eq('establishment_id', est);
-  state.employees = (team||[]).map(t=>({ id:t.id, name:t.name, role:t.role, contract:'', rate:0, phone:'', email:'', archived:!!t.archived, compliance:{} }));
+  state.employees = (team||[]).map(t=>({ id:t.id, name:t.name, role:t.role, color:t.color||'', contract:'', rate:0, phone:'', email:'', archived:!!t.archived, compliance:{} }));
   try{ const { data:pub, error } = await sb.from('week_publications').select('week,published_at').eq('establishment_id', est); if(!error && Array.isArray(pub)){ state.published={}; pub.forEach(p=>{ state.published[p.week]=p.published_at; }); } }catch(e){}
   const { data:shifts } = await sb.from('shifts').select('*').eq('establishment_id', est);
   state.shifts = (shifts||[]).map(s=>({ id:s.id, week:s.week, day:s.day, team:s.team, period:s.period, start:s.start_t, end:s.end_t, empId:s.employee_id||'', extraName:s.extra_name||'', realStart:s.real_start||'', realEnd:s.real_end||'', breaks:s.breaks||[], note:s.note||'' }));
@@ -4900,9 +4936,9 @@ async function pullForOwner(){
     syncGlobals();
     const remoteToLocal={};
     // Manager : on ne récupère PAS la colonne « rate » (taux) → les salaires ne quittent pas le serveur
-    const empCols = canSeeSalaries() ? '*' : 'id,local_id,name,role,contract,phone,email,archived,compliance,conges_allowance,hours,hours_unit,contract_type,matricule,job_title,start_date,end_date,mutuelle';
+    const empCols = canSeeSalaries() ? '*' : 'id,local_id,name,role,contract,phone,email,archived,compliance,conges_allowance,hours,hours_unit,contract_type,matricule,job_title,start_date,end_date,mutuelle,color';
     const { data:emps } = await sb.from('employees').select(empCols).eq('establishment_id', est);
-    state.employees = (emps||[]).map(r=>{ const lid=r.local_id||r.id; remoteToLocal[r.id]=lid; return ensureNameParts({ id:lid, name:r.name, firstName:r.first_name||'', lastName:r.last_name||'', role:r.role||'', contract:r.contract||'', rate:r.rate||0, phone:r.phone||'', email:r.email||'', archived:!!r.archived, compliance:Object.assign(emptyCompliance(), r.compliance||{}), congesAllowance:(r.conges_allowance!=null?r.conges_allowance:25), hours:(r.hours!=null?r.hours:undefined), hoursUnit:(r.hours_unit==='mois'?'mois':'semaine'), contractType:r.contract_type||'', matricule:r.matricule||'', jobTitle:r.job_title||'', startDate:r.start_date||'', endDate:r.end_date||'', mutuelle:!!r.mutuelle, baseSalary:(r.base_salary!=null?r.base_salary:0) }); });
+    state.employees = (emps||[]).map(r=>{ const lid=r.local_id||r.id; remoteToLocal[r.id]=lid; return ensureNameParts({ id:lid, name:r.name, firstName:r.first_name||'', lastName:r.last_name||'', color:r.color||'', role:r.role||'', contract:r.contract||'', rate:r.rate||0, phone:r.phone||'', email:r.email||'', archived:!!r.archived, compliance:Object.assign(emptyCompliance(), r.compliance||{}), congesAllowance:(r.conges_allowance!=null?r.conges_allowance:25), hours:(r.hours!=null?r.hours:undefined), hoursUnit:(r.hours_unit==='mois'?'mois':'semaine'), contractType:r.contract_type||'', matricule:r.matricule||'', jobTitle:r.job_title||'', startDate:r.start_date||'', endDate:r.end_date||'', mutuelle:!!r.mutuelle, baseSalary:(r.base_salary!=null?r.base_salary:0) }); });
     const { data:shifts } = await sb.from('shifts').select('*').eq('establishment_id', est);
     state.shifts = (shifts||[]).map(s=>({ id:s.local_id||s.id, week:s.week, day:s.day, team:s.team, period:s.period, start:s.start_t, end:s.end_t, empId: s.employee_id?(remoteToLocal[s.employee_id]||''):'', extraName:s.extra_name||'', realStart:s.real_start||'', realEnd:s.real_end||'', breaks:Array.isArray(s.breaks)?s.breaks:[], note:s.note||'' }));
     _knownShiftLocalIds = new Set((shifts||[]).map(s=>s.local_id||s.id));   // ce qu'on a VU du cloud (co-édition)
