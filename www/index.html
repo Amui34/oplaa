@@ -215,10 +215,11 @@
 <!-- ============ ÉCRAN D'ACCUEIL (choix du profil) ============ -->
 <div id="rgpdMark" aria-hidden="true"></div>
 <!-- ============ BANDEAU MODE DÉMO ============ -->
-<div id="demoBanner" class="no-print hidden items-center gap-3 px-4 py-2 bg-amber-100 text-amber-900 text-sm border-b border-amber-200">
+<div id="demoBanner" class="no-print hidden flex-wrap items-center gap-x-3 gap-y-2 px-4 py-2 bg-amber-100 text-amber-900 text-sm border-b border-amber-200">
   <span class="ic shrink-0" data-ic="bulb" data-ic-size="16"></span>
-  <span class="flex-1 min-w-0"><b>Mode démo</b> — données d'exemple. Rien n'est enregistré sur un vrai compte.</span>
-  <button id="demoQuit" class="shrink-0 px-3 py-1.5 rounded-lg bg-amber-500 text-white font-semibold hover:bg-amber-600">Quitter la démo</button>
+  <span class="basis-full sm:basis-0 sm:flex-1 min-w-0"><b>Mode démo</b> — données d'exemple, rien n'est enregistré. Pour ton vrai planning, crée un compte gratuit.</span>
+  <button id="demoSignup" class="shrink-0 ml-auto sm:ml-0 px-3 py-1.5 rounded-lg bg-teal-600 text-white font-semibold hover:bg-teal-700">Créer mon compte</button>
+  <button id="demoQuit" class="shrink-0 px-3 py-1.5 rounded-lg border border-amber-400 text-amber-900 font-semibold hover:bg-amber-200">Quitter</button>
 </div>
 
 <!-- ============ EN-TÊTE ============ -->
@@ -2015,6 +2016,8 @@ function load(){
   // 1re ouverture : établissement VIDE en mémoire seulement — rien n'est enregistré tant que l'utilisateur n'a pas
   // choisi (compte, assistant, démo). Sinon un simple rechargement ferait disparaître l'écran d'accueil.
   if(!s){ firstRun=true; return migrate(freshEstablishment('restaurant','')); }
+  // Démo = découverte uniquement : elle ne survit pas à une fermeture. Un vrai planning demande un compte.
+  if(s.demo){ try{ localStorage.removeItem(STORAGE_KEY); localStorage.removeItem(STORAGE_KEY+'_history'); }catch(e){} firstRun=true; return migrate(freshEstablishment('restaurant','')); }
   s=migrate(s); saveQuiet(s); return s;    // pas d'historique pendant l'init (state pas encore prêt)
 }
 function migrate(s){
@@ -5161,6 +5164,7 @@ async function backToWelcome(){
   showWelcome();
 }
 document.getElementById('demoQuit').addEventListener('click', backToWelcome);
+document.getElementById('demoSignup').addEventListener('click', backToWelcome);   // retour à « Créer mon compte »
 const _btnHome=document.getElementById('btnHome'); if(_btnHome) _btnHome.addEventListener('click', ()=>{
   const dm=document.getElementById('dataMenu'); if(dm) dm.classList.add('hidden');
   if(state && state.demo){ backToWelcome(); return; }
@@ -5333,7 +5337,7 @@ document.getElementById('cloudDeleteAcc2').addEventListener('click', cloudDelete
 
 document.getElementById('cloudCreateEst').addEventListener('click', async ()=>{
   // Appareil vierge (1er lancement) → l'assistant de configuration crée l'établissement dans le cloud à la fin
-  if(firstRun || (!state.employees.length && !state.shifts.length)){ _welcomeIntent=null; closeCloud(true); openWizard(); return; }
+  if(firstRun || state.demo || (!state.employees.length && !state.shifts.length)){ _welcomeIntent=null; closeCloud(true); openWizard(); return; }
   // Sinon (données locales déjà présentes, ex. ancien utilisateur) : on crée l'établissement avec le nom existant
   // On demande le nom seulement s'il n'existe pas déjà (évite « Mon établissement » par défaut)
   let nom = (state.restaurant && state.restaurant.trim() && state.restaurant.trim()!=='Mon établissement') ? state.restaurant.trim() : '';

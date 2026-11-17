@@ -66,6 +66,18 @@ test('démo : on peut quitter la démo et revenir à la création de compte', as
   await expect(page.locator('#cloudSignUp')).toBeVisible({ timeout: 15000 });
 });
 
+test('démo : éphémère — recharger après la démo ramène sur la création de compte', async ({ page }) => {
+  await page.locator('#welcomeDemo').click();
+  await expect(page.locator('#demoBanner')).toBeVisible();
+  await expect(page.locator('#demoSignup')).toBeVisible();      // bouton « Créer mon compte » dans le bandeau
+  await page.reload();
+  await expect(page.locator('#cloudModal')).toHaveClass(/onb/);
+  await expect(page.locator('#cloudSignUp')).toBeVisible({ timeout: 15000 });
+  await expect(page.locator('#demoBanner')).toBeHidden();
+  const keys = await page.evaluate(() => Object.keys(localStorage).filter(k => k.startsWith('planning_resto') || k.startsWith('oplaa_estb_')));
+  expect(keys).toEqual([]);   // la démo n'a rien laissé sur l'appareil
+});
+
 test('affichage : aucune dérive horizontale de la page (iPad 768px)', async ({ page }) => {
   await page.setViewportSize({ width: 768, height: 1024 });
   await page.locator('#welcomeDemo').click();
