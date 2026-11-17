@@ -4710,23 +4710,31 @@ async function analyseComboFile(file){
   if(plan.siret && state.siret && plan.siret!==state.siret) plan.warnings.push(`SIRET du fichier (${plan.siret}) différent de celui de l'établissement (${state.siret}) — vérifie que c'est le bon établissement.`);
   return plan;
 }
+function placeholderEmployees(){   // fiches créées par l'assistant sans prénom : « Salle 1 », jamais planifiées, sans contact
+  const labels=state.teams.map(t=>normName(t.label)); const used=new Set(state.shifts.map(s=>s.empId));
+  return state.employees.filter(e=>{ const m=/^(.+?)\s+(\d+)$/.exec(String(e.name||'').trim()); return m && labels.includes(normName(m[1])) && !used.has(e.id) && !e.email && !e.phone && !e.archived; });
+}
 function renderImportPlan(plan){
   const box=document.getElementById('importSummary'); const li=(n,t)=>`<div class="flex items-center gap-2"><span class="w-8 text-right font-extrabold text-teal-700">${n}</span><span>${t}</span></div>`;
   box.innerHTML = li(plan.create.length,'employé(s) à <b>créer</b>'+(plan.create.length?` <span class="text-slate-400">— ${plan.create.slice(0,6).map(c=>c.fields.name).join(', ')}${plan.create.length>6?'…':''}</span>`:''))
     + li(plan.update.length,'fiche(s) à <b>mettre à jour</b> (matricule, contrat, dates, poste, heures, salaire)')
     + li(plan.absences.reduce((t,a)=>t+a.days.length,0),'jour(s) d\'absence à importer (congés, maladie, formation…)')
-    + (plan.siret && !state.siret ? li('ℹ️',`SIRET <b>${plan.siret}</b> sera enregistré pour l'établissement`) : '');
+    + (plan.siret && !state.siret ? li('',`SIRET <b>${plan.siret}</b> sera enregistré pour l'établissement`) : '');
+  const ph=placeholderEmployees(); plan.placeholders=ph;
+  if(ph.length && plan.create.length) box.insertAdjacentHTML('beforeend', `<label class="flex items-start gap-2 mt-2 rounded-lg bg-slate-50 border border-slate-200 px-3 py-2 cursor-pointer"><input type="checkbox" id="importDropPh" class="mt-0.5" checked><span>Retirer les <b>${ph.length}</b> fiche${ph.length>1?'s':''} d'exemple de l'assistant <span class="text-slate-400">(${ph.slice(0,4).map(e=>escapeHtml(e.name)).join(', ')}${ph.length>4?'…':''})</span></span></label>`);
   const w=document.getElementById('importWarn'); if(plan.warnings.length){ w.innerHTML=plan.warnings.map(x=>'⚠️ '+x).join('<br>'); w.classList.remove('hidden'); } else w.classList.add('hidden');
 }
 function applyImportPlan(plan){
   const defaultRole=(state.teams[0]||{}).key||'';
+  const drop=document.getElementById('importDropPh'); if(drop && drop.checked && plan.placeholders && plan.placeholders.length){ const ids=new Set(plan.placeholders.map(e=>e.id)); state.employees=state.employees.filter(e=>!ids.has(e.id)); }
   plan.create.forEach(c=>{ const e=Object.assign({ id:uid(), name:'', role:defaultRole, contract:'', rate:0, phone:'', email:'', archived:false, compliance:emptyCompliance(), congesAllowance:25 }, c.fields); e.contract=[e.contractType,(e.hours?fmtNum(e.hours)+' h/sem':null)].filter(Boolean).join(' · ')||e.contractType||''; state.employees.push(e); });
   plan.update.forEach(u=>{ Object.assign(u.emp, u.fields); u.emp.contract=[u.emp.contractType,(u.emp.hours?fmtNum(u.emp.hours)+' h/'+(u.emp.hoursUnit==='mois'?'mois':'sem'):null)].filter(Boolean).join(' · ')||u.emp.contractType||''; });
   if(plan.siret && !state.siret) state.siret=plan.siret;
   let nAbs=0;
   plan.absences.forEach(a=>{ const emp = state.employees.find(e=>a.matricule && e.matricule===a.matricule) || state.employees.find(e=>normName(e.name)===normName(`${a.prenom} ${a.nom}`)); if(!emp) return;
     a.days.forEach(iso=>{ const d=parseLocalDate(iso); const wk=isoDay(mondayOf(d)), day=(d.getDay()+6)%7; if(state.absences.some(x=>x.empId===emp.id && x.week===wk && x.day===day)) return; const rec={ id:uid(), week:wk, day, empId:emp.id, type:a.type }; if(a.hours>0) rec.hours=Math.round(a.hours*100)/100; state.absences.push(rec); nAbs++; }); });
-  save(); renderAll(); toast(`Import terminé ✓ — ${plan.create.length} créé(s), ${plan.update.length} mis à jour, ${nAbs} jour(s) d'absence`);
+  save(); renderAll(); setView('equipe'); window.scrollTo({top:0});   // on montre le résultat : l'onglet Équipe
+  toast(`Import terminé ✓ — ${plan.create.length} créé(s), ${plan.update.length} mis à jour, ${nAbs} jour(s) d'absence`);
 }
 document.getElementById('btnImportCombo').addEventListener('click', ()=>{ dataMenu.classList.add('hidden'); if(!canSeeSalaries()){ toast('Import réservé aux admins.'); return; } document.getElementById('importComboFile').value=''; document.getElementById('importComboFile').click(); });
 document.getElementById('importComboFile').addEventListener('change', async e=>{
