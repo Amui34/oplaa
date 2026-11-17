@@ -2122,7 +2122,8 @@ function wsCreate(profileKey, name){
   const idx=wsIndex(); idx.push({ id, name:name||profileName(profileKey), profile:profileKey, icon:profileIcon(profileKey) }); wsSaveIndex(idx);
   save();                                   // sauvegarde l'établissement courant
   wsSetActive(id); wsLoadActiveKeys(); versions=[];
-  firstRun=false; state=freshEstablishment(profileKey, name); syncGlobals(); saveQuiet(); recordVersion(); wsTouchMeta();
+  const wasDemo=!!(state && state.demo);
+  firstRun=false; state=freshEstablishment(profileKey, name); if(wasDemo) state.demo=true; syncGlobals(); saveQuiet(); recordVersion(); wsTouchMeta(); applyDemoBanner();
   empLocked=false; confUnlocked=false; teamFilter='all'; setView('planning'); applyMode(); renderAll();
   toast('Établissement créé ✓');
 }
@@ -4719,10 +4720,12 @@ document.addEventListener('copy', e=>{
     e.preventDefault(); toast('Copie désactivée (données protégées · RGPD).');
   }
 });
+let _memLoadError=false;   // la liste des rattachements n'a pas pu être lue (réseau) → on ne bloque pas l'écran
 async function loadMembership(){
-  cloudMembership=null;
+  cloudMembership=null; _memLoadError=false;
   if(!sb || !cloudSession) return;
-  const { data } = await sb.from('memberships').select('*, establishments(name)').limit(1);
+  const { data, error } = await sb.from('memberships').select('*, establishments(name)').limit(1);
+  _memLoadError=!!error;
   if(data && data.length) cloudMembership = data[0];
 }
 async function refreshCloud(){
@@ -4765,6 +4768,9 @@ async function refreshCloud(){
   } else if(cloudMembership && firstRun && !_welcomeIntent){
     // Démarrage avec une session déjà ouverte sur un appareil vierge : les données viennent d'être récupérées → planning
     firstRun=false; hideWelcome();
+  } else if(!cloudMembership && !_memLoadError && !(state && state.demo) && cloudModal.classList.contains('hidden')){
+    // Connecté mais sans établissement (ou déconnecté) : on ne laisse pas le planning local sans compte
+    _welcomeIntent='signup'; cloudModal.classList.add('onb'); cloudModal.classList.remove('hidden'); cloudModal.classList.add('flex');
   }
   _membersCache=null; if(typeof renderManageBanner==='function') renderManageBanner();
   if(typeof renderProBox==='function') renderProBox();
@@ -5174,7 +5180,7 @@ const _btnHome=document.getElementById('btnHome'); if(_btnHome) _btnHome.addEven
 function openCloud(){ cloudModal.classList.remove('hidden'); cloudModal.classList.add('flex'); refreshCloud(); }
 function closeCloud(noWelcome){
   // Première ouverture sans établissement : on ne « ferme » pas, on reste (ou on revient) sur l'écran de création de compte
-  if(noWelcome!==true && firstRun && !cloudMembership){ if(!cloudModal.classList.contains('onb')) showWelcome(); return; }
+  if(noWelcome!==true && accountGate()){ if(!cloudModal.classList.contains('onb')) showWelcome(); return; }
   endOnboarding(); cloudModal.classList.add('hidden'); cloudModal.classList.remove('flex');
 }   // onboarding employé fermé sans connexion → retour accueil
 document.getElementById('btnCloud').addEventListener('click', ()=>{ dataMenu.classList.add('hidden'); openCloud(); });
@@ -5375,8 +5381,13 @@ function traduireErreur(m){
   if(m.includes('password')) return 'Mot de passe trop court (6 caractères min).';
   return m || 'Une erreur est survenue.';
 }
+// Compte obligatoire : y a-t-il une session Oplaa enregistrée sur cet appareil ? (clé de session Supabase)
+function storedSessionLikely(){ try{ return Object.keys(localStorage).some(k=>/^sb-.*-auth-token$/.test(k)); }catch(e){ return false; } }
+// Tant qu'aucun établissement n'est rattaché (hors démo), la fenêtre compte ne peut pas se fermer
+function accountGate(){ return !!sb && !cloudMembership && !_memLoadError && !(state && state.demo); }
 // Au démarrage : session existante → rattachement, récupération si l'appareil est vierge, temps réel, envoi auto
-if(sb && !firstRun){ refreshCloud(); }   // (au 1er lancement, c'est startOnboarding() plus bas qui interroge le cloud)
+// Sans session enregistrée (même avec des données locales) : c'est startOnboarding('login') plus bas → identification obligatoire
+if(sb && !firstRun && (storedSessionLikely() || (state && state.demo))){ refreshCloud(); }
 
 /* ============ ACCESSIBILITÉ : noms des contrôles générés dynamiquement ============
    Le HTML statique porte déjà ses libellés ; ce passage complète ce qui est construit à la volée (listes, lignes de réglages,
@@ -5532,6 +5543,7 @@ document.getElementById('welcomeDemo').addEventListener('click', ()=>{
   maybeOnboard();
 });
 if(firstRun) startOnboarding('signup');
+else if(sb && !state.demo && !storedSessionLikely()) startOnboarding('login');   // données locales mais personne de connecté → s'identifier d'abord
 applyDemoBanner();
 
 /* ============ REPRISE D'APP : recalage semaine + rafraîchissement cloud auto ============ */

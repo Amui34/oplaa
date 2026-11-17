@@ -78,6 +78,21 @@ test('démo : éphémère — recharger après la démo ramène sur la création
   expect(keys).toEqual([]);   // la démo n'a rien laissé sur l'appareil
 });
 
+test('compte obligatoire : des données locales sans session ramènent sur l’identification, et la fenêtre ne se ferme pas', async ({ page }) => {
+  // Un planning local « orphelin » (créé sans compte, ancienne version ou démo convertie) est présent sur l'appareil
+  await page.evaluate(() => {
+    localStorage.setItem('planning_resto_v4', JSON.stringify({ profile:'restaurant', restaurant:'Planning local', teams:[{key:'salle',label:'Salle',color:'#C4562F'}], periods:[], employees:[{id:'e1',name:'Léa',role:'salle',contract:'35h'}], shifts:[], notes:[] }));
+  });
+  await page.reload();
+  await expect(page.locator('#cloudModal')).toHaveClass(/onb/);
+  await expect(page.locator('#cloudSignIn, #cloudSignUp').first()).toBeVisible({ timeout: 15000 });
+  // Impossible de fermer la fenêtre sans être rattaché à un établissement
+  await page.keyboard.press('Escape');
+  await page.mouse.click(5, 5);
+  await expect(page.locator('#cloudModal')).toBeVisible();
+  await expect(page.locator('#cloudModal')).toHaveClass(/onb/);
+});
+
 test('affichage : aucune dérive horizontale de la page (iPad 768px)', async ({ page }) => {
   await page.setViewportSize({ width: 768, height: 1024 });
   await page.locator('#welcomeDemo').click();
