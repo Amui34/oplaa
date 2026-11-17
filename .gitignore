@@ -26,3 +26,6 @@ docs/exemples/*.xlsx
 # Supabase CLI (temporaire)
 supabase/.temp/
 .claude/launch.json
+
+# Clés privées Apple (APNs, App Store Connect) : jamais dans le dépôt
+*.p8
