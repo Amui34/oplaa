@@ -261,6 +261,7 @@
         </div>
         <button id="btnHistory" class="mi w-full text-left px-4 py-2 hover:bg-slate-50"><span class="ic" data-ic="history"></span>Historique &amp; annuler…</button>
         <button id="btnDup" class="mi w-full text-left px-4 py-2 hover:bg-slate-50"><span class="ic" data-ic="copy"></span>Modèles &amp; duplication…</button>
+        <button id="btnImportCombo" class="mi owner-only w-full text-left px-4 py-2 hover:bg-slate-50" title="Importer le fichier Excel exporté depuis votre compte Combo (Synthèse + Absences) pour créer ou mettre à jour les fiches"><span class="ic" data-ic="save"></span>Importer des employés (Excel Combo)…</button>
         <button id="btnSettings" class="mi w-full text-left px-4 py-2 hover:bg-slate-50"><span class="ic" data-ic="settings"></span>Réglages &amp; plus…</button>
         <button id="btnGuide" class="mi w-full text-left px-4 py-2 hover:bg-slate-50"><span class="ic" data-ic="bulb"></span>Aide (guide de démarrage)</button>
         <div class="mi px-4 py-1.5 text-[10px] text-emerald-600 leading-snug"><span class="ic" data-ic="cloud" data-ic-size="13" style="align-self:flex-start;margin-top:1px"></span><span>Tout est enregistré et synchronisé automatiquement.</span></div>
@@ -349,6 +350,8 @@
 
     <!-- Bannière de conflits -->
     <div id="conflictBanner" class="hidden mb-3 rounded-xl border border-red-200 bg-red-50 text-red-700 text-sm px-4 py-3"></div>
+    <!-- Semaine sans aucun service : on propose les gestes utiles au lieu d'une grille vide -->
+    <div id="emptyWeek" class="no-print manager-only hidden mb-3 rounded-2xl border border-dashed border-slate-300 bg-white px-4 py-4 text-center text-sm text-slate-600"></div>
 
     <div id="gridScroll" tabindex="0" role="region" aria-label="Planning de la semaine" class="print-container bg-white rounded-2xl border border-slate-200 overflow-x-auto thin-scroll">
       <table class="w-full border-collapse" id="grid">
@@ -373,17 +376,15 @@
   <section id="view-equipe" class="hidden">
     <div class="no-print flex flex-wrap items-center gap-3 mb-4">
       <h2 class="text-lg font-extrabold text-slate-900">Équipe</h2>
-      <button type="button" id="btnImportCombo" class="owner-only ic-btn px-3 py-2 rounded-lg bg-white border border-slate-300 font-semibold hover:bg-slate-50 text-sm" title="Importer un export Combo (Synthèse + Absences) pour créer / mettre à jour les fiches"><span class="ic" data-ic="save" data-ic-size="15"></span>Importer (Combo)</button>
       <input type="file" id="importComboFile" accept=".xlsx" class="hidden" />
       <input type="search" id="empSearch" placeholder="Rechercher un employé…" class="ml-auto w-full sm:w-64 border border-slate-300 rounded-lg px-3 py-2 text-sm" />
     </div>
-    <div id="manageBanner" class="no-print manager-only rounded-2xl border border-teal-200 bg-teal-50 px-4 py-3 mb-4 flex flex-wrap items-center gap-3">
-      <div class="flex-1 min-w-[220px]">
-        <div class="inline-flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-wide text-teal-700"><span class="ic" data-ic="users" data-ic-size="14"></span>Qui gère avec vous</div>
-        <div id="manageList" class="text-sm text-slate-700 mt-0.5">—</div>
-      </div>
-      <button type="button" id="btnInviteTeam" class="px-4 py-2 rounded-xl bg-teal-600 text-white font-semibold text-sm hover:bg-teal-700">＋ Inviter quelqu'un</button>
-      <button type="button" id="btnManageAccess" class="px-3 py-2 rounded-xl bg-white border border-teal-300 text-teal-700 font-semibold text-sm hover:bg-teal-50">Gérer les accès</button>
+    <div id="manageBanner" class="no-print manager-only rounded-xl border border-teal-200 bg-teal-50 px-3 py-2 mb-4 flex flex-wrap items-center gap-x-3 gap-y-1.5 text-sm">
+      <span class="ic text-teal-700 shrink-0" data-ic="users" data-ic-size="16"></span>
+      <div id="manageList" class="flex-1 min-w-[200px] text-slate-700">—</div>
+      <button type="button" id="btnInviteTeam" class="px-3 py-1.5 rounded-lg bg-teal-600 text-white font-semibold text-xs hover:bg-teal-700">Inviter quelqu'un</button>
+      <button type="button" id="btnManageAccess" class="px-3 py-1.5 rounded-lg bg-white border border-teal-300 text-teal-700 font-semibold text-xs hover:bg-teal-50">Gérer les accès</button>
+      <button type="button" id="manageClose" class="text-slate-400 hover:text-slate-600 px-1 text-lg leading-none" aria-label="Masquer" title="Masquer">&times;</button>
     </div>
     <div id="empBody" class="print-container bg-white rounded-2xl border border-slate-200 divide-y divide-slate-100 overflow-hidden" aria-label="Liste des employés"></div>
     <p id="empEmpty" class="hidden text-center text-slate-400 py-10">Aucun employé. Cliquez sur « Ajouter ».</p>
@@ -1156,10 +1157,11 @@
 <div id="importModal" class="no-print fixed inset-0 bg-black/50 z-[60] hidden items-center justify-center p-4">
   <div class="bg-white rounded-2xl shadow-xl w-full max-w-lg p-5 max-h-[90vh] overflow-y-auto">
     <div class="flex items-center justify-between mb-1">
-      <h3 class="flex items-center gap-2 text-lg font-bold"><span class="ic" data-ic="save" data-ic-size="20"></span>Importer un export Combo</h3>
+      <h3 class="flex items-center gap-2 text-lg font-bold"><span class="ic" data-ic="save" data-ic-size="20"></span>Importer des employés</h3>
       <button class="closeImport text-slate-400 hover:text-slate-600 text-2xl leading-none" aria-label="Fermer">&times;</button>
     </div>
-    <p class="text-sm text-slate-500 mb-3">Aperçu de ce qui sera créé ou mis à jour. Rien n'est modifié avant « Importer ».</p>
+    <p class="text-sm text-slate-500 mb-1">Aperçu de ce qui sera créé ou mis à jour. Rien n'est modifié avant « Importer ».</p>
+    <p class="text-[11px] text-slate-400 mb-3">Oplaa lit le fichier Excel que vous exportez vous-même depuis votre compte Combo. Oplaa n'est pas affilié à Combo.</p>
     <div id="importSummary" class="space-y-2 text-sm"></div>
     <div id="importWarn" class="hidden mt-3 rounded-lg bg-amber-50 border border-amber-200 text-amber-800 text-xs px-3 py-2"></div>
     <div class="flex items-center gap-2 pt-4">
@@ -2151,7 +2153,7 @@ function migrate(s){
   if(s.empScope!=='team' && s.empScope!=='all') s.empScope='all';   // portée vue employé : 'team' (son équipe) | 'all' (tout l'établissement)
   if(!s.planningSent || typeof s.planningSent!=='object') s.planningSent={};   // { empId: {week, at, hash} } — traçabilité de communication du planning
   if(!Array.isArray(s.weekTemplates)) s.weekTemplates=[];   // modèles de semaine réutilisables [{id,name,shifts:[...],absences:[...],createdAt}]
-  if(s.viewMode!=='jour' && s.viewMode!=='semaine') s.viewMode='semaine';   // mode d'affichage mémorisé
+  if(s.viewMode!=='jour' && s.viewMode!=='semaine') s.viewMode='';   // mode d'affichage mémorisé ('' = pas encore choisi → Jour sur téléphone, Semaine ailleurs)
   if(s.gridGroup!=='employe' && s.gridGroup!=='equipe') s.gridGroup='equipe';   // groupement planning : équipe | employé
   // Règles & avantages (par établissement, modulables) — pauses obligatoires + tickets resto
   if(!s.rules || typeof s.rules!=='object') s.rules={};
@@ -2368,7 +2370,7 @@ function renderGrid(){
 
   // Carte d'un shift
   const cardHtml = (s)=>{
-    const emp=empById(s.empId), isExtra=!emp && s.extraName, name=emp?emp.name:(s.extraName||'—');
+    const emp=empById(s.empId), isExtra=!emp && s.extraName, name=emp?shortName(emp):(s.extraName||'—');
     const conflict = conflictIds.has(s.id);
     const realMark = hasReal(s) ? `<span title="Réel : ${s.realStart}–${s.realEnd}" class="shrink-0 w-1.5 h-1.5 rounded-full bg-amber-400 mt-1"></span>` : '';
     const warn = conflict ? `<span title="Conflit d'horaire" class="shrink-0 text-red-500 leading-none">${OplaaIcons.svg('warning',12)}</span>` : '';
@@ -2377,7 +2379,7 @@ function renderGrid(){
     const extraTag = isExtra ? `<span title="Extra / renfort" class="shrink-0 text-[8px] font-bold uppercase tracking-wide text-amber-700 bg-amber-100 rounded px-1 py-0.5 leading-none">extra</span>` : '';
     const legal = (legalByShift.get(s.id)||[]).concat(legalByEmpDay.get((s.empId||'')+'|'+s.week+'|'+s.day)||[]);
     const lw = legal.length ? `<span title="${legal.join(' • ').replace(/"/g,'&quot;')}" aria-label="Alerte légale : ${legal.join(' ; ').replace(/"/g,'&quot;')}" class="shrink-0 text-amber-700 leading-none">${OplaaIcons.svg('scale',12)}</span>` : '';
-    return `<div draggable="true" class="shift-card card bg-white rounded-lg border ${conflict?'border-red-300 ring-1 ring-red-200':isExtra?'border-amber-300 border-dashed':'border-slate-200'} px-1.5 py-1 mb-1 hover:shadow-sm flex items-start gap-1 cursor-grab active:cursor-grabbing" data-shift="${s.id}" data-emp="${s.empId||''}"${emp?` style="border-left:3px solid ${empColor(emp)}"`:''}>
+    return `<div draggable="true" class="shift-card card bg-white rounded-lg border ${conflict?'border-red-300 ring-1 ring-red-200':isExtra?'border-amber-300 border-dashed':'border-slate-200'} px-1.5 py-0.5 mb-0.5 hover:shadow-sm flex items-start gap-1 cursor-grab active:cursor-grabbing" title="${escapeHtml(emp?emp.name:name)}" data-shift="${s.id}" data-emp="${s.empId||''}"${emp?` style="border-left:3px solid ${empColor(emp)}"`:''}>
               <div class="min-w-0 flex-1"><div class="text-[11px] font-semibold text-slate-800 leading-tight truncate flex items-center gap-1">${emp?empAvatar(emp,'sm'):''}${escapeHtml(name)}${extraTag}</div>
               <div class="text-[10px] text-slate-500">${s.start}–${s.end} ${brk}</div>${note}</div>${warn||realMark}${lw}
             </div>`;
@@ -2504,6 +2506,16 @@ function renderGrid(){
 
   // Résumé de la semaine : heures planifiées, effectif, coût estimé, effectif par créneau
   const wkShifts = state.shifts.filter(s=>s.week===start && !isAbsentDay(s.empId,start,s.day));
+  const ew=document.getElementById('emptyWeek');
+  if(ew){ const none=!weekShifts(start).length; const prevN=weekShifts(isoDay(addDays(start,-7))).length; const tplN=(state.weekTemplates||[]).length;
+    if(none && !firstRun){ ew.innerHTML=`<div class="font-semibold text-slate-800 mb-2">Aucun service cette semaine pour l'instant.</div>
+      <div class="flex flex-wrap justify-center gap-2">
+        ${prevN?`<button type="button" id="ewDup" class="ic-btn px-3 py-2 rounded-lg bg-teal-600 text-white font-semibold text-sm hover:bg-teal-700">${ic('copy',15)}Dupliquer la semaine précédente <span class="opacity-80 font-normal">(${prevN})</span></button>`:''}
+        ${tplN?`<button type="button" id="ewTpl" class="ic-btn px-3 py-2 rounded-lg bg-white border border-slate-300 font-semibold text-sm hover:bg-slate-50">${ic('folder',15)}Appliquer un modèle</button>`:''}
+        <button type="button" id="ewAdd" class="ic-btn px-3 py-2 rounded-lg bg-white border border-slate-300 font-semibold text-sm hover:bg-slate-50">${ic('plus',15)}Ajouter un service</button>
+      </div>`; ew.classList.remove('hidden');
+      const q=id=>document.getElementById(id); if(q('ewDup')) q('ewDup').onclick=()=>q('dupWeek').click(); if(q('ewTpl')) q('ewTpl').onclick=()=>q('btnTemplates').click(); if(q('ewAdd')) q('ewAdd').onclick=()=>q('addShiftBtn').click();
+    } else { ew.classList.add('hidden'); ew.innerHTML=''; } }
   let wkHours=0, wkCost=0; const staff=new Set();
   wkShifts.forEach(s=>{ const h=shiftHours(s); wkHours+=h; if(s.empId) staff.add(s.empId); const emp=empById(s.empId); if(emp&&emp.rate) wkCost+=h*emp.rate; });
   const perPeriod = PERIODS.map(p=>{ const n=wkShifts.filter(s=>s.period===p.key).length; return n?`${escapeHtml(p.label)} : ${n}`:null; }).filter(Boolean).join(' · ');
@@ -2604,7 +2616,7 @@ function renderConf(){
     const okN = stats.filter(s=>/emerald|slate/.test(s.st.cls)).length;
     const pct = stats.length ? Math.round(okN/stats.length*100) : 100;
     const pctCls = pct>=100?'text-emerald-600':(pct>=60?'text-amber-600':'text-red-600');
-    return `<tr class="border-t border-slate-100 hover:bg-slate-50">
+    return `<tr class="border-t border-slate-100 hover:bg-slate-50" data-conf-emp="${e.id}">
       <td class="px-4 py-2 font-semibold text-slate-800 sticky left-0 bg-white">${escapeHtml(e.name)}<div class="text-[11px] font-normal text-slate-400">${teamOf(e.role).label} · ${escapeHtml(contractLabel(e))}</div><div class="text-[11px] font-semibold ${pctCls}">Dossier ${pct}%</div></td>
       ${commCell}
       ${cells}
@@ -2614,17 +2626,21 @@ function renderConf(){
 
   // Alertes d'échéances : documents expirés (rouge) ou bientôt expirés / manquants (ambre)
   const alerts=[];
-  activeEmployees().forEach(e=>{ COMPLIANCE_ITEMS.forEach(it=>{ const st=itemStatus(it, e.compliance?.[it.key]); if(/red|amber/.test(st.cls)) alerts.push({name:e.name, label:it.label, st}); }); });
+  activeEmployees().forEach(e=>{ COMPLIANCE_ITEMS.forEach(it=>{ const st=itemStatus(it, e.compliance?.[it.key]); if(/red|amber/.test(st.cls)) alerts.push({id:e.id, name:e.name, label:it.label, st}); }); });
   const abox=document.getElementById('confAlerts');
   if(abox){
     if(!alerts.length){ abox.innerHTML=`<div class="flex items-center gap-2 rounded-xl border border-emerald-200 bg-emerald-50 text-emerald-700 px-4 py-3 text-sm">${ic('checkCircle',18)} Tous les documents du personnel sont à jour.</div>`; }
     else {
-      const red=alerts.filter(a=>/red/.test(a.st.cls)), amber=alerts.filter(a=>/amber/.test(a.st.cls)); const ordered=[...red,...amber];
+      const red=alerts.filter(a=>/red/.test(a.st.cls));
+      // Un résumé par personne (le détail est dans le tableau et dans la fiche) : « Hugo Lemaire · 5 manquants · 1 à renouveler »
+      const byEmp={}; alerts.forEach(a=>{ const o=(byEmp[a.id]=byEmp[a.id]||{id:a.id,name:a.name,red:0,amber:0}); if(/red/.test(a.st.cls)) o.red++; else o.amber++; });
+      const people=Object.values(byEmp).sort((x,y)=>(y.red-x.red)||(y.amber-x.amber)||x.name.localeCompare(y.name));
       abox.innerHTML=`<div class="rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm">
-        <div class="flex items-center gap-1.5 font-bold text-slate-800 mb-1">${ic('warning',16)} ${alerts.length} document${alerts.length>1?'s':''} à surveiller${red.length?` (dont ${red.length} expiré${red.length>1?'s':''}/manquant${red.length>1?'s':''})`:''}</div>
-        <ul class="space-y-0.5">${ordered.slice(0,12).map(a=>`<li class="${/red/.test(a.st.cls)?'text-red-700':'text-amber-700'}">• <b>${escapeHtml(a.name)}</b> — ${escapeHtml(a.label)} : ${a.st.label}</li>`).join('')}</ul>
-        ${ordered.length>12?`<div class="text-[11px] text-slate-400 mt-1">… et ${ordered.length-12} autre${ordered.length-12>1?'s':''}.</div>`:''}
+        <div class="flex items-center gap-1.5 font-bold text-slate-800 mb-2">${ic('warning',16)} ${alerts.length} document${alerts.length>1?'s':''} à surveiller chez ${people.length} personne${people.length>1?'s':''}${red.length?` <span class="font-normal text-slate-600">· ${red.length} expiré${red.length>1?'s':''} ou manquant${red.length>1?'s':''}</span>`:''}</div>
+        <div class="flex flex-wrap gap-1.5">${people.map(o=>`<button type="button" class="conf-jump inline-flex items-center gap-1.5 rounded-full bg-white border ${o.red?'border-red-200 text-red-700':'border-amber-200 text-amber-800'} px-3 py-1 text-xs font-semibold hover:bg-slate-50" data-id="${o.id}">${escapeHtml(o.name)}<span class="font-normal text-slate-500">· ${o.red?`${o.red} manquant${o.red>1?'s':''}`:''}${o.red&&o.amber?' · ':''}${o.amber?`${o.amber} à renouveler`:''}</span></button>`).join('')}</div>
+        <div class="text-[11px] text-slate-400 mt-2">Touchez un nom pour aller à sa ligne.</div>
       </div>`;
+      abox.querySelectorAll('.conf-jump').forEach(b=>b.addEventListener('click', ()=>{ const tr=document.querySelector(`[data-conf-emp="${b.dataset.id}"]`); if(!tr) return; tr.scrollIntoView({behavior:'smooth', block:'center'}); tr.classList.add('bg-teal-50'); setTimeout(()=>tr.classList.remove('bg-teal-50'), 1800); }));
     }
   }
 
@@ -2792,6 +2808,7 @@ function renderTeam(){
       </div>
     </article>`;
   }).join('') : `<div class="px-4 py-6 text-center text-slate-400">Aucun employé ne correspond à « ${escapeHtml(q)} ».</div>`;
+  if(!q) body.insertAdjacentHTML('beforeend', `<button type="button" class="addEmpInline manager-only no-print w-full flex items-center justify-center gap-2 px-4 py-3 text-sm font-semibold text-teal-700 hover:bg-teal-50">${ic('plus',16)}Ajouter un employé</button>`);
 }
 // Extras / renforts : noms libres utilisés dans les shifts (sans fiche employé)
 function knownExtrasDetailed(){
@@ -3883,6 +3900,7 @@ document.getElementById('empFocus').addEventListener('change', function(){ focus
 document.getElementById('weekChart').addEventListener('click', e=>{ const b=e.target.closest('.week-bar'); if(b){ selectedDay=parseInt(b.dataset.day,10); if(typeof setMode==='function') setMode('jour'); } });
 
 document.getElementById('empBody').addEventListener('click', e=>{
+  if(e.target.closest('.addEmpInline')){ openEmpModal(); return; }
   const ed=e.target.closest('.editEmp'); if(ed){ openEmpModal(empById(ed.dataset.id)); return; }
   const sd=e.target.closest('.sendEmp'); if(sd){ openSendEmp(sd.dataset.id); }
 });
@@ -4005,6 +4023,7 @@ document.getElementById('addMenuBtn').addEventListener('click',e=>{ e.stopPropag
 document.getElementById('addMenu').addEventListener('click',e=>e.stopPropagation());
 document.addEventListener('click',()=>document.getElementById('addMenu').classList.add('hidden'));
 document.getElementById('addEmpHeaderBtn').addEventListener('click',()=>openEmpModal());
+(function(){ const c=document.getElementById('manageClose'); if(c) c.addEventListener('click', ()=>{ try{ localStorage.setItem('oplaa_manageHide','1'); }catch(e){} document.getElementById('manageBanner').classList.add('hidden'); }); })();
 document.querySelectorAll('.closeModal').forEach(b=>b.addEventListener('click',closeShiftModal));
 document.querySelectorAll('.closeEmp').forEach(b=>b.addEventListener('click',closeEmpModal));
 [shiftModal,empModal].forEach(m=>m.addEventListener('click',e=>{ if(e.target===m){ closeShiftModal(); closeEmpModal(); }}));
@@ -4673,7 +4692,9 @@ async function analyseComboFile(file){
     const rate = extraRate>0 ? extraRate : (base>0 && mensuel>0 ? Math.round(base/mensuel*100)/100 : 0); if(rate>0) fields.rate=rate;
     if(role) fields.role=role;
     const existing = state.employees.find(e=> (matricule && e.matricule===matricule)) || state.employees.find(e=>normName(e.name)===normName(name));
-    if(existing) plan.update.push({ emp:existing, fields }); else plan.create.push({ fields });
+    const clean=o=>{ Object.keys(o).forEach(k=>{ if(o[k]==null||o[k]==='') delete o[k]; }); return o; };
+    if(existing){ const u=plan.update.find(x=>x.emp===existing); if(u) Object.assign(u.fields, clean(fields)); else plan.update.push({ emp:existing, fields }); }
+    else { const c=plan.create.find(x=>normName(x.fields.name)===normName(name)); if(c) Object.assign(c.fields, clean(fields)); else plan.create.push({ fields }); }   // même personne sur 2 lignes → une seule fiche
   }
   const abs=sheetRows(wb,'absences');
   if(abs){ const A=headerIndex(abs,['Code','Date début','Date fin']); if(A){ const ga=(r,n)=>{ const j=A.map[n]; return j==null?'':r[j]; }; const skipped={};
@@ -4707,7 +4728,7 @@ function applyImportPlan(plan){
     a.days.forEach(iso=>{ const d=parseLocalDate(iso); const wk=isoDay(mondayOf(d)), day=(d.getDay()+6)%7; if(state.absences.some(x=>x.empId===emp.id && x.week===wk && x.day===day)) return; const rec={ id:uid(), week:wk, day, empId:emp.id, type:a.type }; if(a.hours>0) rec.hours=Math.round(a.hours*100)/100; state.absences.push(rec); nAbs++; }); });
   save(); renderAll(); toast(`Import terminé ✓ — ${plan.create.length} créé(s), ${plan.update.length} mis à jour, ${nAbs} jour(s) d'absence`);
 }
-document.getElementById('btnImportCombo').addEventListener('click', ()=>{ if(!canSeeSalaries()){ toast('Import réservé aux admins.'); return; } document.getElementById('importComboFile').value=''; document.getElementById('importComboFile').click(); });
+document.getElementById('btnImportCombo').addEventListener('click', ()=>{ dataMenu.classList.add('hidden'); if(!canSeeSalaries()){ toast('Import réservé aux admins.'); return; } document.getElementById('importComboFile').value=''; document.getElementById('importComboFile').click(); });
 document.getElementById('importComboFile').addEventListener('change', async e=>{
   const f=e.target.files&&e.target.files[0]; if(!f) return;
   try{ _importPlan=await analyseComboFile(f); }catch(err){ toast(err.message||'Fichier illisible'); return; }
@@ -4773,7 +4794,7 @@ document.getElementById('btnContact').addEventListener('click',()=>{
 });
 
 /* ============ TOAST ============ */
-let tt; function toast(m){ const t=document.getElementById('toast'); t.textContent=m; t.style.opacity='1'; clearTimeout(tt); tt=setTimeout(()=>t.style.opacity='0',2600); }
+let tt; function toast(m){ if(/✓/.test(String(m)) && typeof haptic==='function') haptic(); const t=document.getElementById('toast'); t.textContent=m; t.style.opacity='1'; clearTimeout(tt); tt=setTimeout(()=>t.style.opacity='0',2600); }
 
 /* ============ COMPTE CLOUD (SUPABASE) ============ */
 let sb = null, cloudSession = null, cloudMembership = null;
@@ -5189,12 +5210,14 @@ async function renderManageBanner(){
   if(!box) return;
   const staff=!!(cloudMembership && ['owner','manager'].includes(cloudMembership.role));
   if(cloudMembership && cloudMembership.role==='employee'){ box.classList.add('hidden'); return; }
+  let hid=false; try{ hid=localStorage.getItem('oplaa_manageHide')==='1'; }catch(e){}
+  if(hid){ box.classList.add('hidden'); return; }   // masquée par l'utilisateur (toujours accessible via Menu → Mon compte → Accès & rôles)
   box.classList.remove('hidden');
   if(!staff){
-    list.innerHTML='Vous travaillez seul·e sur cet appareil. <b>Créez un compte</b> pour partager la gestion avec un associé ou un manager, et donner à chacun son planning.';
+    list.innerHTML='Vous gérez seul·e. <b>Créez un compte</b> pour partager la gestion avec un associé ou un manager.';
     inv.textContent='Partager la gestion'; mg.classList.add('hidden'); return;
   }
-  inv.textContent='＋ Inviter quelqu\'un'; mg.classList.remove('hidden');
+  inv.textContent='Inviter quelqu\'un'; mg.classList.remove('hidden');
   const paint=rows=>{ const staffRows=rows.filter(m=>m.role!=='employee'); const nEmp=rows.length-staffRows.length;
     list.innerHTML=(staffRows.map(m=>`<b>${(m.employee_name||m.email||'').replace(/</g,'&lt;')}</b> <span class="text-slate-500">(${ROLE_LABEL[m.role]||m.role})</span>`).join(' · ')||'<i>aucun autre gestionnaire</i>')+(nEmp?` <span class="text-slate-500">· ${nEmp} employé${nEmp>1?'s':''} connecté${nEmp>1?'s':''}</span>`:''); };
   if(_membersCache) paint(_membersCache);
@@ -5602,6 +5625,10 @@ document.getElementById('suiviBody').addEventListener('click', e=>{ const b=e.ta
 
 /* ============ INIT ============ */
 function renderAll(){ renderTeamFilter(); renderGrid(); renderTeam(); renderSuivi(); }
+// « Camille D. » : prénom + initiale du nom (cartes du planning) ; nom complet au survol et partout ailleurs
+function shortName(e){ if(!e) return '—'; const fn=(e.firstName||'').trim(), ln=(e.lastName||'').trim(); if(fn) return fn+(ln?' '+ln[0].toUpperCase()+'.':''); const parts=String(e.name||'').trim().split(/\s+/); return parts.length>1 ? parts[0]+' '+parts[parts.length-1][0].toUpperCase()+'.' : (parts[0]||'—'); }
+// Retour haptique léger (app iPhone) sur chaque confirmation — silencieux sur le web
+function haptic(){ try{ const H=window.Capacitor&&window.Capacitor.Plugins&&window.Capacitor.Plugins.Haptics; if(H&&H.impact) H.impact({style:'LIGHT'}).catch(()=>{}); }catch(e){} }
 var _legalCount=0;   // nombre d'alertes légales de la semaine (pour l'intitulé du résumé)
 (function(){ const d=document.getElementById('weekSummary'); if(!d) return; let pref=null; try{ pref=localStorage.getItem('oplaa_weekSummary'); }catch(e){}
   d.open = pref ? pref==='open' : window.matchMedia('(min-width: 640px)').matches;   // ouvert sur ordinateur, replié sur téléphone
@@ -5609,7 +5636,7 @@ var _legalCount=0;   // nombre d'alertes légales de la semaine (pour l'intitul�
 setAccent(state.accent); applyTheme();
 // À chaque ouverture, on se cale automatiquement sur la semaine (et le jour) réels en cours
 try{ if(state && state.weekStart){ state.weekStart = isoDay(mondayOf(new Date())); selectedDay = ((new Date().getDay()+6)%7); saveQuiet(); } }catch(e){}
-setView('planning'); setMode(state.viewMode||'semaine'); setScope('semaine'); teamFilter='all'; renderAll(); applyMode();
+setView('planning'); setMode(state.viewMode || (window.matchMedia('(max-width: 639px)').matches ? 'jour' : 'semaine')); setScope('semaine'); teamFilter='all'; renderAll(); applyMode();
 // Écran d'accueil au 1er lancement : choisir patron ou employé
 // Première ouverture : pas d'écran intermédiaire. La fenêtre compte s'affiche en plein écran (classe .onb), directement
 // sur « Créer mon compte » ; elle ne se ferme que lorsqu'un établissement est rattaché (ou via la démo).
