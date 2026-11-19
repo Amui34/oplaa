@@ -150,6 +150,9 @@
     :where(input[type="color"]) { min-width:44px; min-height:44px; }
     :where(label:has(input[type="checkbox"]), label:has(input[type="radio"])) { min-height:44px; }
   }
+  /* Champs date / heure : même hauteur et même largeur que les autres champs (WebKit/iPhone les rend étroits et plus bas) */
+  input[type="date"], input[type="time"] { -webkit-appearance:none; appearance:none; display:block; min-height:42px; text-align:left; background:#fff; }
+  input[type="date"]::-webkit-date-and-time-value, input[type="time"]::-webkit-date-and-time-value { text-align:left; min-height:1.5rem; line-height:1.5rem; }
   /* Focus clavier toujours visible */
   :where(button, a[href], input, select, textarea, summary, [tabindex]):focus-visible { outline:2px solid var(--o-700); outline-offset:2px; }
   /* Première ouverture : la fenêtre compte EST l'écran d'accueil (plein écran, pas de croix) → on arrive directement sur « Créer mon compte » */
@@ -567,7 +570,7 @@
           <select id="shiftDay" class="mt-1 w-full border border-slate-300 rounded-lg px-3 py-2"></select>
         </div>
         <div>
-          <label for="shiftTeam" class="text-sm font-semibold text-slate-600">Équipe</label>
+          <div class="flex items-baseline justify-between gap-2"><label for="shiftTeam" class="text-sm font-semibold text-slate-600 team-word">Équipe</label><button type="button" class="openTeamsLink text-xs text-teal-700 font-semibold hover:underline shrink-0">Gérer…</button></div>
           <select id="shiftTeam" class="mt-1 w-full border border-slate-300 rounded-lg px-3 py-2"></select>
         </div>
         <div>
@@ -660,12 +663,17 @@
           <input type="tel" id="empPhone" placeholder="06 12 34 56 78" class="mt-1 w-full border border-slate-300 rounded-lg px-3 py-2" />
         </div>
       </div>
-      <div class="grid grid-cols-2 gap-3">
+      <div class="grid grid-cols-2 sm:grid-cols-3 gap-3">
         <div>
-          <label for="empRole" class="text-sm font-semibold text-slate-600">Équipe</label>
+          <div class="flex items-baseline justify-between gap-2"><label for="empRole" class="text-sm font-semibold text-slate-600 team-word">Équipe</label><button type="button" class="openTeamsLink text-xs text-teal-700 font-semibold hover:underline shrink-0">Gérer…</button></div>
           <select id="empRole" class="mt-1 w-full border border-slate-300 rounded-lg px-3 py-2"></select>
         </div>
         <div>
+          <label for="empJobTitle" class="text-sm font-semibold text-slate-600">Poste de travail</label>
+          <input type="text" id="empJobTitle" list="jobTitleList" autocomplete="off" placeholder="Ex : Chef de rang" class="mt-1 w-full border border-slate-300 rounded-lg px-3 py-2" />
+          <datalist id="jobTitleList"></datalist>
+        </div>
+        <div class="col-span-2 sm:col-span-1">
           <label for="empType" class="text-sm font-semibold text-slate-600">Type de contrat</label>
           <select id="empType" class="mt-1 w-full border border-slate-300 rounded-lg px-3 py-2">
             <option>CDI</option><option>CDD</option><option>Temps partiel</option>
@@ -695,11 +703,11 @@
         </div>
       </div>
       <div>
-        <div class="grid grid-cols-2 gap-3">
-          <div><label for="empStart" class="text-sm font-semibold text-slate-600">Arrivée dans l'entreprise</label><input type="date" id="empStart" class="mt-1 w-full border border-slate-300 rounded-lg px-3 py-2" /></div>
-          <div><label for="empEnd" class="text-sm font-semibold text-slate-600">Départ de l'entreprise</label><input type="date" id="empEnd" class="mt-1 w-full border border-slate-300 rounded-lg px-3 py-2" /></div>
+        <div class="grid grid-cols-2 gap-3 items-end">
+          <div><label for="empStart" class="text-sm font-semibold text-slate-600 block whitespace-nowrap">Date d'arrivée</label><input type="date" id="empStart" class="mt-1 w-full border border-slate-300 rounded-lg px-3 py-2" /></div>
+          <div><label for="empEnd" class="text-sm font-semibold text-slate-600 block whitespace-nowrap">Date de départ</label><input type="date" id="empEnd" class="mt-1 w-full border border-slate-300 rounded-lg px-3 py-2" /></div>
         </div>
-        <span class="text-[11px] text-slate-400 block mt-0.5">Pour savoir depuis quand la personne fait partie de l'entreprise. Laisse le départ vide tant qu'elle est en poste. (Ce n'est pas un pointage des heures.)</span>
+        <span class="text-[11px] text-slate-400 block mt-0.5">Arrivée et départ dans l'entreprise, pour savoir depuis quand la personne en fait partie. Laisse le départ vide tant qu'elle est en poste. (Ce n'est pas un pointage des heures.)</span>
       </div>
       <div id="empPayEstimate" class="rounded-lg bg-slate-50 border border-slate-200 px-3 py-2 text-sm text-slate-600"></div>
       <div>
@@ -711,7 +719,6 @@
         <summary class="px-3 py-2 cursor-pointer text-sm font-semibold text-slate-600 select-none">Infos paie (export comptable)</summary>
         <div class="px-3 pb-3 grid grid-cols-1 sm:grid-cols-2 gap-3">
           <div><label for="empMatricule" class="text-sm font-semibold text-slate-600">Matricule</label><input type="text" id="empMatricule" placeholder="Ex : B0143" class="mt-1 w-full border border-slate-300 rounded-lg px-3 py-2" /></div>
-          <div><label for="empJobTitle" class="text-sm font-semibold text-slate-600">Poste (intitulé)</label><input type="text" id="empJobTitle" placeholder="Ex : Serveur·se" class="mt-1 w-full border border-slate-300 rounded-lg px-3 py-2" /></div>
           <label class="flex items-center gap-2 text-sm text-slate-700 sm:col-span-1"><input type="checkbox" id="empMutuelle"> Mutuelle d'entreprise</label>
           <div class="cost-col"><label for="empBaseSalary" class="text-sm font-semibold text-slate-600">Salaire de base mensuel brut (€)</label><input type="number" id="empBaseSalary" min="0" step="1" inputmode="decimal" placeholder="Ex : 2150" class="mt-1 w-full border border-slate-300 rounded-lg px-3 py-2" /></div>
         </div>
@@ -2754,7 +2761,7 @@ function renderTeam(){
   if(!act.length){ body.innerHTML=''; empty.classList.toggle('hidden', state.employees.length>0); return; }
   empty.classList.add('hidden');
   const q=(document.getElementById('empSearch')?.value||'').trim().toLowerCase();
-  const list=act.filter(e=>!q || e.name.toLowerCase().includes(q) || teamOf(e.role).label.toLowerCase().includes(q));
+  const list=act.filter(e=>!q || e.name.toLowerCase().includes(q) || teamOf(e.role).label.toLowerCase().includes(q) || (e.jobTitle||'').toLowerCase().includes(q));
   const planned={}; state.shifts.filter(s=>s.week===state.weekStart).forEach(s=>planned[s.empId]=(planned[s.empId]||0)+shiftHours(s));
   body.innerHTML = list.length ? list.map(e=>{
     const t=teamOf(e.role); const ch=contractHours(e); const ph=planned[e.id]||0;
@@ -2794,6 +2801,7 @@ function renderTeam(){
       <div class="flex flex-wrap items-center gap-x-3 gap-y-2">
         <span class="inline-flex items-center gap-2 font-bold text-slate-900 text-[15px] leading-tight">${empAvatar(e)}${escapeHtml(e.name)}</span>
         <span class="inline-flex items-center gap-1.5 text-xs font-semibold text-slate-700 bg-slate-100 rounded-full px-2.5 py-0.5" style="--c:${t.color}"><span class="dot"></span>${t.label}</span>
+        ${e.jobTitle?`<span class="text-xs font-semibold text-slate-600">${escapeHtml(e.jobTitle)}</span>`:''}
         <span class="text-xs font-semibold text-slate-500">${escapeHtml(contractLabel(e))}</span>
         <span class="no-print ml-auto flex items-center gap-2">
           <button type="button" class="sendEmp emp-btn text-teal-700" data-id="${e.id}">📤 Envoyer</button>
@@ -3106,7 +3114,23 @@ document.getElementById('shiftPeriod').addEventListener('change', function(){
 
 /* ============ MODALE EMPLOYÉ ============ */
 const empModal=document.getElementById('empModal');
-function fillEmpSelects(){ document.getElementById('empRole').innerHTML = TEAMS.map(t=>`<option value="${t.key}">${t.label}</option>`).join(''); }
+const JOB_SUGGESTIONS = {
+  restaurant:['Serveur·se','Chef de rang','Runner','Barman / Barmaid','Chef de cuisine','Second de cuisine','Chef de partie','Commis de cuisine','Plongeur·se','Pâtissier·ère','Pizzaïolo','Manager','Hôte·sse d\'accueil'],
+  cafe:['Vendeur·se','Barista','Boulanger·ère','Pâtissier·ère','Apprenti·e','Responsable'],
+  commerce:['Vendeur·se','Caissier·ère','Responsable de rayon','Réceptionnaire','Responsable de magasin'],
+  hotel:['Réceptionniste','Night audit','Femme / Valet de chambre','Gouvernant·e','Bagagiste','Serveur·se petit-déjeuner'],
+  sante:['Infirmier·ère','Aide-soignant·e','Secrétaire médical·e','Agent d\'entretien','Technicien·ne'],
+};
+function jobTitleSuggestions(){
+  const base = JOB_SUGGESTIONS[state.profile] || Object.values(JOB_SUGGESTIONS).flat();
+  const used = (state.employees||[]).map(e=>(e.jobTitle||'').trim()).filter(Boolean);
+  return [...new Set([...used, ...base])];
+}
+function fillEmpSelects(){
+  document.getElementById('empRole').innerHTML = TEAMS.map(t=>`<option value="${t.key}">${t.label}</option>`).join('');
+  const dl=document.getElementById('jobTitleList'); if(dl) dl.innerHTML = jobTitleSuggestions().map(j=>`<option value="${escapeHtml(j)}"></option>`).join('');
+  document.querySelectorAll('label.team-word').forEach(l=>{ l.textContent = teamWord; });
+}
 function renderEmpColorRow(emp){
   const row=document.getElementById('empColorRow'); if(!row) return;
   const cur=(emp&&emp.color&&EMP_PALETTE.some(c=>c.k===emp.color))?emp.color:'';
@@ -4267,7 +4291,8 @@ function closeTeams(){ teamsModal.classList.add('hidden'); teamsModal.classList.
 document.getElementById('addTeamRow2').addEventListener('click',()=>{ document.getElementById('teamsList').insertAdjacentHTML('beforeend', teamRowHtml()); if(window.OplaaIcons) OplaaIcons.paint(teamsModal); });
 document.querySelectorAll('.closeTeams').forEach(b=>b.addEventListener('click',closeTeams));
 teamsModal.addEventListener('click',e=>{ if(e.target===teamsModal){ closeTeams(); return; } if(e.target.closest('.del-row')) e.target.closest('.del-row').parentElement.remove(); });
-{ const _bt=document.getElementById('btnTeams'); if(_bt) _bt.addEventListener('click',openTeams); }   // btnTeams retiré du menu (édition des équipes désormais dans Réglages) — binding sécurisé
+{ const _bt=document.getElementById('btnTeams'); if(_bt) _bt.addEventListener('click',openTeams); }
+document.querySelectorAll('.openTeamsLink').forEach(b=>b.addEventListener('click',openTeams));   // btnTeams retiré du menu (édition des équipes désormais dans Réglages) — binding sécurisé
 document.getElementById('teamsForm').addEventListener('submit',ev=>{
   ev.preventDefault();
   const err=document.getElementById('teamsErr');
@@ -4284,7 +4309,11 @@ document.getElementById('teamsForm').addEventListener('submit',ev=>{
   const orphanEmp=state.employees.find(e=>e.role && !teamKeys.has(e.role));
   if(orphanEmp){ err.textContent=`Impossible : « ${orphanEmp.name} » est dans l'équipe « ${teamOf(orphanEmp.role).label} ». Change son équipe d'abord.`; err.classList.remove('hidden'); return; }
   state.teams=newTeams; state.profile='custom';
-  syncGlobals(); save(); renderAll(); closeTeams(); toast('Équipes mises à jour ✓');
+  syncGlobals(); save(); renderAll(); closeTeams();
+  // Les fenêtres Employé / Service restent ouvertes : on rafraîchit leur liste d'équipes en gardant le choix
+  if(!empModal.classList.contains('hidden')){ const sel=document.getElementById('empRole'), v=sel.value; fillEmpSelects(); sel.value = TEAMS.some(t=>t.key===v)?v:(TEAMS[0]&&TEAMS[0].key)||''; }
+  if(!shiftModal.classList.contains('hidden')){ const sel=document.getElementById('shiftTeam'), v=sel.value; sel.innerHTML = TEAMS.map(t=>`<option value="${t.key}">${t.label}</option>`).join(''); sel.value = TEAMS.some(t=>t.key===v)?v:(TEAMS[0]&&TEAMS[0].key)||''; }
+  toast('Équipes mises à jour ✓');
 });
 
 /* ============ RÉGLAGES (équipes / créneaux) ============ */

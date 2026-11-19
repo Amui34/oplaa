@@ -14,7 +14,7 @@
 5. Quand la 1.0.13 sera en vente : **mettre à jour l'app** sur votre iPhone et vérifier que l'ouverture demande bien un compte.
 
 ## Claude — à la prochaine session
-1. **Envoyer la 1.0.14** dès que la 1.0.13 est en vente (ou que Noa dit go) : build 302, notes = refonte visuelle (icônes, planning iPhone, cartes, Jour par défaut, Équipe, Conformité, semaine vide, haptique) + correctif import. Pipeline : `build1013.sh` du scratchpad à adapter (projet SPM : `-project App.xcodeproj`, pas de workspace).
+1. **Envoyer la 1.0.14** dès que la 1.0.13 est en vente (ou que Noa dit go) : build 302, notes = refonte visuelle (icônes, planning iPhone, cartes, Jour par défaut, Équipe, Conformité, semaine vide, haptique) + correctif import + postes de travail (19/11 : champ « Poste de travail » avec suggestions, lien « Gérer… » pour ajouter des équipes depuis les fiches, champs dates d'arrivée/départ alignés). Pipeline : `build1013.sh` du scratchpad à adapter (projet SPM : `-project App.xcodeproj`, pas de workspace).
 2. **Abonnement 1.1** (branche `abonnement-1.1`) : finir RevenueCat, produits 7,99 €/mois et 79,99 €/an **par établissement**, essai gratuit, paywall ; **désigner le médiateur de la consommation** dans les CGV avant d'encaisser ; page Tarifs du site.
 3. **Import côté iPhone** : vérifier que le sélecteur de fichiers iOS accepte bien un `.xlsx` (plugin Filesystem / input file) ; test e2e de l'import avec un fichier de fixture **synthétique** (jamais le vrai export).
 4. **Finitions mobiles** : largeur de la colonne « Équipe » en mode Jour sur iPhone ; passer en revue le mode sombre écran par écran (modales incluses).
