@@ -1,8 +1,8 @@
-# Oplaa — À faire (mis à jour le 17/11/2026 au soir)
+# Oplaa — À faire (mis à jour le 19/11/2026)
 
 ## État au 17/11/2026
 - **Site oplaa.pro** : à jour (dernier commit `ae04fae`). Tout ce qui a été fait aujourd'hui y est.
-- **iPhone** : 1.0.12 **en vente** (sans l'obligation de compte ni la refonte visuelle). 1.0.13 (build 301) **en review** : compte obligatoire + démo éphémère. Les passes visuelles d'aujourd'hui et le correctif d'import attendent la **1.0.14**.
+- **iPhone** : 1.0.13 (build 301) **en vente depuis le 19/11/2026** : compte obligatoire + démo éphémère. Les passes visuelles d'aujourd'hui et le correctif d'import attendent la **1.0.14**.
 - **Notifications** : fonction `notify` déployée, clé APNs créée, 5 secrets posés. **Jamais testées en réel.**
 - **Workflows Xcode Cloud** : désactivés (plus de collision de numéros de build).
 
@@ -11,7 +11,7 @@
 2. **Tester les e-mails** (Resend) : créer un compte avec une adresse jamais utilisée → le code doit arriver depuis une adresse `@oplaa.pro`, pas depuis Supabase.
 3. **Refaire l'import Combo sur le web, connecté** : Menu → « Importer des employés (Excel Combo) » → aperçu → Importer → l'onglet Équipe s'ouvre rempli. Me dire sur quel appareil le premier essai avait échoué (Safari ? iPhone ?).
 4. **Ranger la clé .p8** hors des Téléchargements (fait ? sinon : Documents/Oplaa/Clés ou gestionnaire de mots de passe).
-5. Quand la 1.0.13 sera en vente : **mettre à jour l'app** sur votre iPhone et vérifier que l'ouverture demande bien un compte.
+5. **Mettre à jour l'app** sur votre iPhone (1.0.13 en vente depuis le 19/11) et vérifier que l'ouverture demande bien un compte.
 
 ## Claude — à la prochaine session
 1. **Envoyer la 1.0.14** dès que la 1.0.13 est en vente (ou que Noa dit go) : build 302, notes = refonte visuelle (icônes, planning iPhone, cartes, Jour par défaut, Équipe, Conformité, semaine vide, haptique) + correctif import + postes de travail (19/11 : champ « Poste de travail » avec suggestions, lien « Gérer… » pour ajouter des équipes depuis les fiches, champs dates d'arrivée/départ alignés). Pipeline : `build1013.sh` du scratchpad à adapter (projet SPM : `-project App.xcodeproj`, pas de workspace).
@@ -22,7 +22,6 @@
 6. **Vague 2** : à définir avec Noa (ce qui manque le plus aux restaurateurs au quotidien).
 
 ## En attente (rien à faire)
-- Review Apple de la 1.0.13 (surveillance automatique toutes les 2 h dans la session Claude).
 - Conversion du compte Apple en Organisation (dossier en cours, banque SAS NOMAD).
 
 ## Rappels / règles
