@@ -314,7 +314,7 @@ test('équipe : une fiche employé se saisit avec prénom et nom séparés', asy
   const parts = await page.evaluate(() => { const e = state.employees.find(x => x.name === 'Camille Durand'); return [e.firstName, e.lastName]; });
   expect(parts).toEqual(['Camille', 'Durand']);
   // Nouvelle fiche : deux champs, le nom complet affiché est « Prénom Nom »
-  await page.locator('.tab-btn[data-view="equipe"]').click();
+  await page.locator('.tab-btn[data-view="equipe"]:visible').first().click();
   await page.locator('#addEmpHeaderBtn').click();
   await expect(page.locator('#empFirstName')).toBeVisible();
   await page.locator('#empFirstName').fill('Marie Anne');
@@ -355,7 +355,7 @@ test('planning : les alertes légales s’affichent (repos < 11 h) et se désact
 
 test('compteurs : congés acquis / pris / solde dans l’équipe et « Mes compteurs » dans l’espace employé', async ({ page }) => {
   await page.locator('#welcomeDemo').click();
-  await page.locator('.tab-btn[data-view="equipe"]').click();
+  await page.locator('.tab-btn[data-view="equipe"]:visible').first().click();
   await expect(page.locator('#view-equipe')).toContainText(/j acquis · \d+ pris · solde/);
   await page.evaluate(() => { setView('employe'); renderEmploye(); });
   await expect(page.locator('#empCounters')).toContainText('Mes compteurs');
@@ -365,7 +365,7 @@ test('compteurs : congés acquis / pris / solde dans l’équipe et « Mes compt
 
 test('primes / avances : saisie dans le Suivi et reprise dans l’export comptable', async ({ page }) => {
   await page.locator('#welcomeDemo').click();
-  await page.locator('.tab-btn[data-view="suivi"]').click();
+  await page.locator('.tab-btn[data-view="suivi"]:visible').first().click();
   await page.locator('.payItemsBtn').first().click();
   await expect(page.locator('#payItemModal')).toBeVisible();
   await page.locator('#payItemCode').selectOption('prime_exceptionnelle');

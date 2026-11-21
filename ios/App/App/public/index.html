@@ -51,7 +51,7 @@
   :root {
     --o-50:#FBEFE9; --o-100:#F6E0D6; --o-200:#EBC9BA; --o-300:#E0A98C; --o-400:#D8724A; --o-500:#D0623A; --o-600:#BD532E; --o-700:#A8471F; --o-800:#8A3A19; --o-900:#6E2E14;
     /* Échelle neutre (slate) pilotée par variables → thème clair/sombre */
-    --s-50:#FBF6F1; --s-100:#F3E4D9; --s-200:#E5DACC; --s-300:#B8A99B; --s-400:#746559; --s-500:#6E655C; --s-600:#544A42; --s-700:#443A33; --s-800:#2A1D16; --s-900:#1E140E;
+    --s-50:#FBF6F1; --s-100:#F4ECE4; --s-200:#E8E0D6; --s-300:#C6B9AB; --s-400:#746559; --s-500:#6E655C; --s-600:#544A42; --s-700:#443A33; --s-800:#2A1D16; --s-900:#1E140E;
     --surface:#ffffff; --scroll-thumb:#cbd5e1; --word:#2A1D16;
     --ink:#2A1D16; --ink-hover:#1E140E;
     color-scheme: light;
@@ -106,7 +106,7 @@
     @page { size: A4 landscape; margin: 10mm; }
     /* Toujours imprimer en clair, même si l'écran est en mode sombre */
     :root, [data-theme="dark"] {
-      --s-50:#FBF6F1; --s-100:#F3E4D9; --s-200:#E5DACC; --s-300:#B8A99B; --s-400:#746559; --s-500:#6E655C; --s-600:#544A42; --s-700:#443A33; --s-800:#2A1D16; --s-900:#1E140E;
+      --s-50:#FBF6F1; --s-100:#F4ECE4; --s-200:#E8E0D6; --s-300:#C6B9AB; --s-400:#746559; --s-500:#6E655C; --s-600:#544A42; --s-700:#443A33; --s-800:#2A1D16; --s-900:#1E140E;
       --surface:#ffffff; --word:#2A1D16;
     }
     [data-theme="dark"] .bg-white { background-color:#fff !important; }
@@ -202,6 +202,20 @@
   details#weekSummary[open] .ws-chev{ transform:rotate(180deg); }
   .ws-chev{ transition:transform .15s; }
   .ic-btn:not(.hidden){ display:inline-flex; }
+  /* --- Barre latérale (ordinateur ≥ 1024 px) : navigation à gauche, contenu pleine largeur --- */
+  .side-link{ display:flex; align-items:center; gap:.65rem; width:100%; padding:.55rem .65rem; border-radius:.55rem; font-size:13px; font-weight:600; color:var(--s-700); text-align:left; }
+  .side-link:hover{ background:var(--s-50); }
+  .tab-btn.side-link.on{ background:var(--o-50); color:var(--o-700); box-shadow:none; }
+  .tab-btn.side-link.on .ic{ color:var(--o-600); }
+  body.role-employee #sideNav{ display:none !important; }
+  @media (min-width:1024px){ body.role-employee header, body.role-employee main, body.role-employee #demoBanner{ margin-left:0 !important; } }
+  /* Grille : colonne du jour légèrement teintée, aucune ligne verticale */
+  .col-today{ background:color-mix(in srgb, var(--o-50) 55%, var(--surface)); }
+  /* Résumé de la semaine : chiffres clés */
+  .kpi{ display:flex; flex-direction:column; padding:.15rem 1rem .15rem 0; margin-right:.25rem; border-right:1px solid var(--s-200); }
+  .kpi:last-child{ border-right:0; }
+  .kpi b{ font-size:18px; font-weight:700; line-height:1.15; color:var(--s-900); font-variant-numeric:tabular-nums; }
+  .kpi span{ font-size:11px; color:var(--s-500); }
 </style>
 <script type="application/ld+json">
 {"@context":"https://schema.org","@type":"SoftwareApplication","name":"Oplaa","url":"https://oplaa.pro/","applicationCategory":"BusinessApplication","operatingSystem":"iOS, Web","description":"Planning d'équipe pour la restauration, le commerce et l'hôtellerie : horaires, heures, congés, absences, export comptable.","image":"https://oplaa.pro/og-image.png","offers":{"@type":"Offer","price":"0","priceCurrency":"EUR"},"author":{"@type":"Person","name":"Noa Madar"},"publisher":{"@type":"Organization","name":"SAS NOMAD","url":"https://oplaa.pro/mentions-legales.html"}}
@@ -222,17 +236,42 @@
 <!-- ============ ÉCRAN D'ACCUEIL (choix du profil) ============ -->
 <div id="rgpdMark" aria-hidden="true"></div>
 <!-- ============ BANDEAU MODE DÉMO ============ -->
-<div id="demoBanner" class="no-print hidden flex-wrap items-center gap-x-3 gap-y-2 px-4 py-2 bg-amber-100 text-amber-900 text-sm border-b border-amber-200">
+<div id="demoBanner" class="no-print hidden lg:ml-[220px] flex-wrap items-center gap-x-3 gap-y-2 px-4 py-2 bg-amber-100 text-amber-900 text-sm border-b border-amber-200">
   <span class="ic shrink-0" data-ic="bulb" data-ic-size="16"></span>
   <span class="basis-full sm:basis-0 sm:flex-1 min-w-0"><b>Mode démo</b> — données d'exemple, rien n'est enregistré. Pour ton vrai planning, crée un compte gratuit.</span>
   <button id="demoSignup" class="shrink-0 ml-auto sm:ml-0 px-3 py-1.5 rounded-lg bg-teal-600 text-white font-semibold hover:bg-teal-700">Créer mon compte</button>
   <button id="demoQuit" class="shrink-0 px-3 py-1.5 rounded-lg border border-amber-400 text-amber-900 font-semibold hover:bg-amber-200">Quitter</button>
 </div>
 
+<!-- ============ BARRE LATÉRALE (ordinateur) ============ -->
+<aside id="sideNav" class="no-print hidden lg:flex fixed left-0 top-0 bottom-0 w-[220px] z-40 flex-col bg-white border-r border-slate-200 px-3 py-4">
+  <div class="flex items-center gap-2.5 px-2 pb-5">
+    <svg viewBox="0 0 128 128" class="w-8 h-8 shrink-0" aria-hidden="true">
+      <rect width="128" height="128" rx="30" fill="#C4562F"/>
+      <circle cx="64" cy="64" r="33" fill="none" stroke="#FBF6F1" stroke-width="8"/>
+      <circle cx="64" cy="64" r="29" fill="#FBF6F1"/>
+      <path d="M64 64 L44.14 85.14 A29 29 0 0 1 64 35 Z" fill="#C4562F"/>
+    </svg>
+    <span class="oplaa-word text-xl">oplaa</span>
+  </div>
+  <button data-view="planning"   class="tab-btn side-link"><span class="ic" data-ic="calendar" data-ic-size="17"></span>Planning</button>
+  <button data-view="equipe"     class="tab-btn side-link"><span class="ic" data-ic="users" data-ic-size="17"></span>Équipe</button>
+  <button data-view="suivi"      class="tab-btn side-link"><span class="ic" data-ic="clock" data-ic-size="17"></span>Suivi des heures</button>
+  <button data-view="conformite" class="tab-btn side-link"><span class="ic" data-ic="shield" data-ic-size="17"></span>Conformité</button>
+  <div class="my-3 border-t border-slate-100"></div>
+  <button type="button" id="sideSettings" class="side-link"><span class="ic" data-ic="settings" data-ic-size="17"></span>Réglages</button>
+  <button type="button" id="sideHelp" class="side-link"><span class="ic" data-ic="bulb" data-ic-size="17"></span>Aide</button>
+  <button type="button" id="sideEstb" class="mt-auto flex items-center gap-2.5 rounded-xl border border-slate-200 px-2.5 py-2 text-left hover:bg-slate-50" title="Changer d'établissement">
+    <img id="sideLogo" class="hidden w-8 h-8 rounded-lg object-cover shrink-0" alt="" />
+    <span id="sideInitial" class="w-8 h-8 rounded-lg bg-slate-800 text-white text-xs font-bold grid place-items-center shrink-0">O</span>
+    <span class="min-w-0"><span id="sideResto" class="block text-xs font-bold text-slate-800 truncate">Oplaa</span><span id="sideRole" class="block text-[11px] text-slate-400 truncate">Patron</span></span>
+  </button>
+</aside>
+
 <!-- ============ EN-TÊTE ============ -->
-<header class="no-print bg-white border-b border-slate-200 sticky top-0 z-30" style="padding-top:env(safe-area-inset-top)">
-  <div class="max-w-6xl mx-auto px-4 py-2 sm:py-3 flex items-center gap-2">
-    <div class="flex items-center gap-2.5 mr-auto min-w-0">
+<header class="no-print bg-white border-b border-slate-200 sticky top-0 z-30 lg:ml-[220px]" style="padding-top:env(safe-area-inset-top)">
+  <div class="max-w-6xl mx-auto px-4 py-2 sm:py-3 flex items-center gap-2 lg:max-w-none lg:px-6">
+    <div class="flex items-center gap-2.5 mr-auto min-w-0 lg:hidden">
       <img id="hdrLogo" class="hidden w-9 h-9 rounded-lg object-cover shrink-0 border border-slate-200" alt="Logo de l'établissement" />
       <svg id="appMark" viewBox="0 0 128 128" class="hidden sm:block w-9 h-9 shrink-0" role="img" aria-label="Oplaa">
         <rect width="128" height="128" rx="30" fill="#C4562F"/>
@@ -245,7 +284,8 @@
         <h1 class="text-base font-bold text-slate-800 truncate sm:text-xs sm:font-semibold sm:text-slate-500 sm:mt-1" id="restoName">Planning Équipe</h1>
       </div>
     </div>
-    <nav class="hidden sm:flex bg-slate-100 rounded-lg p-1 text-sm font-semibold">
+    <h2 id="hdrViewTitle" class="hidden lg:block mr-auto text-base font-bold text-slate-900 truncate">Planning</h2>
+    <nav class="hidden sm:flex lg:hidden bg-slate-100 rounded-lg p-1 text-sm font-semibold">
       <button data-view="planning"   class="tab-btn px-3 py-1.5 rounded-md transition">Planning</button>
       <button data-view="equipe"     class="tab-btn px-3 py-1.5 rounded-md transition">Équipe</button>
       <button data-view="suivi"      class="tab-btn px-3 py-1.5 rounded-md transition">Suivi</button>
@@ -284,7 +324,7 @@
 
 </header>
 
-<main class="max-w-6xl mx-auto px-4 py-6 pb-28 sm:pb-6">
+<main class="max-w-6xl mx-auto px-4 py-6 pb-28 sm:pb-6 lg:max-w-none lg:ml-[220px] lg:px-6">
 
   <!-- Titre impression -->
   <div class="print-title items-center justify-between mb-4">
@@ -299,11 +339,11 @@
     <div class="no-print flex flex-wrap items-center gap-3 mb-3">
       <div class="flex items-center gap-2">
         <button id="prevWeek" aria-label="Semaine précédente" class="w-9 h-9 rounded-lg bg-white border border-slate-300 hover:bg-slate-50 font-bold">‹</button>
-        <div class="text-center min-w-[150px]">
-          <div id="weekLabel" class="font-bold text-slate-900 text-sm"></div>
+        <div class="text-center min-w-[150px] sm:min-w-[200px]">
+          <div id="weekLabel" class="font-bold text-slate-900 text-sm sm:text-lg tracking-tight"></div>
         </div>
         <button id="nextWeek" aria-label="Semaine suivante" class="w-9 h-9 rounded-lg bg-white border border-slate-300 hover:bg-slate-50 font-bold">›</button>
-        <button id="todayBtn" class="whitespace-nowrap px-3 py-2 text-xs rounded-lg bg-teal-50 text-teal-700 font-semibold border border-teal-200 hover:bg-teal-100">Cette semaine</button>
+        <button id="todayBtn" class="whitespace-nowrap px-3 py-2 text-xs rounded-lg bg-white text-slate-700 font-semibold border border-slate-300 hover:bg-slate-50">Cette semaine</button>
         <button id="btnPublish" class="manager-only no-print ic-btn fixed sm:static right-4 z-30 rounded-full sm:rounded-lg px-4 py-3 sm:px-3 sm:py-2 text-sm sm:text-xs shadow-lg sm:shadow-none bg-teal-600 text-white font-semibold hover:bg-teal-700" style="bottom:calc(env(safe-area-inset-bottom) + 4.6rem)" title="Envoyer le planning de la semaine à l'équipe (notification)"><span class="ic" data-ic="megaphone" data-ic-size="15"></span>Publier</button>
         <span id="publishedAt" class="manager-only no-print hidden sm:inline text-[11px] text-slate-400"></span>
       </div>
@@ -356,7 +396,7 @@
     <!-- Semaine sans aucun service : on propose les gestes utiles au lieu d'une grille vide -->
     <div id="emptyWeek" class="no-print manager-only hidden mb-3 rounded-2xl border border-dashed border-slate-300 bg-white px-4 py-4 text-center text-sm text-slate-600"></div>
 
-    <div id="gridScroll" tabindex="0" role="region" aria-label="Planning de la semaine" class="print-container bg-white rounded-2xl border border-slate-200 overflow-x-auto thin-scroll">
+    <div id="gridScroll" tabindex="0" role="region" aria-label="Planning de la semaine" class="print-container bg-white rounded-xl border border-slate-200 overflow-x-auto thin-scroll">
       <table class="w-full border-collapse" id="grid">
         <thead id="gridHead"></thead>
         <tbody id="gridBody"></tbody>
@@ -378,7 +418,7 @@
   <!-- ============ VUE ÉQUIPE ============ -->
   <section id="view-equipe" class="hidden">
     <div class="no-print flex flex-wrap items-center gap-3 mb-4">
-      <h2 class="text-lg font-extrabold text-slate-900">Équipe</h2>
+      <h2 class="text-lg font-extrabold text-slate-900 lg:hidden">Équipe</h2>
       <input type="file" id="importComboFile" accept=".xlsx" class="hidden" />
       <input type="search" id="empSearch" placeholder="Rechercher un employé…" class="ml-auto w-full sm:w-64 border border-slate-300 rounded-lg px-3 py-2 text-sm" />
     </div>
@@ -415,7 +455,7 @@
     </div>
     <p class="no-print text-sm text-slate-500 mb-2" id="suiviPeriod"></p>
     <div id="suiviSummary" class="no-print flex flex-wrap gap-2 text-sm mb-4"></div>
-    <div tabindex="0" role="region" aria-label="Tableau défilant" class="print-container bg-white rounded-2xl border border-slate-200 overflow-x-auto thin-scroll">
+    <div tabindex="0" role="region" aria-label="Tableau défilant" class="print-container bg-white rounded-xl border border-slate-200 overflow-x-auto thin-scroll">
       <table class="w-full text-sm min-w-[320px] sm:min-w-[720px]">
         <thead class="bg-slate-50 text-slate-500 text-xs uppercase tracking-wide">
           <tr>
@@ -1949,6 +1989,8 @@ function applyLogo(){
   const img=document.getElementById('hdrLogo'), mark=document.getElementById('appMark');
   if(state.logo){ img.src=state.logo; img.classList.remove('hidden'); if(mark) mark.style.display='none'; }
   else { img.classList.add('hidden'); img.removeAttribute('src'); if(mark) mark.style.display=''; }
+  const sl=document.getElementById('sideLogo'), si=document.getElementById('sideInitial');
+  if(sl && si){ if(state.logo){ sl.src=state.logo; sl.classList.remove('hidden'); si.classList.add('hidden'); } else { sl.classList.add('hidden'); sl.removeAttribute('src'); si.classList.remove('hidden'); } }
 }
 /* Redimensionne une image (fichier) en data URL carré ~256px pour rester léger */
 function readLogoFile(file, cb){
@@ -2356,10 +2398,11 @@ function renderGrid(){
   if(legalOn){ const LRULES=legalRules(); weeksInView.forEach(w=>{ const al=legalAlerts(state.shifts, w, LRULES); if(w===start) legalWeek=al;
     al.forEach(a=>{ if(a.shiftId){ if(!legalByShift.has(a.shiftId)) legalByShift.set(a.shiftId,[]); legalByShift.get(a.shiftId).push(a.text); }
       else if(a.day!=null){ const k=a.empId+'|'+w+'|'+a.day; if(!legalByEmpDay.has(k)) legalByEmpDay.set(k,[]); legalByEmpDay.get(k).push(a.text); } }); }); }
-  const sepCls = (c,idx)=> (viewMode!=='jour' && c.day===0 && idx>0) ? ' border-l-2 border-slate-300' : '';
+  const sepCls = (c,idx)=> (viewMode!=='jour' && c.day===0 && idx>0) ? ' border-l border-slate-200' : '';
+  const todayStr=new Date().toDateString(); const tdBg = c => (c.date.toDateString()===todayStr ? 'col-today' : 'bg-white');
 
   // En-tête : une colonne par jour (ruban continu)
-  let hrow = `<th class="sticky left-0 z-10 bg-slate-50 text-left px-3 py-2 text-xs font-bold text-slate-500 uppercase border-b border-r border-slate-200 min-w-[104px]">${gridGroup==='employe'?'Employé':teamWord}</th>`;
+  let hrow = `<th class="sticky left-0 z-10 bg-white text-left px-3 py-2 text-[11px] font-semibold text-slate-400 uppercase tracking-wide border-b border-r border-slate-100 min-w-[104px]">${gridGroup==='employe'?'Employé':teamWord}</th>`;
   cols.forEach((c,idx)=>{
     const date=c.date, today=new Date().toDateString()===date.toDateString();
     const hasNote = state.notes.some(n=>n.week===c.week && n.day===c.day);
@@ -2368,9 +2411,9 @@ function renderGrid(){
     const holBadge = hol ? `<div class="mt-0.5"><span class="text-[9px] font-bold px-1 py-0.5 rounded bg-rose-100 text-rose-700 leading-none" title="Jour férié : ${hol}">🎌 ${escapeHtml(hol)}</span></div>` : '';
     const dayAbs = weekAbsences(c.week).filter(a=>a.day===c.day).map(a=>{const e=empById(a.empId);const t=absenceType(a.type);return e?{name:e.name.split(' ')[0],emoji:t.emoji,label:t.label,color:t.color}:null;}).filter(Boolean);
     const absBadge = dayAbs.length ? `<div class="mt-1 flex flex-wrap gap-0.5 justify-center">${dayAbs.map(a=>`<span class="text-[9px] font-semibold px-1 py-0.5 rounded leading-none" style="background:${a.color}22;color:${a.color}" title="${a.label}">${a.emoji} ${escapeHtml(a.name)}</span>`).join('')}</div>` : '';
-    hrow += `<th class="px-2 py-2 border-b border-l border-slate-200${sepCls(c,idx)} ${viewMode==='jour'?'':'min-w-[136px]'} ${today?'bg-teal-50':'bg-slate-50'}">
-               <div class="text-xs font-bold ${today?'text-teal-700':'text-slate-700'}">${DAYS[c.day]}${pin}</div>
-               <div class="text-[11px] ${today?'text-teal-700':'text-slate-400'}">${fmtDate(date)}</div>${holBadge}${absBadge}
+    hrow += `<th class="px-2 py-2 border-b border-slate-100${sepCls(c,idx)} ${viewMode==='jour'?'':'min-w-[136px]'} ${today?'col-today':'bg-white'}">
+               <div class="text-[11px] font-semibold uppercase tracking-wide ${today?'text-teal-700':'text-slate-400'}">${DAYS[c.day]}${pin}</div>
+               <div class="text-sm font-bold ${today?'text-teal-700':'text-slate-800'}">${fmtDate(date)}</div>${holBadge}${absBadge}
              </th>`;
   });
   head.innerHTML = `<tr>${hrow}</tr>`;
@@ -2386,9 +2429,11 @@ function renderGrid(){
     const extraTag = isExtra ? `<span title="Extra / renfort" class="shrink-0 text-[8px] font-bold uppercase tracking-wide text-amber-700 bg-amber-100 rounded px-1 py-0.5 leading-none">extra</span>` : '';
     const legal = (legalByShift.get(s.id)||[]).concat(legalByEmpDay.get((s.empId||'')+'|'+s.week+'|'+s.day)||[]);
     const lw = legal.length ? `<span title="${legal.join(' • ').replace(/"/g,'&quot;')}" aria-label="Alerte légale : ${legal.join(' ; ').replace(/"/g,'&quot;')}" role="img" class="shrink-0 text-amber-700 leading-none">${OplaaIcons.svg('scale',12)}</span>` : '';
-    return `<div draggable="true" class="shift-card card bg-white rounded-lg border ${conflict?'border-red-300 ring-1 ring-red-200':isExtra?'border-amber-300 border-dashed':'border-slate-200'} px-1.5 py-0.5 mb-0.5 hover:shadow-sm flex items-start gap-1 cursor-grab active:cursor-grabbing" title="${escapeHtml(emp?emp.name:name)}" data-shift="${s.id}" data-emp="${s.empId||''}"${emp?` style="border-left:3px solid ${empColor(emp)}"`:''}>
-              <div class="min-w-0 flex-1"><div class="text-[11px] font-semibold text-slate-800 leading-tight truncate flex items-center gap-1">${emp?empAvatar(emp,'sm'):''}${escapeHtml(name)}${extraTag}</div>
-              <div class="text-[10px] text-slate-500">${s.start}–${s.end} ${brk}</div>${note}</div>${warn||realMark}${lw}
+    const cls = conflict ? 'border-red-300 ring-1 ring-red-200' : legal.length ? 'border-amber-300 bg-amber-50' : isExtra ? 'border-amber-300 border-dashed' : 'border-slate-200';
+    const av = emp ? empAvatar(emp) : `<span class="emp-av" style="--ec:#A39E94" aria-hidden="true">${escapeHtml((name||'?').trim().charAt(0).toUpperCase())}</span>`;
+    return `<div draggable="true" class="shift-card bg-white rounded-lg border ${cls} px-1.5 py-1 mb-1 hover:border-slate-300 hover:shadow-sm flex items-center gap-1.5 cursor-grab active:cursor-grabbing" title="${escapeHtml(emp?emp.name:name)}" data-shift="${s.id}" data-emp="${s.empId||''}">
+              ${av}<div class="min-w-0 flex-1 leading-tight"><div class="text-[12px] font-semibold text-slate-800 truncate flex items-center gap-1">${escapeHtml(name)}${extraTag}</div>
+              <div class="text-[10.5px] text-slate-500 tabular-nums">${s.start}–${s.end} ${brk}</div>${note}</div>${warn||realMark}${lw}
             </div>`;
   };
   const grpLabel = (txt,extra='')=>`<div class="text-[9px] font-bold uppercase tracking-wide text-slate-400 mt-1 mb-0.5 ${extra}">${txt}</div>`;
@@ -2408,10 +2453,10 @@ function renderGrid(){
     emps.forEach(emp=>{
       const t=teamOf(emp.role);
       const eh=cols.reduce((a,c)=>a+empColShifts(c,emp.id).reduce((x,s)=>x+shiftHours(s),0),0);
-      b += `<tr style="--c:${t.color}"><td class="sticky left-0 z-10 bg-white px-3 py-2 border-b border-r border-slate-200 align-top"><div class="font-bold text-sm text-slate-800 flex items-center gap-2"><span class="dot"></span>${escapeHtml(emp.name)}</div><div class="text-[10px] text-slate-400 mt-0.5 pl-4">${t.label}${eh>0?` · ${eh.toFixed(1)} h`:''}</div></td>`;
+      b += `<tr style="--c:${t.color}"><td class="sticky left-0 z-10 bg-white px-3 py-2 border-b border-r border-slate-100 align-top"><div class="font-bold text-sm text-slate-800 flex items-center gap-2"><span class="dot"></span>${escapeHtml(emp.name)}</div><div class="text-[10px] text-slate-400 mt-0.5 pl-4">${t.label}${eh>0?` · ${eh.toFixed(1)} h`:''}</div></td>`;
       cols.forEach((c,idx)=>{
         const all=empColShifts(c,emp.id); const known=new Set(PERIODS.map(p=>p.key));
-        b += `<td class="px-1.5 py-1.5 border-b border-l border-slate-100${sepCls(c,idx)} align-top bg-white cursor-pointer hover:bg-slate-50 transition" data-add-day="${c.day}" data-add-week="${c.week}" data-add-emp="${emp.id}" data-add-team="${emp.role}">`;
+        b += `<td class="px-1.5 py-1.5 border-b border-slate-100${sepCls(c,idx)} align-top ${tdBg(c)} cursor-pointer hover:bg-slate-50 transition" data-add-day="${c.day}" data-add-week="${c.week}" data-add-emp="${emp.id}" data-add-team="${emp.role}">`;
         PERIODS.forEach(p=>{ const list=sortByStart(all.filter(s=>s.period===p.key)); if(list.length){ b+=grpLabel(p.label,p.accent?'text-teal-700':''); list.forEach(s=>b+=cardHtml(s)); } });
         const others=sortByStart(all.filter(s=>!known.has(s.period))); if(others.length){ b+=grpLabel('Autre'); others.forEach(s=>b+=cardHtml(s)); }
         if(!all.length) b += `<div class="no-print text-center text-slate-400 text-lg leading-none select-none">+</div>`;
@@ -2422,10 +2467,10 @@ function renderGrid(){
     // Ligne « Extras / renforts » (services sans fiche employé)
     const extras=state.shifts.filter(s=> !empIds.has(s.empId) && (teamFilter==='all'||visibleTeamKeys.has(s.team)));
     if(extras.length){
-      b += `<tr style="--c:#D8974A"><td class="sticky left-0 z-10 bg-white px-3 py-2 border-b border-r border-slate-200 align-top"><div class="font-bold text-sm text-slate-800 flex items-center gap-2"><span class="dot"></span>Extras</div></td>`;
+      b += `<tr style="--c:#D8974A"><td class="sticky left-0 z-10 bg-white px-3 py-2 border-b border-r border-slate-100 align-top"><div class="font-bold text-sm text-slate-800 flex items-center gap-2"><span class="dot"></span>Extras</div></td>`;
       cols.forEach((c,idx)=>{
         const all=sortByStart(state.shifts.filter(s=>s.week===c.week && s.day===c.day && !empIds.has(s.empId) && (teamFilter==='all'||visibleTeamKeys.has(s.team))));
-        b += `<td class="px-1.5 py-1.5 border-b border-l border-slate-100${sepCls(c,idx)} align-top bg-white">`;
+        b += `<td class="px-1.5 py-1.5 border-b border-slate-100${sepCls(c,idx)} align-top ${tdBg(c)}">`;
         all.forEach(s=>b+=cardHtml(s));
         if(!all.length) b += `<div class="text-center text-slate-200 text-lg leading-none select-none">·</div>`;
         b += `</td>`;
@@ -2436,13 +2481,13 @@ function renderGrid(){
   visible.forEach(team=>{
     const th=teamHours(team);
     b += `<tr style="--c:${team.color}">`;
-    b += `<td class="sticky left-0 z-10 bg-white px-3 py-2 border-b border-r border-slate-200 align-top">
+    b += `<td class="sticky left-0 z-10 bg-white px-3 py-2 border-b border-r border-slate-100 align-top">
             <div class="font-bold text-sm text-slate-800 flex items-center gap-2"><span class="dot"></span>${team.label}</div>
             ${th>0?`<div class="text-[10px] text-slate-400 mt-0.5 pl-4 tabular-nums">${th.toFixed(1)} h</div>`:''}
           </td>`;
     cols.forEach((c,idx)=>{
       const all = colShifts(c, team.key);
-      b += `<td class="px-1.5 py-1.5 border-b border-l border-slate-100${sepCls(c,idx)} align-top bg-white cursor-pointer hover:bg-slate-50 transition" data-add-day="${c.day}" data-add-week="${c.week}" data-add-team="${team.key}">`;
+      b += `<td class="px-1.5 py-1.5 border-b border-slate-100${sepCls(c,idx)} align-top ${tdBg(c)} cursor-pointer hover:bg-slate-50 transition" data-add-day="${c.day}" data-add-week="${c.week}" data-add-team="${team.key}">`;
       // Groupes dans l'ordre des créneaux du profil (+ tout créneau inconnu à la fin)
       const known=new Set(PERIODS.map(p=>p.key));
       PERIODS.forEach(p=>{
@@ -2462,8 +2507,8 @@ function renderGrid(){
   const showCost = !!state.advanced && canSeeSalaries();   // coûts réservés au patron (masqués pour un manager invité)
   const grandCost = cols.reduce((a,c)=>a+dayCost(c),0);
   b += `<tr class="bg-slate-50">
-          <td class="sticky left-0 z-10 bg-slate-50 px-3 py-2 border-r border-slate-200 text-[11px] font-bold uppercase tracking-wide text-slate-500">Total${grand>0?` · ${grand.toFixed(1)} h`:''}${showCost&&grandCost>0?`<div class="font-normal normal-case text-slate-400">${grandCost.toFixed(0)} €</div>`:''}</td>`;
-  cols.forEach((c,idx)=>{ const dt=dayTotal(c), dc=dayCost(c); b += `<td class="px-2 py-2 border-l border-slate-100${sepCls(c,idx)} text-center text-[11px] font-semibold tabular-nums ${dt>0?'text-slate-700':'text-slate-400'}">${dt>0?dt.toFixed(1)+' h':'—'}${showCost&&dc>0?`<div class="font-normal text-slate-400">${dc.toFixed(0)} €</div>`:''}</td>`; });
+          <td class="sticky left-0 z-10 bg-slate-50 px-3 py-2 border-r border-slate-100 text-[11px] font-bold uppercase tracking-wide text-slate-500">Total${grand>0?` · ${grand.toFixed(1)} h`:''}${showCost&&grandCost>0?`<div class="font-normal normal-case text-slate-400">${grandCost.toFixed(0)} €</div>`:''}</td>`;
+  cols.forEach((c,idx)=>{ const dt=dayTotal(c), dc=dayCost(c); b += `<td class="px-2 py-2${sepCls(c,idx)} text-center text-[11px] font-semibold tabular-nums ${dt>0?'text-slate-700':'text-slate-400'}">${dt>0?dt.toFixed(1)+' h':'—'}${showCost&&dc>0?`<div class="font-normal text-slate-400">${dc.toFixed(0)} €</div>`:''}</td>`; });
   b += `</tr>`;
   body.innerHTML=b;
 
@@ -2509,6 +2554,9 @@ function renderGrid(){
   document.getElementById('printWeek').textContent = 'Semaine du '+fmtLong(ws)+' au '+fmtLong(we);
   document.getElementById('printResto').textContent = state.restaurant+' — Planning';
   document.getElementById('restoName').textContent = state.restaurant + (wsIndex().length>1?' ▾':'');
+  { const sr=document.getElementById('sideResto'), si=document.getElementById('sideInitial'), srl=document.getElementById('sideRole');
+    if(sr) sr.textContent=state.restaurant||'Oplaa'; if(si) si.textContent=(state.restaurant||'O').trim().charAt(0).toUpperCase()||'O';
+    if(srl) srl.textContent = document.body.classList.contains('role-manager') ? 'Manager' : 'Patron'; }
   applyLogo();
 
   // Résumé de la semaine : heures planifiées, effectif, coût estimé, effectif par créneau
@@ -2528,10 +2576,10 @@ function renderGrid(){
   const perPeriod = PERIODS.map(p=>{ const n=wkShifts.filter(s=>s.period===p.key).length; return n?`${escapeHtml(p.label)} : ${n}`:null; }).filter(Boolean).join(' · ');
   const ps=document.getElementById('planningStats');
   if(ps){ ps.innerHTML = wkShifts.length ? `
-    <span class="inline-flex items-center gap-1.5 rounded-lg bg-slate-100 text-slate-700 px-3 py-1.5 font-semibold">${ic('clock',15)} ${wkHours.toFixed(1)} h planifiées</span>
-    <span class="inline-flex items-center gap-1.5 rounded-lg bg-slate-100 text-slate-700 px-3 py-1.5 font-semibold">${ic('users',15)} ${staff.size} en poste</span>
-    ${wkCost?`<span class="cost-col inline-flex items-center gap-1.5 rounded-lg bg-amber-50 text-amber-700 px-3 py-1.5 font-semibold">${ic('euro',15)} ~${wkCost.toFixed(0)} € (masse salariale)</span>`:''}
-    ${perPeriod?`<span class="inline-flex items-center gap-1.5 rounded-lg bg-slate-100 text-slate-600 px-3 py-1.5">${ic('list',15)} ${perPeriod}</span>`:''}
+    <div class="kpi"><b>${wkHours.toFixed(1)} h</b><span>planifiées</span></div>
+    <div class="kpi"><b>${staff.size}</b><span>${staff.size>1?'personnes en poste':'personne en poste'}</span></div>
+    ${wkCost?`<div class="kpi cost-col"><b>≈ ${Math.round(wkCost).toLocaleString('fr-FR')} €</b><span>masse salariale estimée</span></div>`:''}
+    ${perPeriod?`<div class="kpi"><b style="font-size:13px;font-weight:600">${perPeriod}</b><span>services</span></div>`:''}
   ` : ''; }
   // Intitulé du résumé repliable : l'essentiel en une ligne, même replié
   const wst=document.getElementById('weekSummaryTxt');
@@ -2804,8 +2852,8 @@ function renderTeam(){
         ${e.jobTitle?`<span class="text-xs font-semibold text-slate-600">${escapeHtml(e.jobTitle)}</span>`:''}
         <span class="text-xs font-semibold text-slate-500">${escapeHtml(contractLabel(e))}</span>
         <span class="no-print ml-auto flex items-center gap-2">
-          <button type="button" class="sendEmp emp-btn text-teal-700" data-id="${e.id}">📤 Envoyer</button>
-          <button type="button" class="editEmp emp-btn text-slate-700" data-id="${e.id}">✏️ Modifier</button>
+          <button type="button" class="sendEmp emp-btn text-teal-700" data-id="${e.id}">${ic('send',14)}Envoyer</button>
+          <button type="button" class="editEmp emp-btn text-slate-700" data-id="${e.id}">${ic('pencil',14)}Modifier</button>
         </span>
       </div>
       <div class="mt-2.5 grid gap-x-6 gap-y-2.5 text-[12px] sm:grid-cols-2 lg:grid-cols-4">
@@ -3712,6 +3760,7 @@ function setView(v){
     const a=b.dataset.view===v;
     b.classList.toggle('on', a); b.classList.toggle('text-slate-500', !a);
   });
+  { const ht=document.getElementById('hdrViewTitle'); if(ht) ht.textContent = ({planning:'Planning', equipe:'Équipe', suivi:'Suivi des heures', conformite:'Conformité', employe:'Mon espace'})[v] || 'Oplaa'; }
   document.querySelectorAll('.btab').forEach(b=>{
     const a=b.dataset.view===v;
     b.classList.toggle('text-teal-700', a); b.classList.toggle('text-slate-400', !a);
@@ -3719,6 +3768,9 @@ function setView(v){
   window.scrollTo({top:0});
 }
 document.querySelectorAll('.tab-btn').forEach(b=>b.addEventListener('click',()=>setView(b.dataset.view)));
+{ const px=(a,b)=>{ const x=document.getElementById(a), y=document.getElementById(b); if(x&&y) x.addEventListener('click',()=>y.click()); };
+  px('sideSettings','btnSettings'); px('sideHelp','btnGuide');
+  const se=document.getElementById('sideEstb'); if(se) se.addEventListener('click',()=>{ if(typeof openEstb==='function') openEstb(); }); }
 document.getElementById('bottomNav').addEventListener('click',e=>{ const b=e.target.closest('.btab'); if(b) setView(b.dataset.view); });
 document.getElementById('btnEmailM').addEventListener('click',()=>{ dataMenu.classList.add('hidden'); document.getElementById('btnEmail').click(); });
 document.getElementById('btnPrintM').addEventListener('click',()=>{ dataMenu.classList.add('hidden'); document.getElementById('btnPrint').click(); });
