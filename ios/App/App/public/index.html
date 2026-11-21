@@ -5224,6 +5224,7 @@ async function pullForOwner(){
     if(e){ state.restaurant=e.name||state.restaurant; if(e.teams&&e.teams.length)state.teams=e.teams; if(e.periods&&e.periods.length)state.periods=e.periods; if(e.compliance&&e.compliance.length)state.complianceItems=e.compliance; state.teamWord=e.team_word||state.teamWord; state.accent=e.accent||state.accent; state.logo=e.logo||''; state.empScope=e.emp_scope||'all'; state.profile=e.profile||state.profile; state.proUntil=e.pro_until||null; state.proSource=e.pro_source||null; state.siret=e.siret||state.siret||''; if(e.rules&&typeof e.rules==='object'&&Object.keys(e.rules).length) state.rules=Object.assign({}, state.rules||{}, e.rules); }
     syncGlobals();
     const remoteToLocal={};
+    const _prevPay={}; (state.employees||[]).forEach(e=>{ _prevPay[e.id]={ rate:e.rate, baseSalary:e.baseSalary }; });   // salaires déjà sur l'appareil
     // Manager : on ne récupère PAS la colonne « rate » (taux) → les salaires ne quittent pas le serveur
     const empCols = canSeeSalaries() ? '*' : 'id,local_id,name,role,contract,phone,email,archived,compliance,conges_allowance,hours,hours_unit,contract_type,matricule,job_title,start_date,end_date,mutuelle,color';
     const { data:emps } = await sb.from('employees').select(empCols).eq('establishment_id', est);
@@ -5239,7 +5240,7 @@ async function pullForOwner(){
     if(cloudMembership.role==='owner'){   // salaires (employee_pay, admins uniquement ; table absente → valeurs de « employees »)
       try{ const { data:pay, error } = await sb.from('employee_pay').select('employee_id,rate,base_salary').eq('establishment_id', est);
         if(!error && Array.isArray(pay)){ const byId={}; pay.forEach(x=>{ byId[remoteToLocal[x.employee_id]]=x; });
-          state.employees.forEach(e=>{ const x=byId[e.id]; e.rate=x&&x.rate!=null?+x.rate:0; e.baseSalary=x&&x.base_salary!=null?+x.base_salary:0; }); }
+          state.employees.forEach(e=>{ const x=byId[e.id], prev=_prevPay[e.id]||{}; e.rate=(x&&x.rate!=null)?+x.rate:(prev.rate||0); e.baseSalary=(x&&x.base_salary!=null)?+x.base_salary:(prev.baseSalary||0); }); }   // pas de ligne côté serveur → on garde la valeur de l'appareil (renvoyée au prochain envoi)
       }catch(e){}
     }
     if(canSeeSalaries()){   // primes / avances (table réservée aux admins ; absente → on garde le local)
