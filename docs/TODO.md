@@ -2,7 +2,7 @@
 
 ## État au 17/11/2026
 - **Site oplaa.pro** : à jour (dernier commit `ae04fae`). Tout ce qui a été fait aujourd'hui y est.
-- **iPhone** : 1.0.13 (build 301) **en vente depuis le 19/11/2026** : compte obligatoire + démo éphémère. **1.0.14 (build 302) en vente depuis le 21/11/2026** : refonte visuelle, correctif import, postes de travail, haptique. Noa a autorisé les soumissions sans redemander.
+- **iPhone** : 1.0.13 (build 301) **en vente depuis le 19/11/2026** : compte obligatoire + démo éphémère. **1.0.15 (build 303) en cours d'envoi le 21/11/2026** (passe « propre et pro » : barre latérale ordinateur, grille allégée, vue Jour en liste sur iPhone, accueil deux colonnes). 1.0.14 (build 302) en vente depuis le 21/11/2026 : refonte visuelle, correctif import, postes de travail, haptique. Noa a autorisé les soumissions sans redemander.
 - **Notifications** : fonction `notify` déployée, clé APNs créée, 5 secrets posés. **Jamais testées en réel.**
 - **Workflows Xcode Cloud** : désactivés (plus de collision de numéros de build).
 
@@ -29,3 +29,8 @@
 - Les employés ne voient jamais les salaires ; un manager n'envoie/ne reçoit ni taux, ni salaire de base, ni primes.
 - Le vrai export Combo (`docs/exemples/*.xlsx`) et les clés `.p8` ne vont jamais dans le dépôt (`.gitignore`).
 - Numéros de build manuels > 301 ; après chaque lot : pousser `main` (déploie oplaa.pro), `npx cap copy ios` avant un build iPhone.
+
+## Direction visuelle retenue (21/11/2026)
+- Noa a refusé la maquette « éditorial minimaliste » (fond papier, cadres partout, Space Mono) proposée par Lucas : trop de carrés, on s'y perd.
+- Direction validée : « propre et pro » — beaucoup de blanc, très peu de traits, barre latérale sur ordinateur, pastilles de couleur par personne, un seul bouton accent par écran, police système. Maquettes dans `docs/maquettes/` (style-propre.html = référence).
+- Appliquée en trois passes le 21/11 (ordinateur, iPhone, accueil) ; reste à affiner : vue Équipe en liste dense (une ligne par personne), Suivi et Conformité au même niveau, mode sombre à revérifier.
