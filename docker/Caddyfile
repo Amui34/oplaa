@@ -8,6 +8,16 @@
 # (les pages légales/support restent servies depuis la vitrine)
 :80 {
 	encode zstd gzip
+	# Sécurité : pas d'affichage dans un cadre d'un autre site, pas de devinette de type, pas de fuite d'adresse
+	header {
+		Content-Security-Policy "frame-ancestors 'none'; base-uri 'self'; object-src 'none'"
+		X-Frame-Options "DENY"
+		X-Content-Type-Options "nosniff"
+		Referrer-Policy "no-referrer"
+		Permissions-Policy "camera=(), microphone=(), geolocation=(), payment=()"
+		Strict-Transport-Security "max-age=31536000"
+		-Server
+	}
 
 	# Assistance & Confidentialité : servies depuis la vitrine (/srv/site)
 	@legal path /assistance.html /confidentialite.html /cgu.html /dpa.html /mentions-legales.html /assistance /confidentialite /cgu /dpa /mentions-legales
@@ -33,6 +43,16 @@
 :8080 {
 	root * /srv/app
 	encode zstd gzip
+	# Sécurité : pas d'affichage dans un cadre d'un autre site, pas de devinette de type, pas de fuite d'adresse
+	header {
+		Content-Security-Policy "frame-ancestors 'none'; base-uri 'self'; object-src 'none'"
+		X-Frame-Options "DENY"
+		X-Content-Type-Options "nosniff"
+		Referrer-Policy "no-referrer"
+		Permissions-Policy "camera=(), microphone=(), geolocation=(), payment=()"
+		Strict-Transport-Security "max-age=31536000"
+		-Server
+	}
 	file_server
 	@pages path / *.html
 	try_files {path} /index.html

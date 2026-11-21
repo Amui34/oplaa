@@ -395,3 +395,24 @@ test('planning : bouton « Publier » (démo : simulation, mention « Pas encore
   await page.locator('#btnPublish').click();
   await expect(page.locator('#toast')).toContainText('Mode démo');
 });
+
+test('sécurité : les données reçues du cloud sont assainies avant affichage (heures, couleurs, libellés)', async ({ page }) => {
+  await page.locator('#welcomeDemo').click();
+  const r = await page.evaluate(() => {
+    window.__pwned = 0;
+    const s = { teams:[{ key:'x', label:'<img src=x onerror="window.__pwned=1">Salle', color:'red;background:url(x)' }],
+      periods:[{ key:'p', label:'Midi<script>', start:'11:00<b>', end:'15:00' }],
+      shifts:[{ start:'<svg onload=1>', end:'23:00', team:'x', period:'p' }], employees:[{ name:'Jo<script>alert(1)</script>', firstName:"L'Atelier" }] };
+    sanitizeState(s);
+    return { label:s.teams[0].label, color:s.teams[0].color, pstart:s.periods[0].start, sstart:s.shifts[0].start, name:s.employees[0].name, apos:s.employees[0].firstName };
+  });
+  expect(r.label).not.toContain('<');
+  expect(r.color).toBe('#64748b');
+  expect(r.pstart).toBe('09:00');
+  expect(r.sstart).toBe('09:00');
+  expect(r.name).not.toContain('<');
+  expect(r.apos).toBe("L'Atelier");
+  expect(await page.evaluate(() => window.__pwned)).toBe(0);
+  const code = await page.evaluate(() => randCode());
+  expect(code).toMatch(/^[A-Z0-9]{10}$/);
+});

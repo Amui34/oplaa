@@ -9,6 +9,10 @@ on:
     - cron: '23 6 * * *'      # tous les jours à 06:23 UTC
   workflow_dispatch:
 
+# Sécurité : le jeton GitHub ne peut que lire le dépôt
+permissions:
+  contents: read
+
 jobs:
   ping:
     name: Ping des projets Supabase

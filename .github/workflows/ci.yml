@@ -12,6 +12,10 @@ concurrency:
   group: ci-${{ github.ref }}
   cancel-in-progress: true
 
+# Sécurité : le jeton GitHub ne peut que lire le dépôt
+permissions:
+  contents: read
+
 jobs:
   test:
     name: Tests (unitaires + fonctionnels)

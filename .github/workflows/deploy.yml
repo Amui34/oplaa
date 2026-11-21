@@ -15,6 +15,10 @@ concurrency:
   group: deploy-oplaa
   cancel-in-progress: false
 
+# Sécurité : le jeton GitHub ne peut que lire le dépôt
+permissions:
+  contents: read
+
 jobs:
   deploy:
     name: Deploy to server
