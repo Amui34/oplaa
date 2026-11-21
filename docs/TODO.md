@@ -2,7 +2,7 @@
 
 ## État au 17/11/2026
 - **Site oplaa.pro** : à jour (dernier commit `ae04fae`). Tout ce qui a été fait aujourd'hui y est.
-- **iPhone** : 1.0.13 (build 301) **en vente depuis le 19/11/2026** : compte obligatoire + démo éphémère. **1.0.15 (build 303) en cours d'envoi le 21/11/2026** (passe « propre et pro » : barre latérale ordinateur, grille allégée, vue Jour en liste sur iPhone, accueil deux colonnes). 1.0.14 (build 302) en vente depuis le 21/11/2026 : refonte visuelle, correctif import, postes de travail, haptique. Noa a autorisé les soumissions sans redemander.
+- **iPhone** : 1.0.13 (build 301) **en vente depuis le 19/11/2026** : compte obligatoire + démo éphémère. **1.0.15 (build 303) soumise à la review le 21/11/2026 au soir** (passe « propre et pro » : barre latérale ordinateur, grille allégée, vue Jour en liste sur iPhone, accueil deux colonnes). 1.0.14 (build 302) en vente depuis le 21/11/2026 : refonte visuelle, correctif import, postes de travail, haptique. Noa a autorisé les soumissions sans redemander.
 - **Notifications** : fonction `notify` déployée, clé APNs créée, 5 secrets posés. **Jamais testées en réel.**
 - **Workflows Xcode Cloud** : désactivés (plus de collision de numéros de build).
 
