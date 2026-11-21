@@ -163,6 +163,14 @@
   #cloudModal.onb #cloudHead { display:none; }
   #cloudModal.onb #cloudCard { max-height:none; overflow:visible; margin-bottom:auto; box-shadow:0 18px 50px rgba(196,86,47,.14); }
   #cloudModal.onb #welcomeDemo { display:flex; }
+  /* Ordinateur : accueil en deux colonnes (promesse à gauche, connexion à droite) */
+  @media (min-width:1024px){
+    #cloudModal.onb { flex-direction:row; align-items:center; justify-content:center; gap:72px; padding:48px; }
+    #cloudModal.onb #cloudBrand { margin:0; text-align:left; max-width:500px; }
+    #cloudModal.onb #cloudBrand > svg { margin-left:0; }
+    #cloudModal.onb #cloudPitch { display:block; }
+    #cloudModal.onb #cloudCard { margin:0; width:420px; max-width:420px; }
+  }
   /* Accessibilité : respecte « réduire les animations » + focus clavier visible */
   @media (prefers-reduced-motion: reduce){ *,*::before,*::after{ animation-duration:.001ms !important; animation-iteration-count:1 !important; transition-duration:.001ms !important; scroll-behavior:auto !important } }
   :focus-visible { outline:2px solid var(--o-600); outline-offset:2px; border-radius:6px; }
@@ -780,6 +788,16 @@
     <svg viewBox="0 0 128 128" class="w-16 h-16 mx-auto mb-3" role="img" aria-label="Oplaa" style="filter:drop-shadow(0 10px 26px rgba(196,86,47,.22))"><rect width="128" height="128" rx="30" fill="#C4562F"/><circle cx="64" cy="64" r="33" fill="none" stroke="#FBF6F1" stroke-width="8"/><circle cx="64" cy="64" r="29" fill="#FBF6F1"/><path d="M64 64 L44.14 85.14 A29 29 0 0 1 64 35 Z" fill="#C4562F"/></svg>
     <div class="oplaa-word" style="font-size:34px;color:#C4562F">oplaa</div>
     <p class="text-slate-500 mt-1 text-sm">Le planning d'équipe, simplifié.</p>
+    <div id="cloudPitch" class="hidden">
+      <h2 class="text-4xl font-extrabold tracking-tight text-slate-900 leading-[1.08] mt-8">Le planning d'équipe, <span class="text-teal-600">enfin simple.</span></h2>
+      <p class="text-slate-500 mt-4 text-[15px] leading-relaxed max-w-md">Horaires, heures, congés, absences et export comptable pour la restauration, le commerce et l'hôtellerie. Pris en main en dix minutes, sans formation.</p>
+      <ul class="mt-6 space-y-2.5 text-sm text-slate-700 max-w-md">
+        <li class="flex gap-2.5"><span class="ic text-emerald-700 shrink-0 mt-0.5" data-ic="checkCircle" data-ic-size="16"></span><span>Le planning de la semaine, publié en un geste et reçu par toute l'équipe sur leur téléphone.</span></li>
+        <li class="flex gap-2.5"><span class="ic text-emerald-700 shrink-0 mt-0.5" data-ic="checkCircle" data-ic-size="16"></span><span>Repos légal, durées maximales et pauses vérifiés automatiquement.</span></li>
+        <li class="flex gap-2.5"><span class="ic text-emerald-700 shrink-0 mt-0.5" data-ic="checkCircle" data-ic-size="16"></span><span>Heures, congés et paie prêts pour le comptable.</span></li>
+      </ul>
+      <p class="mt-8 text-xs text-slate-400">Édité en France par SAS NOMAD.</p>
+    </div>
   </div>
   <div id="cloudCard" class="bg-white rounded-2xl shadow-xl w-full max-w-md p-5 max-h-[90vh] overflow-y-auto">
     <div id="cloudHead" class="flex items-center justify-between mb-1">
