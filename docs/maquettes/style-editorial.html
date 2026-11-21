@@ -1,0 +1,316 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Oplaa — maquette « éditorial minimaliste »</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;0,6..72,600;1,6..72,400&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#F8F7F4; --bg2:#EFECE6; --ink:#1A1918; --line:#D6D2C9; --accent:#D94E1F;
+    --muted:#6B6761; --salle:#1A1918; --cuisine:#6B6761; --bar:#A39E94;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;background:var(--bg);color:var(--ink);font-family:'Space Mono',ui-monospace,monospace;font-size:13px;line-height:1.45;-webkit-font-smoothing:antialiased}
+  h1,h2,h3,.serif{font-family:'Newsreader',Georgia,serif;font-weight:500;letter-spacing:-0.01em;margin:0}
+  a{color:inherit}
+  button{font:inherit;color:inherit;background:none;border:1px solid var(--line);border-radius:0;padding:8px 14px;cursor:pointer;text-transform:uppercase;letter-spacing:.06em;font-size:11px;transition:background .12s,color .12s,border-color .12s}
+  button:hover{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+  button.primary{background:var(--accent);border-color:var(--accent);color:#fff}
+  button.primary:hover{background:var(--ink);border-color:var(--ink)}
+  button.ghost{border-color:transparent;padding-left:6px;padding-right:6px}
+  button.ghost:hover{background:transparent;color:var(--accent)}
+  .label{font-size:10px;text-transform:uppercase;letter-spacing:.12em;color:var(--muted)}
+  .num{font-variant-numeric:tabular-nums}
+  hr{border:0;border-top:1px solid var(--line);margin:0}
+
+  /* --- page de présentation des écrans --- */
+  .intro{max-width:1180px;margin:0 auto;padding:40px 24px 8px}
+  .intro h1{font-size:40px;line-height:1.05}
+  .intro p{max-width:62ch;color:var(--muted);margin:12px 0 0}
+  .swatches{display:flex;gap:0;margin:20px 0 0;border:1px solid var(--line);width:max-content}
+  .swatches div{width:88px;height:56px;padding:6px;font-size:9px;border-right:1px solid var(--line);display:flex;align-items:flex-end}
+  .swatches div:last-child{border-right:0}
+  .screens{max-width:1180px;margin:0 auto;padding:24px}
+  .screen{border:1px solid var(--line);background:var(--bg);margin:0 0 40px}
+  .screen > .cap{padding:8px 14px;border-bottom:1px solid var(--line);background:var(--bg2);display:flex;justify-content:space-between}
+  .frame{display:grid;grid-template-columns:1fr 390px;gap:0}
+  .frame > *{min-width:0}
+  .frame .phone{border-left:1px solid var(--line);background:var(--bg2);padding:24px;display:flex;justify-content:center}
+  .device{width:340px;height:700px;background:var(--bg);border:1px solid var(--ink);display:flex;flex-direction:column;overflow:hidden}
+
+  /* --- en-tête appli --- */
+  .top{display:flex;align-items:center;gap:18px;padding:14px 20px;border-bottom:1px solid var(--line)}
+  .top .brand{font-family:'Newsreader',serif;font-size:22px;font-weight:600;letter-spacing:-.02em}
+  .top .brand i{color:var(--accent);font-style:normal}
+  .top nav{display:flex;gap:0;margin-left:8px;border:1px solid var(--line)}
+  .top nav button{border:0;border-right:1px solid var(--line);padding:7px 14px}
+  .top nav button:last-child{border-right:0}
+  .top nav button.on{background:var(--ink);color:var(--bg)}
+  .top .sp{flex:1}
+
+  /* --- planning semaine --- */
+  .toolbar{display:flex;align-items:center;gap:14px;padding:12px 20px;border-bottom:1px solid var(--line)}
+  .toolbar h2{font-size:26px}
+  .toolbar .range{display:flex;border:1px solid var(--line)}
+  .toolbar .range button{border:0;border-right:1px solid var(--line);padding:6px 10px}
+  .toolbar .range button:last-child{border-right:0}
+  .stats{display:grid;grid-template-columns:repeat(4,1fr);border-bottom:1px solid var(--line)}
+  .stats div{padding:12px 20px;border-right:1px solid var(--line)}
+  .stats div:last-child{border-right:0}
+  .stats b{display:block;font-family:'Newsreader',serif;font-size:28px;font-weight:500;line-height:1}
+  .stats .alert b{color:var(--accent)}
+  table.grid{border-collapse:collapse;width:100%;table-layout:fixed}
+  table.grid th{font-weight:400;text-align:left;padding:8px 10px;border-bottom:1px solid var(--line);border-right:1px solid var(--line);font-size:10px;text-transform:uppercase;letter-spacing:.12em;color:var(--muted);background:var(--bg2)}
+  table.grid th:first-child{width:120px}
+  table.grid th small{display:block;font-family:'Newsreader',serif;font-size:18px;color:var(--ink);text-transform:none;letter-spacing:0;margin-top:2px}
+  table.grid th.today small{color:var(--accent)}
+  table.grid td{vertical-align:top;padding:6px 6px;border-bottom:1px solid var(--line);border-right:1px solid var(--line);height:96px}
+  table.grid td:last-child,table.grid th:last-child{border-right:0}
+  table.grid td.team{padding:10px;background:var(--bg2)}
+  table.grid td.team b{display:block;font-family:'Newsreader',serif;font-size:17px;font-weight:500}
+  table.grid td.team span{color:var(--muted);font-size:10px}
+  .shift{display:flex;flex-direction:column;gap:1px;padding:5px 6px;border:1px solid var(--line);margin:0 0 4px;background:var(--bg);cursor:pointer}
+  .shift:hover{border-color:var(--ink)}
+  .shift .n{font-size:11px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-family:'Newsreader',serif;font-size:14px}
+  .shift .n::before{content:"";display:inline-block;width:7px;height:7px;background:var(--ink);margin-right:6px;vertical-align:1px}
+  .shift.c2 .n::before{background:var(--cuisine)} .shift.c3 .n::before{background:var(--bar)} .shift.c4 .n::before{background:var(--accent)}
+  .shift .h{font-size:10px;color:var(--muted);white-space:nowrap}
+  .shift.warn{border-color:var(--accent)}
+  .shift.warn .h{color:var(--accent)}
+  .shift.off{border-style:dashed;color:var(--muted)}
+  .shift.off .n::before{background:transparent;border:1px solid var(--muted);width:5px;height:5px}
+  .add{width:100%;border:1px dashed var(--line);padding:4px;text-align:center;color:var(--muted);font-size:11px;background:transparent}
+  .add:hover{border-color:var(--accent);color:var(--accent);background:transparent}
+
+  /* --- téléphone : vue jour --- */
+  .ptop{display:flex;align-items:center;justify-content:space-between;padding:14px 16px 10px;border-bottom:1px solid var(--line)}
+  .ptop .brand{font-family:'Newsreader',serif;font-size:20px;font-weight:600}
+  .ptop .brand i{color:var(--accent);font-style:normal}
+  .pday{display:flex;align-items:baseline;justify-content:space-between;padding:14px 16px 10px}
+  .pday h3{font-size:30px;line-height:1}
+  .pday .label{padding-bottom:3px}
+  .pweek{display:grid;grid-template-columns:repeat(7,1fr);border-top:1px solid var(--line);border-bottom:1px solid var(--line)}
+  .pweek div{text-align:center;padding:8px 0;border-right:1px solid var(--line);font-size:10px;color:var(--muted)}
+  .pweek div:last-child{border-right:0}
+  .pweek div b{display:block;font-family:'Newsreader',serif;font-size:16px;font-weight:500;color:var(--ink)}
+  .pweek div.on{background:var(--ink);color:var(--bg2)} .pweek div.on b{color:var(--bg)}
+  .plist{flex:1;overflow:auto}
+  .pgroup{padding:12px 16px 4px;border-bottom:1px solid var(--line)}
+  .pgroup .label{display:flex;justify-content:space-between}
+  .prow{display:flex;justify-content:space-between;align-items:center;padding:9px 0;border-top:1px solid var(--line)}
+  .pgroup .prow:first-of-type{border-top:0}
+  .prow .who{display:flex;align-items:center;gap:10px}
+  .av{width:26px;height:26px;border:1px solid var(--ink);display:grid;place-items:center;font-size:10px;font-weight:700}
+  .av.a2{background:var(--ink);color:var(--bg)} .av.a3{background:var(--bg2)} .av.a4{border-color:var(--accent);color:var(--accent)}
+  .prow .who span{font-family:'Newsreader',serif;font-size:16px}
+  .prow .when{font-size:11px;color:var(--muted);text-align:right}
+  .prow .when b{display:block;color:var(--ink);font-weight:400}
+  .pfab{margin:12px 16px 14px;padding:12px;text-align:center}
+  .ptabs{display:grid;grid-template-columns:repeat(4,1fr);border-top:1px solid var(--line)}
+  .ptabs div{text-align:center;padding:10px 0 12px;font-size:9px;text-transform:uppercase;letter-spacing:.1em;color:var(--muted);border-right:1px solid var(--line)}
+  .ptabs div:last-child{border-right:0}
+  .ptabs div.on{color:var(--ink);box-shadow:inset 0 2px 0 var(--accent)}
+
+  /* --- équipe --- */
+  .team-list{border-top:1px solid var(--line)}
+  .emp{display:grid;grid-template-columns:40px 1.4fr 1fr 1fr 1fr auto;gap:16px;align-items:center;padding:14px 20px;border-bottom:1px solid var(--line)}
+  .emp:hover{background:var(--bg2)}
+  .emp .name{font-family:'Newsreader',serif;font-size:19px}
+  .emp .name small{display:block;font-family:'Space Mono',monospace;font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.1em;margin-top:2px}
+  .emp .kv{font-size:11px;color:var(--muted)}
+  .emp .kv b{display:block;color:var(--ink);font-weight:400;font-size:13px}
+  .emp .kv.bad b{color:var(--accent)}
+  .team-head{display:grid;grid-template-columns:40px 1.4fr 1fr 1fr 1fr auto;gap:16px;padding:8px 20px;background:var(--bg2);border-top:1px solid var(--line)}
+  .team-head .label:last-child{min-width:130px}
+
+  /* --- accueil / connexion --- */
+  .welcome{display:grid;grid-template-columns:1.1fr 1fr;min-height:520px}
+  .welcome .left{padding:48px 44px;border-right:1px solid var(--line);display:flex;flex-direction:column}
+  .welcome .left h1{font-size:54px;line-height:.98;letter-spacing:-.025em;max-width:11ch}
+  .welcome .left h1 em{font-style:italic;font-weight:400;color:var(--accent)}
+  .welcome .left p{color:var(--muted);max-width:44ch;margin:18px 0 0}
+  .welcome .facts{margin-top:auto;display:grid;grid-template-columns:repeat(3,1fr);border:1px solid var(--line)}
+  .welcome .facts div{padding:12px 14px;border-right:1px solid var(--line)}
+  .welcome .facts div:last-child{border-right:0}
+  .welcome .facts b{display:block;font-family:'Newsreader',serif;font-size:24px;font-weight:500}
+  .welcome .right{padding:48px 44px;background:var(--bg2)}
+  .welcome .right h2{font-size:28px}
+  .field{margin:18px 0 0}
+  .field input{width:100%;border:1px solid var(--line);background:var(--bg);padding:11px 12px;font:inherit;color:var(--ink);border-radius:0;margin-top:6px}
+  .field input:focus{outline:0;border-color:var(--ink)}
+  .right .actions{display:flex;gap:0;margin-top:22px}
+  .right .actions button{flex:1}
+  .right .actions button + button{border-left:0}
+  .fine{margin-top:16px;color:var(--muted);font-size:11px;line-height:1.6}
+  .fine a{color:var(--accent);text-decoration:none;border-bottom:1px solid var(--accent)}
+</style>
+</head>
+<body>
+
+<section class="intro">
+  <div class="label">Oplaa · maquette · 21 novembre 2026</div>
+  <h1>Style « éditorial minimaliste »</h1>
+  <p>Trois écrans d'Oplaa redessinés selon les directives : fond papier, bordures nettes à la place des cartes et des ombres, une seule couleur d'accent pour les actions principales, Newsreader pour les titres et Space Mono pour les chiffres, libellés et boutons. Les données sont celles de la démo.</p>
+  <div class="swatches">
+    <div style="background:#F8F7F4">#F8F7F4 fond</div>
+    <div style="background:#EFECE6">#EFECE6 surfaces</div>
+    <div style="background:#1A1918;color:#F8F7F4">#1A1918 texte</div>
+    <div style="background:#D6D2C9">#D6D2C9 bordures</div>
+    <div style="background:#D94E1F;color:#fff">#D94E1F accent</div>
+  </div>
+</section>
+
+<section class="screens">
+
+  <!-- ===== 1. PLANNING (ordinateur + téléphone) ===== -->
+  <div class="screen">
+    <div class="cap"><span class="label">01 · Planning — semaine sur ordinateur, jour sur iPhone</span><span class="label">patron</span></div>
+    <div class="frame">
+      <div>
+        <div class="top">
+          <div class="brand">Oplaa<i>.</i></div>
+          <nav><button class="on">Planning</button><button>Équipe</button><button>Conformité</button><button>Heures</button></nav>
+          <div class="sp"></div>
+          <span class="label">Le Bistrot du Coin</span>
+          <button class="ghost">Menu</button>
+          <button class="primary">Ajouter</button>
+        </div>
+        <div class="toolbar">
+          <div class="range"><button>←</button><button>Cette semaine</button><button>→</button></div>
+          <h2>16 — 22 novembre</h2>
+          <div class="sp" style="flex:1"></div>
+          <span class="label">Publié mardi 18 · 09:12</span>
+          <button>Publier</button>
+        </div>
+        <div class="stats">
+          <div><span class="label">Heures planifiées</span><b class="num">212,5</b></div>
+          <div><span class="label">En poste</span><b class="num">9</b></div>
+          <div><span class="label">Coût estimé</span><b class="num">3 460 €</b></div>
+          <div class="alert"><span class="label">Alertes légales</span><b class="num">2</b></div>
+        </div>
+        <table class="grid">
+          <thead><tr>
+            <th>Équipe</th>
+            <th>Lun<small>16</small></th><th>Mar<small>17</small></th><th>Mer<small>18</small></th><th>Jeu<small>19</small></th><th>Ven<small>20</small></th><th class="today">Sam<small>21</small></th><th>Dim<small>22</small></th>
+          </tr></thead>
+          <tbody>
+            <tr>
+              <td class="team"><b>Salle</b><span class="num">62,0 h</span></td>
+              <td><div class="shift"><span class="n">Camille D.</span><span class="h">11:30–15</span></div><div class="shift c2"><span class="n">Yanis M.</span><span class="h">18:30–23</span></div><button class="add">+</button></td>
+              <td><div class="shift"><span class="n">Camille D.</span><span class="h">11:30–15</span></div><div class="shift c3"><span class="n">Nina R.</span><span class="h">18:30–23</span></div></td>
+              <td><div class="shift off"><span class="n">Camille D.</span><span class="h">repos</span></div><div class="shift c2"><span class="n">Yanis M.</span><span class="h">18:30–23</span></div></td>
+              <td><div class="shift c3"><span class="n">Nina R.</span><span class="h">11:30–15</span></div><div class="shift c2 warn"><span class="n">Yanis M.</span><span class="h">18–00:30</span></div></td>
+              <td><div class="shift"><span class="n">Camille D.</span><span class="h">11:30–15</span></div><div class="shift c3"><span class="n">Nina R.</span><span class="h">18:30–23</span></div><div class="shift c4"><span class="n">Extra · Léa</span><span class="h">19–23</span></div></td>
+              <td><div class="shift"><span class="n">Camille D.</span><span class="h">11–15:30</span></div><div class="shift c2"><span class="n">Yanis M.</span><span class="h">18:30–23</span></div><div class="shift c3"><span class="n">Nina R.</span><span class="h">18:30–23</span></div></td>
+              <td><div class="shift"><span class="n">Camille D.</span><span class="h">11–16</span></div></td>
+            </tr>
+            <tr>
+              <td class="team"><b>Cuisine</b><span class="num">104,5 h</span></td>
+              <td><div class="shift"><span class="n">Karim H.</span><span class="h">09–15</span></div><div class="shift c2"><span class="n">Léo M.</span><span class="h">17–23:30</span></div></td>
+              <td><div class="shift"><span class="n">Karim H.</span><span class="h">09–15</span></div><div class="shift c3"><span class="n">Mehdi S.</span><span class="h">17–23:30</span></div></td>
+              <td><div class="shift c2"><span class="n">Léo M.</span><span class="h">09–15</span></div><div class="shift c3"><span class="n">Mehdi S.</span><span class="h">17–23:30</span></div></td>
+              <td><div class="shift warn"><span class="n">Karim H.</span><span class="h">09–23:30</span></div></td>
+              <td><div class="shift"><span class="n">Karim H.</span><span class="h">09–15</span></div><div class="shift c2"><span class="n">Léo M.</span><span class="h">17–23:30</span></div><div class="shift c3"><span class="n">Mehdi S.</span><span class="h">17–23:30</span></div></td>
+              <td><div class="shift"><span class="n">Karim H.</span><span class="h">09–15</span></div><div class="shift c2"><span class="n">Léo M.</span><span class="h">17–00</span></div><div class="shift c3"><span class="n">Mehdi S.</span><span class="h">17–00</span></div></td>
+              <td><div class="shift c2"><span class="n">Léo M.</span><span class="h">10–16</span></div></td>
+            </tr>
+            <tr>
+              <td class="team"><b>Bar</b><span class="num">46,0 h</span></td>
+              <td><div class="shift"><span class="n">Sofia B.</span><span class="h">18–23:30</span></div></td>
+              <td><div class="shift"><span class="n">Sofia B.</span><span class="h">18–23:30</span></div></td>
+              <td><div class="shift c2"><span class="n">Tom G.</span><span class="h">18–23:30</span></div></td>
+              <td><div class="shift c2"><span class="n">Tom G.</span><span class="h">18–23:30</span></div></td>
+              <td><div class="shift"><span class="n">Sofia B.</span><span class="h">18–00:30</span></div><div class="shift c2"><span class="n">Tom G.</span><span class="h">18–00:30</span></div></td>
+              <td><div class="shift"><span class="n">Sofia B.</span><span class="h">18–01</span></div><div class="shift c2"><span class="n">Tom G.</span><span class="h">18–01</span></div></td>
+              <td><button class="add">+</button></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="phone">
+        <div class="device">
+          <div class="ptop"><div class="brand">Oplaa<i>.</i></div><span class="label">Le Bistrot</span></div>
+          <div class="pday"><span class="label">Samedi</span><h3>21 nov.</h3><span class="label num">31,5 h · 9</span></div>
+          <div class="pweek"><div>L<b>16</b></div><div>M<b>17</b></div><div>M<b>18</b></div><div>J<b>19</b></div><div>V<b>20</b></div><div class="on">S<b>21</b></div><div>D<b>22</b></div></div>
+          <div class="plist">
+            <div class="pgroup"><div class="label"><span>Salle</span><span class="num">15 h</span></div>
+              <div class="prow"><div class="who"><span class="av">CD</span><span>Camille</span></div><div class="when"><b>11:00 – 15:30</b>midi</div></div>
+              <div class="prow"><div class="who"><span class="av a2">YM</span><span>Yanis</span></div><div class="when"><b>18:30 – 23:00</b>soir</div></div>
+              <div class="prow"><div class="who"><span class="av a3">NR</span><span>Nina</span></div><div class="when"><b>18:30 – 23:00</b>soir</div></div>
+            </div>
+            <div class="pgroup"><div class="label"><span>Cuisine</span><span class="num">20 h</span></div>
+              <div class="prow"><div class="who"><span class="av">KH</span><span>Karim</span></div><div class="when"><b>09:00 – 15:00</b>midi</div></div>
+              <div class="prow"><div class="who"><span class="av a2">LM</span><span>Léo</span></div><div class="when"><b>17:00 – 00:00</b>soir</div></div>
+              <div class="prow"><div class="who"><span class="av a3">MS</span><span>Mehdi</span></div><div class="when"><b>17:00 – 00:00</b>soir</div></div>
+            </div>
+            <div class="pgroup"><div class="label"><span>Bar</span><span class="num">14 h</span></div>
+              <div class="prow"><div class="who"><span class="av a4">SB</span><span>Sofia</span></div><div class="when"><b>18:00 – 01:00</b>soir</div></div>
+              <div class="prow"><div class="who"><span class="av a2">TG</span><span>Tom</span></div><div class="when"><b>18:00 – 01:00</b>soir</div></div>
+            </div>
+          </div>
+          <button class="primary pfab">Publier la semaine</button>
+          <div class="ptabs"><div class="on">Planning</div><div>Équipe</div><div>Congés</div><div>Compte</div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== 2. ÉQUIPE ===== -->
+  <div class="screen">
+    <div class="cap"><span class="label">02 · Équipe — liste dense, un trait par personne</span><span class="label">patron</span></div>
+    <div class="top">
+      <div class="brand">Oplaa<i>.</i></div>
+      <nav><button>Planning</button><button class="on">Équipe</button><button>Conformité</button><button>Heures</button></nav>
+      <div class="sp"></div>
+      <span class="label">Le Bistrot du Coin</span>
+      <button class="ghost">Menu</button>
+      <button class="primary">Ajouter un employé</button>
+    </div>
+    <div class="toolbar">
+      <h2>Équipe <span class="label" style="font-family:'Space Mono';font-size:11px;margin-left:8px">9 actifs · 1 ancien</span></h2>
+      <div class="sp" style="flex:1"></div>
+      <div class="field" style="margin:0;width:260px"><input placeholder="Rechercher un nom, un poste…"></div>
+    </div>
+    <div class="team-head"><span></span><span class="label">Nom · poste</span><span class="label">Équipe · contrat</span><span class="label">Cette semaine</span><span class="label">Congés</span><span class="label">Actions</span></div>
+    <div class="team-list">
+      <div class="emp"><span class="av">CD</span><div class="name">Camille Durand<small>Chef de rang</small></div><div class="kv">Salle<b>CDI · 39 h/sem</b></div><div class="kv">Planifié<b class="num">36,5 h / 39</b></div><div class="kv">Solde<b class="num">12,5 j</b></div><div><button class="ghost">Envoyer</button><button class="ghost">Modifier</button></div></div>
+      <div class="emp"><span class="av a2">YM</span><div class="name">Yanis Moreau<small>Serveur</small></div><div class="kv">Salle<b>CDI · 35 h/sem</b></div><div class="kv bad">Planifié<b class="num">41,0 h / 35</b></div><div class="kv">Solde<b class="num">4,0 j</b></div><div><button class="ghost">Envoyer</button><button class="ghost">Modifier</button></div></div>
+      <div class="emp"><span class="av a3">NR</span><div class="name">Nina Rousseau<small>Runner</small></div><div class="kv">Salle<b>Temps partiel · 24 h/sem</b></div><div class="kv">Planifié<b class="num">22,0 h / 24</b></div><div class="kv">Solde<b class="num">9,0 j</b></div><div><button class="ghost">Envoyer</button><button class="ghost">Modifier</button></div></div>
+      <div class="emp"><span class="av">KH</span><div class="name">Karim Haddad<small>Chef de cuisine</small></div><div class="kv">Cuisine<b>CDI · 39 h/sem</b></div><div class="kv bad">Planifié<b class="num">44,5 h / 39</b></div><div class="kv">Solde<b class="num">18,0 j</b></div><div><button class="ghost">Envoyer</button><button class="ghost">Modifier</button></div></div>
+      <div class="emp"><span class="av a2">LM</span><div class="name">Léo Martin<small>Chef de partie</small></div><div class="kv">Cuisine<b>CDI · 39 h/sem</b></div><div class="kv">Planifié<b class="num">38,0 h / 39</b></div><div class="kv">Solde<b class="num">7,5 j</b></div><div><button class="ghost">Envoyer</button><button class="ghost">Modifier</button></div></div>
+      <div class="emp"><span class="av a3">MS</span><div class="name">Mehdi Slimani<small>Commis</small></div><div class="kv">Cuisine<b>Apprentissage · 35 h/sem</b></div><div class="kv">Planifié<b class="num">33,0 h / 35</b></div><div class="kv">Solde<b class="num">2,0 j</b></div><div><button class="ghost">Envoyer</button><button class="ghost">Modifier</button></div></div>
+      <div class="emp"><span class="av a4">SB</span><div class="name">Sofia Bernard<small>Barmaid</small></div><div class="kv">Bar<b>CDI · 35 h/sem</b></div><div class="kv">Planifié<b class="num">34,5 h / 35</b></div><div class="kv bad">Document<b>Visite médicale en retard</b></div><div><button class="ghost">Envoyer</button><button class="ghost">Modifier</button></div></div>
+      <div class="emp"><span class="av a2">TG</span><div class="name">Tom Girard<small>Barman</small></div><div class="kv">Bar<b>Extra</b></div><div class="kv">Planifié<b class="num">26,0 h</b></div><div class="kv">—<b>&nbsp;</b></div><div><button class="ghost">Envoyer</button><button class="ghost">Modifier</button></div></div>
+    </div>
+  </div>
+
+  <!-- ===== 3. ACCUEIL / CONNEXION ===== -->
+  <div class="screen">
+    <div class="cap"><span class="label">03 · Accueil — première ouverture, compte obligatoire</span><span class="label">site et appli</span></div>
+    <div class="welcome">
+      <div class="left">
+        <div class="brand" style="font-family:'Newsreader';font-size:22px;font-weight:600">Oplaa<i style="color:var(--accent);font-style:normal">.</i></div>
+        <h1 style="margin-top:36px">Le planning d'équipe, <em>enfin simple.</em></h1>
+        <p>Horaires, heures, congés, absences et export comptable pour la restauration, le commerce et l'hôtellerie. Un établissement, 7,99 € par mois.</p>
+        <div class="facts">
+          <div><span class="label">Mise en place</span><b>10 min</b></div>
+          <div><span class="label">Alertes légales</span><b>Automatiques</b></div>
+          <div><span class="label">Export</span><b>Comptable</b></div>
+        </div>
+      </div>
+      <div class="right">
+        <h2>Se connecter</h2>
+        <div class="field"><span class="label">E-mail</span><input value="camille@bistrot.fr"></div>
+        <div class="field"><span class="label">Mot de passe</span><input type="password" value="••••••••••"></div>
+        <div class="actions"><button class="primary">Se connecter</button><button>Créer un compte</button></div>
+        <p class="fine">Mot de passe oublié ? <a href="#">Recevoir un lien</a><br>Pas encore de compte ? <a href="#">Voir une démo sans compte</a> — rien n'est enregistré.</p>
+      </div>
+    </div>
+  </div>
+
+</section>
+</body>
+</html>
