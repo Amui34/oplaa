@@ -34,3 +34,11 @@
 - Noa a refusé la maquette « éditorial minimaliste » (fond papier, cadres partout, Space Mono) proposée par Lucas : trop de carrés, on s'y perd.
 - Direction validée : « propre et pro » — beaucoup de blanc, très peu de traits, barre latérale sur ordinateur, pastilles de couleur par personne, un seul bouton accent par écran, police système. Maquettes dans `docs/maquettes/` (style-propre.html = référence).
 - Appliquée en trois passes le 21/11 (ordinateur, iPhone, accueil) ; reste à affiner : vue Équipe en liste dense (une ligne par personne), Suivi et Conformité au même niveau, mode sombre à revérifier.
+
+## Sécurité (audit du 22/11/2026)
+- Correctifs codés, testés sur une base Postgres Supabase locale (attaques bloquées, usages normaux OK) et poussés : `supabase/migrations/2026-11-22-securite.sql` (aussi dans schema.sql).
+- **À faire par Noa : exécuter la migration en prod** (SQL Editor, coller, Run). Tant qu'elle n'est pas passée, les failles côté base restent ouvertes ; l'app reste compatible dans les deux sens.
+- iPhone : 1.0.15 renvoyée avec le build 304 (correctifs app : échappement, codes 10 caractères, effacement à la déconnexion, SheetJS 0.20.3).
+- Après la migration, les **anciennes** versions iPhone (≤ 1.0.15 build 303) affichent les taux à 0 chez l'admin : rien n'est perdu (table employee_pay), mettre à jour l'app.
+- Reste en réserve : CSP complète (sortir le gros script inline), texte libre des notifications push (redéployer notify), réglage « longueur mini du mot de passe = 8 » dans Supabase → Auth (l'app l'impose déjà), tests d'intégration sur base locale Docker plutôt qu'un projet cloud de test.
+- Décision prise par défaut : un manager garde le droit de modifier nom et réglages de l'établissement (l'abonnement est désormais protégé par trigger).
