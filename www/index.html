@@ -382,7 +382,7 @@
     </details>
 
     <!-- Sélecteur de jour (mode Jour) -->
-    <div id="dayPicker" class="no-print hidden flex-wrap gap-1.5 mb-3"></div>
+    <div id="dayPicker" class="no-print hidden mb-3 grid grid-cols-7 gap-1 sm:flex sm:flex-wrap sm:gap-1.5"></div>
 
     <!-- Bannière d'aide (après l'assistant) -->
     <div id="coachHint" class="no-print hidden mb-3 rounded-xl border border-teal-200 bg-teal-50 text-teal-800 text-sm px-4 py-3 flex items-center gap-2">
@@ -2386,6 +2386,7 @@ function renderGrid(){
   const cols = ribbonCols();
   grid.className = 'w-full border-collapse ' + (viewMode==='jour' ? 'min-w-full' : 'min-w-[980px]');
   const wsh=document.getElementById('weekScrollHint'); if(wsh) wsh.classList.toggle('hidden', viewMode!=='semaine');
+  const phoneDay = viewMode==='jour' && window.matchMedia('(max-width: 639px)').matches;   // téléphone : liste pleine largeur, sans colonne « Équipe »
 
   // Conflits : on cumule ceux de chaque semaine visible du ruban (pour marquer les cartes) ; la bannière reste sur la semaine ancre
   const weeksInView = [...new Set(cols.map(c=>c.week))];
@@ -2416,11 +2417,11 @@ function renderGrid(){
                <div class="text-sm font-bold ${today?'text-teal-700':'text-slate-800'}">${fmtDate(date)}</div>${holBadge}${absBadge}
              </th>`;
   });
-  head.innerHTML = `<tr>${hrow}</tr>`;
+  head.innerHTML = phoneDay ? '' : `<tr>${hrow}</tr>`;
 
   // Carte d'un shift
-  const cardHtml = (s)=>{
-    const emp=empById(s.empId), isExtra=!emp && s.extraName, name=emp?shortName(emp):(s.extraName||'—');
+  const cardHtml = (s, big)=>{
+    const emp=empById(s.empId), isExtra=!emp && s.extraName, name=emp?(big?(nameParts(emp).prenom||shortName(emp)):shortName(emp)):(s.extraName||'—');
     const conflict = conflictIds.has(s.id);
     const realMark = hasReal(s) ? `<span title="Réel : ${s.realStart}–${s.realEnd}" class="shrink-0 w-1.5 h-1.5 rounded-full bg-amber-400 mt-1"></span>` : '';
     const warn = conflict ? `<span title="Conflit d'horaire" class="shrink-0 text-red-500 leading-none">${OplaaIcons.svg('warning',12)}</span>` : '';
@@ -2431,6 +2432,12 @@ function renderGrid(){
     const lw = legal.length ? `<span title="${legal.join(' • ').replace(/"/g,'&quot;')}" aria-label="Alerte légale : ${legal.join(' ; ').replace(/"/g,'&quot;')}" role="img" class="shrink-0 text-amber-700 leading-none">${OplaaIcons.svg('scale',12)}</span>` : '';
     const cls = conflict ? 'border-red-300 ring-1 ring-red-200' : legal.length ? 'border-amber-300 bg-amber-50' : isExtra ? 'border-amber-300 border-dashed' : 'border-slate-200';
     const av = emp ? empAvatar(emp) : `<span class="emp-av" style="--ec:#A39E94" aria-hidden="true">${escapeHtml((name||'?').trim().charAt(0).toUpperCase())}</span>`;
+    if(big){
+      return `<div draggable="true" class="shift-card bg-white rounded-xl border ${cls} px-3 py-2 mb-1.5 flex items-center gap-2.5 cursor-pointer" title="${escapeHtml(emp?emp.name:name)}" data-shift="${s.id}" data-emp="${s.empId||''}">
+              ${av}<div class="min-w-0 flex-1 leading-tight"><div class="text-[13px] font-semibold text-slate-800 truncate flex items-center gap-1">${escapeHtml(name)}${extraTag}</div>${brk?`<div class="text-[11px] text-slate-500">${brk}</div>`:''}${note}</div>
+              <div class="shrink-0 text-right text-[12px] font-semibold text-slate-700 tabular-nums">${s.start}–${s.end}</div>${warn||realMark}${lw}
+            </div>`;
+    }
     return `<div draggable="true" class="shift-card bg-white rounded-lg border ${cls} px-1.5 py-1 mb-1 hover:border-slate-300 hover:shadow-sm flex items-center gap-1.5 cursor-grab active:cursor-grabbing" title="${escapeHtml(emp?emp.name:name)}" data-shift="${s.id}" data-emp="${s.empId||''}">
               ${av}<div class="min-w-0 flex-1 leading-tight"><div class="text-[12px] font-semibold text-slate-800 truncate flex items-center gap-1">${escapeHtml(name)}${extraTag}</div>
               <div class="text-[10.5px] text-slate-500 tabular-nums">${s.start}–${s.end} ${brk}</div>${note}</div>${warn||realMark}${lw}
@@ -2445,7 +2452,30 @@ function renderGrid(){
   const dayTotal  = c => visible.reduce((a,t)=> a + colShifts(c,t.key).reduce((x,s)=>x+shiftHours(s),0), 0);
   const dayCost   = c => visible.reduce((a,t)=> a + colShifts(c,t.key).reduce((x,s)=>{const e=empById(s.empId); return x + shiftHours(s)*((e&&e.rate)||0);},0), 0);
   const visibleTeamKeys=new Set(visible.map(t=>t.key));
+  const showCost = !!state.advanced && canSeeSalaries();   // coûts réservés au patron (masqués pour un manager invité)
   let b='';
+  if(phoneDay){
+    const c=cols[0];
+    const section=(title,color,hours,all,attrs)=>{
+      let h=`<tr><td class="px-3 pt-3 pb-1 bg-white"><div class="flex items-center gap-2 text-sm font-bold text-slate-800" style="--c:${color}"><span class="dot"></span>${title}<span class="ml-auto text-[11px] font-semibold text-slate-400 tabular-nums">${hours>0?hours.toFixed(1)+' h':''}</span></div></td></tr>`;
+      h+=`<tr><td class="px-3 pb-2 bg-white border-b border-slate-100 cursor-pointer" ${attrs}>`;
+      const known=new Set(PERIODS.map(p=>p.key));
+      PERIODS.forEach(p=>{ const list=sortByStart(all.filter(s=>s.period===p.key)); if(list.length){ h+=grpLabel(p.label,p.accent?'text-teal-700':''); list.forEach(s=>h+=cardHtml(s,true)); } });
+      const others=sortByStart(all.filter(s=>!known.has(s.period))); if(others.length){ h+=grpLabel('Autre'); others.forEach(s=>h+=cardHtml(s,true)); }
+      h+=`<div class="no-print manager-only flex items-center gap-1.5 text-[12px] text-slate-400 py-1.5">${ic('plus',12)} Ajouter un service</div></td></tr>`;
+      return h;
+    };
+    if(gridGroup==='employe'){
+      activeEmployees().filter(e=> teamFilter==='all' || visibleTeamKeys.has(e.role)).forEach(emp=>{
+        const t=teamOf(emp.role); const all=state.shifts.filter(s=>s.week===c.week && s.day===c.day && s.empId===emp.id);
+        b+=section(escapeHtml(emp.name), t.color, all.reduce((x,s)=>x+shiftHours(s),0), all, `data-add-day="${c.day}" data-add-week="${c.week}" data-add-emp="${emp.id}" data-add-team="${emp.role}"`);
+      });
+    } else {
+      visible.forEach(team=>{ const all=colShifts(c,team.key); b+=section(team.label, team.color, all.reduce((x,s)=>x+shiftHours(s),0), all, `data-add-day="${c.day}" data-add-week="${c.week}" data-add-team="${team.key}"`); });
+    }
+    const dt=dayTotal(c), dc=dayCost(c);
+    b+=`<tr class="bg-slate-50"><td class="px-3 py-2 text-[11px] font-bold uppercase tracking-wide text-slate-500">Total · ${dt>0?dt.toFixed(1)+' h':'—'}${showCost&&dc>0?` <span class="font-normal normal-case text-slate-400">· ${dc.toFixed(0)} €</span>`:''}</td></tr>`;
+  } else {
   if(gridGroup==='employe'){
     const empIds=new Set(activeEmployees().map(e=>e.id));
     const emps=activeEmployees().filter(e=> teamFilter==='all' || visibleTeamKeys.has(e.role));
@@ -2504,12 +2534,12 @@ function renderGrid(){
   }
   // Ligne de totaux par jour (heures + coût)
   const grand = cols.reduce((a,c)=>a+dayTotal(c),0);
-  const showCost = !!state.advanced && canSeeSalaries();   // coûts réservés au patron (masqués pour un manager invité)
   const grandCost = cols.reduce((a,c)=>a+dayCost(c),0);
   b += `<tr class="bg-slate-50">
           <td class="sticky left-0 z-10 bg-slate-50 px-3 py-2 border-r border-slate-100 text-[11px] font-bold uppercase tracking-wide text-slate-500">Total${grand>0?` · ${grand.toFixed(1)} h`:''}${showCost&&grandCost>0?`<div class="font-normal normal-case text-slate-400">${grandCost.toFixed(0)} €</div>`:''}</td>`;
   cols.forEach((c,idx)=>{ const dt=dayTotal(c), dc=dayCost(c); b += `<td class="px-2 py-2${sepCls(c,idx)} text-center text-[11px] font-semibold tabular-nums ${dt>0?'text-slate-700':'text-slate-400'}">${dt>0?dt.toFixed(1)+' h':'—'}${showCost&&dc>0?`<div class="font-normal text-slate-400">${dc.toFixed(0)} €</div>`:''}</td>`; });
   b += `</tr>`;
+  }
   body.innerHTML=b;
 
   // Bannière conflits
@@ -2523,12 +2553,13 @@ function renderGrid(){
   // Sélecteur de jour (mode Jour)
   const dp=document.getElementById('dayPicker');
   if(viewMode==='jour'){
-    dp.classList.remove('hidden'); dp.classList.add('flex');
+    dp.classList.remove('hidden');
+    const todayS=new Date().toDateString();
     dp.innerHTML = DAYS.map((d,i)=>{
-      const date=addDays(start,i), a=i===selectedDay;
-      return `<button data-day="${i}" class="daypick-btn px-2.5 py-1.5 rounded-lg text-xs font-semibold border ${a?'bg-teal-600 text-white border-teal-600':'bg-white text-slate-600 border-slate-300 hover:bg-slate-50'}">${DAYS_SHORT[i]} ${date.getDate()}</button>`;
+      const date=addDays(start,i), a=i===selectedDay, t=date.toDateString()===todayS;
+      return `<button data-day="${i}" aria-pressed="${a}" class="daypick-btn py-1.5 sm:px-3 rounded-xl text-center border leading-tight ${a?'bg-teal-600 text-white border-teal-600':'bg-white text-slate-600 border-slate-200 hover:bg-slate-50'}"><span class="block text-[10px] font-semibold uppercase tracking-wide ${a?'text-white':(t?'text-teal-700':'text-slate-400')}">${DAYS_SHORT[i]}</span><span class="block text-sm font-bold">${date.getDate()}</span></button>`;
     }).join('');
-  } else { dp.classList.add('hidden'); dp.classList.remove('flex'); }
+  } else { dp.classList.add('hidden'); }
 
   // Bannière des alertes légales (semaine affichée)
   const lb=document.getElementById('legalBanner');
