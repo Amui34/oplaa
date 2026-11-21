@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Oplaa — quatre versions</title>
+<style>
+  *{box-sizing:border-box}
+  body{margin:0;background:#D9D6D1;font-family:"Helvetica Neue",Helvetica,Arial,sans-serif;color:#111;-webkit-font-smoothing:antialiased}
+  .num{font-variant-numeric:tabular-nums}
+  .page{width:1240px;margin:0 auto;padding:40px 30px 80px}
+  .label{display:flex;align-items:baseline;gap:16px;margin:56px 0 14px;color:#333}
+  .label b{font-size:30px;font-weight:800;letter-spacing:-.02em;color:#111}
+  .label span{font-size:15px;max-width:760px;line-height:1.45}
+  .frame{width:1180px;overflow:hidden;border-radius:4px;box-shadow:0 24px 50px -28px rgba(0,0,0,.45)}
+  table{border-collapse:collapse;width:100%;table-layout:fixed}
+  td,th{vertical-align:top}
+
+  tr.team td{text-align:left!important}
+  /* ===================== A · CARNET DE SERVICE ===================== */
+  .vA{background:#fff;padding:40px 44px 36px}
+  .vA .head{display:flex;justify-content:space-between;align-items:flex-end;margin-bottom:34px}
+  .vA .est{font-size:12px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:#666}
+  .vA h2{font-size:58px;font-weight:800;letter-spacing:-.045em;margin:6px 0 0;line-height:.95}
+  .vA .dates{font-size:15px;color:#666;margin-top:8px}
+  .vA .actions{display:flex;gap:22px;align-items:center;font-size:14px;font-weight:600}
+  .vA .actions a{color:#111;text-decoration:none;border-bottom:1px solid #bbb;padding-bottom:1px}
+  .vA .actions .pub{background:#111;color:#fff;border:0;padding:11px 20px;border-radius:2px}
+  .vA .actions .pub:hover{background:#C4562F}
+  .vA th{font-size:12px;font-weight:600;color:#888;text-align:left;padding:0 10px 12px;border-bottom:2px solid #111}
+  .vA th b{display:block;font-size:20px;color:#111;font-weight:700;margin-top:2px}
+  .vA th.today{color:#C4562F} .vA th.today b{color:#C4562F}
+  .vA th:first-child{padding-left:0;width:200px} .vA th:last-child{width:90px;text-align:right;padding-right:0}
+  .vA td{padding:11px 10px;border-bottom:1px solid #E6E6E6;font-size:14px;line-height:1.5}
+  .vA td:first-child{padding-left:0} .vA td:last-child{text-align:right;padding-right:0}
+  .vA td.today{background:#FBF4F0}
+  .vA .who b{display:block;font-weight:600}
+  .vA .who span{font-size:12px;color:#888}
+  .vA .off{color:#BBB}
+  .vA .leave{color:#C4562F;font-style:italic}
+  .vA .alert{color:#B7791F;font-weight:700}
+  .vA .team td{padding:26px 0 8px;border-bottom:1px solid #111;font-size:12px;font-weight:700;letter-spacing:.14em;text-transform:uppercase}
+  .vA .over{color:#C4562F;font-weight:700}
+  .vA .tot td{border-bottom:0;padding-top:16px;font-weight:700}
+
+  /* ===================== B · ARDOISE ===================== */
+  .vB{background:#1F2326;color:#ECE6DC;padding:42px 46px 38px}
+  .vB .head{display:grid;grid-template-columns:1fr auto;align-items:end;margin-bottom:36px}
+  .vB .est{font-size:14px;color:#9AA0A3}
+  .vB h2{font-family:Georgia,"Times New Roman",serif;font-style:italic;font-weight:400;font-size:60px;margin:4px 0 0;line-height:1}
+  .vB h2 em{font-style:normal;color:#E5835A}
+  .vB .pub{background:#E5835A;color:#1F2326;font-weight:700;font-size:15px;padding:13px 24px;border-radius:999px;border:0}
+  .vB .meta{color:#9AA0A3;font-size:14px;margin-top:10px;text-align:right}
+  .vB th{text-align:left;font-weight:400;padding:0 10px 14px;color:#9AA0A3;font-size:13px}
+  .vB th b{display:block;font-family:Georgia,serif;font-size:26px;color:#ECE6DC;font-weight:400;margin-top:2px}
+  .vB th.today b{color:#E5835A}
+  .vB th:first-child{width:190px;padding-left:0} .vB th:last-child{width:80px;text-align:right;padding-right:0}
+  .vB td{padding:10px;font-size:14px;line-height:1.5;border-top:1px dashed #3A4044}
+  .vB td:first-child{padding-left:0} .vB td:last-child{text-align:right;padding-right:0;color:#9AA0A3}
+  .vB td.today{background:#272C30}
+  .vB .who{font-family:Georgia,serif;font-size:17px}
+  .vB .off{color:#4D5459}
+  .vB .leave{color:#E5835A;font-style:italic}
+  .vB .alert{color:#F2C14E}
+  .vB .team td{border-top:0;padding:28px 0 6px;color:#E5835A;font-size:12px;letter-spacing:.16em;text-transform:uppercase;font-weight:700}
+  .vB .over{color:#F2C14E}
+
+  /* ===================== C · GRILLE HORAIRE ===================== */
+  .vC{background:#fff;padding:0 0 30px}
+  .vC .bar{display:flex;align-items:center;gap:28px;padding:20px 40px;border-bottom:1px solid #EAEAEA}
+  .vC .logo{font-weight:800;font-size:20px;letter-spacing:-.04em}
+  .vC .nav{display:flex;gap:6px;font-size:14px;color:#777}
+  .vC .nav span{padding:7px 12px;border-radius:6px}
+  .vC .nav .on{background:#111;color:#fff}
+  .vC .wk{margin-left:auto;font-size:14px;color:#555}
+  .vC .wk b{color:#111}
+  .vC .pub{background:#C4562F;color:#fff;border:0;border-radius:6px;padding:10px 18px;font-weight:700;font-size:14px}
+  .vC .inner{padding:30px 40px 0}
+  .vC th{font-size:13px;font-weight:600;text-align:left;padding:0 12px 12px;color:#555}
+  .vC th:first-child{width:200px;padding-left:0} .vC th:last-child{width:84px;text-align:right;padding-right:0}
+  .vC th .d{display:inline-block;padding:4px 10px;border-radius:6px}
+  .vC th.today .d{background:#111;color:#fff}
+  .vC td{padding:12px;border-top:1px solid #F0F0F0}
+  .vC td:first-child{padding-left:0} .vC td:last-child{text-align:right;padding-right:0;font-size:14px}
+  .vC .who{display:flex;align-items:center;gap:10px;font-size:14px;font-weight:600}
+  .vC .who i{width:9px;height:9px;border-radius:50%;flex:none}
+  .vC .who small{display:block;font-weight:400;color:#999;font-size:12px}
+  .vC .track{position:relative;height:6px;background:#F1EFEC;border-radius:3px}
+  .vC .track span{position:absolute;top:0;bottom:0;border-radius:3px}
+  .vC .t{font-size:12px;color:#555;margin-top:7px;line-height:1.45}
+  .vC .t.al{color:#B7791F;font-weight:700}
+  .vC .off{font-size:12px;color:#C4C4C4;padding-top:10px}
+  .vC .leave{font-size:12px;color:#C4562F;padding-top:10px;font-weight:600}
+  .vC .team td{border-top:0;padding:24px 0 6px;font-size:12px;font-weight:700;color:#999;letter-spacing:.1em;text-transform:uppercase}
+  .vC .over{color:#C4562F;font-weight:700}
+  .vC .axis{display:flex;justify-content:space-between;font-size:10px;color:#BBB;margin-top:4px}
+
+  /* ===================== D · JOURNAL ===================== */
+  .vD{background:#F6F2EB;padding:36px 40px 34px;font-family:Georgia,"Times New Roman",serif}
+  .vD .mast{text-align:center;border-bottom:3px double #222;padding-bottom:14px;margin-bottom:6px}
+  .vD .mast h2{font-size:46px;font-weight:400;margin:0;letter-spacing:-.01em}
+  .vD .sub{display:flex;justify-content:space-between;font-family:"Helvetica Neue",Arial,sans-serif;font-size:12px;letter-spacing:.12em;text-transform:uppercase;color:#555;padding:8px 0 22px;border-bottom:1px solid #222}
+  .vD .sub b{color:#222}
+  .vD .cols{display:grid;grid-template-columns:repeat(7,1fr)}
+  .vD .col{padding:18px 14px 6px;border-right:1px solid #CFC8BD;min-width:0}
+  .vD .col:last-child{border-right:0}
+  .vD .col.today{background:#EFE6DA}
+  .vD .dn{font-family:"Helvetica Neue",Arial,sans-serif;font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:#777}
+  .vD .dd{font-size:40px;line-height:1;margin:2px 0 14px}
+  .vD .today .dd{color:#B3471F}
+  .vD .per{font-style:italic;font-size:13px;color:#777;margin:12px 0 4px;border-top:1px solid #D8D0C4;padding-top:8px}
+  .vD .e{font-size:15px;line-height:1.25;margin:0 0 8px}
+  .vD .e small{display:block;font-family:"Helvetica Neue",Arial,sans-serif;font-size:12px;color:#666;margin-top:1px}
+  .vD .e.al small{color:#A0661A;font-weight:700}
+  .vD .abs{font-size:12px;font-style:italic;color:#8A8278;margin-top:14px;border-top:1px solid #D8D0C4;padding-top:8px;line-height:1.4}
+  .vD .foot{font-family:"Helvetica Neue",Arial,sans-serif;font-size:12px;color:#555;margin-top:12px}
+  .vD .bottom{display:flex;justify-content:space-between;align-items:center;border-top:1px solid #222;margin-top:6px;padding-top:16px;font-family:"Helvetica Neue",Arial,sans-serif;font-size:14px;color:#444}
+  .vD .bottom button{background:#222;color:#F6F2EB;border:0;padding:11px 22px;font-size:14px;font-weight:600;letter-spacing:.02em}
+</style>
+</head>
+<body>
+<div class="page">
+
+  <div class="label"><b>A</b><span><b style="font-size:15px">Carnet de service.</b> La feuille de planning que tout restaurateur connaît, nettoyée : une ligne par personne, une colonne par jour, les heures écrites comme on les écrit en cuisine. Noir et blanc, une seule couleur pour aujourd'hui et les dépassements.</span></div>
+  <div class="frame vA" id="A"></div>
+
+  <div class="label"><b>B</b><span><b style="font-size:15px">Ardoise.</b> Même lecture, mais l'ambiance de l'ardoise du jour : fond sombre, noms en lettres à empattement, orange brique pour ce qui compte. Reposant le soir en plein service.</span></div>
+  <div class="frame vB" id="B"></div>
+
+  <div class="label"><b>C</b><span><b style="font-size:15px">Grille horaire.</b> Sous chaque horaire, un petit trait montre où il tombe dans la journée, de 9 h à 1 h. On repère d'un coup d'œil les ouvertures, les fermetures et les coupures. Navigation en haut, très sobre.</span></div>
+  <div class="frame vC" id="C"></div>
+
+  <div class="label"><b>D</b><span><b style="font-size:15px">Journal.</b> La semaine mise en page comme une gazette : un jour par colonne, le midi et le soir en rubriques, les repos en bas de colonne. Fait pour être affiché ou imprimé en cuisine.</span></div>
+  <div class="frame vD" id="D"></div>
+
+</div>
+
+<script>
+const DAYS=['Lundi','Mardi','Mercredi','Jeudi','Vendredi','Samedi','Dimanche'], DS=['Lun','Mar','Mer','Jeu','Ven','Sam','Dim'], NUM=[16,17,18,19,20,21,22], TODAY=5;
+const R='R', C='C';
+const TEAMS=[
+ {name:'Salle',color:'#C4562F',people:[
+  {n:'Camille Durand',p:'Chef de rang',k:39,w:[[[11.5,15],[18,23]],[[11.5,15],[18,23]],R,[[11.5,15],[18,23]],[[11.5,15],[18,23]],[[11,15.5],[18,24]],R],al:[5]},
+  {n:'Nina Rousseau',p:'Runner',k:24,w:[R,[[18.5,23]],[[11.5,15]],[[11.5,15]],[[18.5,23]],[[11,15.5]],C]},
+  {n:'Yanis Moreau',p:'Serveur',k:35,w:[[[18.5,23]],R,[[18.5,23]],[[18,24.5]],[[18.5,23]],[[18,24]],[[11,16]]]},
+  {n:'Inès Fabre',p:'Serveuse · extra',k:null,w:[R,R,R,R,[[18,24]],[[18,24]],R]},
+ ]},
+ {name:'Cuisine',color:'#3F6B4A',people:[
+  {n:'Karim Haddad',p:'Chef de cuisine',k:39,w:[[[9,15]],[[9,15]],R,[[9,15],[17,23.5]],[[9,15]],[[10,15.5]],R],al:[3]},
+  {n:'Léo Martin',p:'Chef de partie',k:39,w:[[[17,23.5]],R,[[9,15]],R,[[17,23.5]],[[10,15],[17,24]],[[10,16]]]},
+  {n:'Mehdi Slimani',p:'Commis · apprenti',k:35,w:[R,[[17,23.5]],[[17,23.5]],[[17,23.5]],[[17,23.5]],[[17,24]],R]},
+ ]},
+ {name:'Bar',color:'#2F6F83',people:[
+  {n:'Sofia Bernard',p:'Barmaid',k:35,w:[[[18,23.5]],[[18,23.5]],R,R,[[18,24.5]],[[18,25]],R]},
+  {n:'Tom Girard',p:'Barman',k:35,w:[R,R,[[18,23.5]],[[18,23.5]],[[18,24.5]],[[18,25]],R]},
+ ]},
+];
+const f=h=>{const H=Math.floor(h)%24,M=Math.round((h%1)*60);return H+'h'+(M?String(M).padStart(2,'0'):'');};
+const seg=s=>f(s[0])+' – '+f(s[1]);
+const hrs=w=>w.reduce((a,d)=>Array.isArray(d)?a+d.reduce((x,s)=>x+s[1]-s[0],0):a,0);
+const n1=x=>String(Math.round(x*10)/10).replace('.',',');
+const dayTotal=i=>TEAMS.reduce((a,t)=>a+t.people.reduce((b,p)=>b+(Array.isArray(p.w[i])?p.w[i].reduce((x,s)=>x+s[1]-s[0],0):0),0),0);
+
+/* ---------- A ---------- */
+(function(){
+  let h=`<div class="head"><div><div class="est">Le Bistrot du Coin</div><h2>Semaine 47</h2><div class="dates">du lundi 16 au dimanche 22 novembre 2026</div></div>
+  <div class="actions"><a href="#">Imprimer</a><a href="#">Envoyer</a><button class="pub">Publier</button></div></div>`;
+  h+=`<table><thead><tr><th>Équipe</th>${DS.map((d,i)=>`<th class="${i===TODAY?'today':''}">${d}<b class="num">${NUM[i]}</b></th>`).join('')}<th>Heures</th></tr></thead><tbody>`;
+  TEAMS.forEach(t=>{
+    h+=`<tr class="team"><td colspan="9" style="color:${t.color}">${t.name}</td></tr>`;
+    t.people.forEach(p=>{
+      const H=hrs(p.w), over=p.k&&H>p.k;
+      h+=`<tr><td class="who"><b>${p.n}</b><span>${p.p}</span></td>`;
+      p.w.forEach((d,i)=>{
+        const cls=i===TODAY?'today':''; const al=(p.al||[]).includes(i);
+        h+=`<td class="${cls} num">${d===R?'<span class="off">repos</span>':d===C?'<span class="leave">congé</span>':d.map(seg).map(x=>`<div class="${al?'alert':''}">${x}</div>`).join('')}</td>`;
+      });
+      h+=`<td class="num"><span class="${over?'over':''}">${n1(H)} h</span>${p.k?`<div style="font-size:12px;color:#999">sur ${p.k} h</div>`:''}</td></tr>`;
+    });
+  });
+  h+=`<tr class="tot"><td>Total</td>${DS.map((d,i)=>`<td class="num ${i===TODAY?'today':''}">${n1(dayTotal(i))} h</td>`).join('')}<td class="num">${n1(DS.reduce((a,d,i)=>a+dayTotal(i),0))} h</td></tr></tbody></table>`;
+  document.getElementById('A').innerHTML=h;
+})();
+
+/* ---------- B ---------- */
+(function(){
+  let h=`<div class="head"><div><div class="est">Le Bistrot du Coin · semaine 47</div><h2>Planning <em>du 16 au 22 novembre</em></h2></div>
+  <div><button class="pub">Publier la semaine</button><div class="meta">Pas encore envoyée à l'équipe</div></div></div>`;
+  h+=`<table><thead><tr><th></th>${DAYS.map((d,i)=>`<th class="${i===TODAY?'today':''}">${d}<b class="num">${NUM[i]}</b></th>`).join('')}<th>Heures</th></tr></thead><tbody>`;
+  TEAMS.forEach(t=>{
+    h+=`<tr class="team"><td colspan="9">${t.name}</td></tr>`;
+    t.people.forEach(p=>{
+      const H=hrs(p.w), over=p.k&&H>p.k;
+      h+=`<tr><td class="who">${p.n.split(' ')[0]} <span style="color:#6E767B">${p.n.split(' ')[1][0]}.</span></td>`;
+      p.w.forEach((d,i)=>{ const al=(p.al||[]).includes(i);
+        h+=`<td class="${i===TODAY?'today':''} num">${d===R?'<span class="off">—</span>':d===C?'<span class="leave">congé</span>':d.map(seg).map(x=>`<div class="${al?'alert':''}">${x}</div>`).join('')}</td>`; });
+      h+=`<td class="num"><span class="${over?'over':''}">${n1(H)} h</span></td></tr>`;
+    });
+  });
+  h+=`</tbody></table>`;
+  document.getElementById('B').innerHTML=h;
+})();
+
+/* ---------- C ---------- */
+(function(){
+  const T0=9,T1=25,pc=x=>((x-T0)/(T1-T0)*100).toFixed(2)+'%';
+  let h=`<div class="bar"><span class="logo">oplaa</span><div class="nav"><span class="on">Planning</span><span>Équipe</span><span>Heures</span><span>Conformité</span></div>
+  <div class="wk">‹ &nbsp;<b>16 – 22 novembre</b>&nbsp; ›</div><button class="pub">Publier</button></div><div class="inner">`;
+  h+=`<table><thead><tr><th></th>${DS.map((d,i)=>`<th class="${i===TODAY?'today':''}"><span class="d">${d} ${NUM[i]}</span></th>`).join('')}<th>Heures</th></tr></thead><tbody>`;
+  TEAMS.forEach(t=>{
+    h+=`<tr class="team"><td colspan="9">${t.name}</td></tr>`;
+    t.people.forEach(p=>{
+      const H=hrs(p.w), over=p.k&&H>p.k;
+      h+=`<tr><td><div class="who"><i style="background:${t.color}"></i><span>${p.n}<small>${p.p}</small></span></div></td>`;
+      p.w.forEach((d,i)=>{ const al=(p.al||[]).includes(i);
+        if(d===R) h+=`<td><div class="off">repos</div></td>`;
+        else if(d===C) h+=`<td><div class="leave">congé</div></td>`;
+        else h+=`<td><div class="track">${d.map(s=>`<span style="left:${pc(s[0])};width:calc(${pc(s[1])} - ${pc(s[0])});background:${al?'#B7791F':t.color}"></span>`).join('')}</div><div class="t num ${al?'al':''}">${d.map(seg).join('<br>')}</div></td>`;
+      });
+      h+=`<td class="num"><span class="${over?'over':''}">${n1(H)} h</span></td></tr>`;
+    });
+  });
+  h+=`</tbody></table></div>`;
+  document.getElementById('C').innerHTML=h;
+})();
+
+/* ---------- D ---------- */
+(function(){
+  let h=`<div class="mast"><h2>Le Bistrot du Coin</h2></div><div class="sub"><span>Planning de l'équipe</span><b>Semaine 47 · du 16 au 22 novembre 2026</b><span>Publié le mardi 18</span></div><div class="cols">`;
+  DAYS.forEach((d,i)=>{
+    const midi=[],soir=[],off=[];
+    TEAMS.forEach(t=>t.people.forEach(p=>{ const w=p.w[i], al=(p.al||[]).includes(i);
+      if(w===R||w===C){ off.push(p.n.split(' ')[0]+(w===C?' (congé)':'')); return; }
+      w.forEach(s=>{ (s[0]<16?midi:soir).push({n:p.n.split(' ')[0],t:seg(s),al}); });
+    }));
+    const list=a=>a.map(x=>`<p class="e${x.al?' al':''}">${x.n}<small class="num">${x.t}</small></p>`).join('');
+    h+=`<div class="col${i===TODAY?' today':''}"><div class="dn">${d}</div><div class="dd num">${NUM[i]}</div>
+      ${midi.length?`<div class="per">Midi</div>${list(midi)}`:''}${soir.length?`<div class="per">Soir</div>${list(soir)}`:''}
+      ${off.length?`<div class="abs">Repos : ${off.join(', ')}</div>`:''}<div class="foot num">${n1(dayTotal(i))} h au total</div></div>`;
+  });
+  h+=`</div><div class="bottom"><span>9 personnes · ${n1(DS.reduce((a,d,i)=>a+dayTotal(i),0))} heures cette semaine · 2 dépassements à vérifier</span><button>Publier la semaine</button></div>`;
+  document.getElementById('D').innerHTML=h;
+})();
+</script>
+</body>
+</html>
