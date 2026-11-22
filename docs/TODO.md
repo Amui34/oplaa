@@ -2,7 +2,7 @@
 
 ## État au 17/11/2026
 - **Site oplaa.pro** : à jour (dernier commit `ae04fae`). Tout ce qui a été fait aujourd'hui y est.
-- **iPhone** : 1.0.13 (build 301) **en vente depuis le 19/11/2026** : compte obligatoire + démo éphémère. **1.0.15 (build 303) soumise à la review le 21/11/2026 au soir** (passe « propre et pro » : barre latérale ordinateur, grille allégée, vue Jour en liste sur iPhone, accueil deux colonnes). 1.0.14 (build 302) en vente depuis le 21/11/2026 : refonte visuelle, correctif import, postes de travail, haptique. Noa a autorisé les soumissions sans redemander.
+- **iPhone** : 1.0.13 (build 301) **en vente depuis le 19/11/2026** : compte obligatoire + démo éphémère. **1.0.15 (build 305) en vente depuis le 22/11/2026** (passe « propre et pro » : barre latérale ordinateur, grille allégée, vue Jour en liste sur iPhone, accueil deux colonnes). 1.0.14 (build 302) en vente depuis le 21/11/2026 : refonte visuelle, correctif import, postes de travail, haptique. Noa a autorisé les soumissions sans redemander.
 - **Notifications** : fonction `notify` déployée, clé APNs créée, 5 secrets posés. **Jamais testées en réel.**
 - **Workflows Xcode Cloud** : désactivés (plus de collision de numéros de build).
 
@@ -38,7 +38,7 @@
 ## Sécurité (audit du 22/11/2026)
 - Correctifs codés, testés sur une base Postgres Supabase locale (attaques bloquées, usages normaux OK) et poussés : `supabase/migrations/2026-11-22-securite.sql` (aussi dans schema.sql).
 - **Migration appliquée en prod le 22/11/2026** (CLI Supabase, à la demande de Noa) et vérifiée : employee_pay + join_attempts, 3 triggers, 4 politiques invite_codes, 0 code sans expiration, suppression de compte débloquée, anon sans accès aux fonctions, congés verrouillés. 0 taux repris (aucun n'était saisi en ligne ; 18 employés, 3 établissements).
-- iPhone : 1.0.15 renvoyée avec le build 305 (correctifs app : échappement, codes 10 caractères, effacement à la déconnexion, SheetJS 0.20.3).
+- iPhone : 1.0.15 (build 305) EN VENTE le 22/11 (correctifs app : échappement, codes 10 caractères, effacement à la déconnexion, SheetJS 0.20.3).
 - Après la migration, les **anciennes** versions iPhone (≤ 1.0.15 build 303) affichent les taux à 0 chez l'admin : rien n'est perdu (table employee_pay), mettre à jour l'app.
 - Reste en réserve : CSP complète (sortir le gros script inline), texte libre des notifications push (redéployer notify), réglage « longueur mini du mot de passe = 8 » dans Supabase → Auth (l'app l'impose déjà), tests d'intégration sur base locale Docker plutôt qu'un projet cloud de test.
 - Décision prise par défaut : un manager garde le droit de modifier nom et réglages de l'établissement (l'abonnement est désormais protégé par trigger).
