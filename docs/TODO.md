@@ -15,7 +15,7 @@
 
 ## Claude — à la prochaine session
 1. ~~Envoyer la 1.0.14~~ (en vente le 21/11/2026, build 302) — pour mémoire : build 302, notes = refonte visuelle (icônes, planning iPhone, cartes, Jour par défaut, Équipe, Conformité, semaine vide, haptique) + correctif import + postes de travail (19/11 : champ « Poste de travail » avec suggestions, lien « Gérer… » pour ajouter des équipes depuis les fiches, champs dates d'arrivée/départ alignés). Pipeline : `build1013.sh` du scratchpad à adapter (projet SPM : `-project App.xcodeproj`, pas de workspace).
-2. **Abonnement 1.1** (branche `abonnement-1.1`) : finir RevenueCat, produits 7,99 €/mois et 79,99 €/an **par établissement**, essai gratuit, paywall ; **désigner le médiateur de la consommation** dans les CGV avant d'encaisser ; page Tarifs du site.
+2. **Abonnement 1.1** (branche `abonnement-1.1`) : finir RevenueCat, produits **19,99 €/mois et 199,99 €/an** (décision Noa 24/11/2026) **par établissement** — la branche date de la 1.0.11 et contient encore 7,99 €/79,99 € : à refaire depuis main, essai gratuit, paywall ; **désigner le médiateur de la consommation** dans les CGV avant d'encaisser ; page Tarifs du site.
 3. **Import côté iPhone** : vérifier que le sélecteur de fichiers iOS accepte bien un `.xlsx` (plugin Filesystem / input file) ; test e2e de l'import avec un fichier de fixture **synthétique** (jamais le vrai export).
 4. **Finitions mobiles** : largeur de la colonne « Équipe » en mode Jour sur iPhone ; passer en revue le mode sombre écran par écran (modales incluses).
 5. **Métiers à la création** : si Noa le souhaite, ajouter bar/brasserie, fast-food/snack, traiteur (équipes + créneaux adaptés).
