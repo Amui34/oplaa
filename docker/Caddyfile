@@ -19,11 +19,11 @@
 		-Server
 	}
 
-	# Assistance & Confidentialité : servies depuis la vitrine (/srv/site)
-	@legal path /assistance.html /confidentialite.html /cgu.html /dpa.html /mentions-legales.html /assistance /confidentialite /cgu /dpa /mentions-legales
+	# Vitrine (/decouvrir), aide et pages légales : servies depuis /srv/site (les polices viennent de /srv/app/fonts)
+	@legal path /decouvrir.html /site.css /assistance.html /confidentialite.html /cgu.html /dpa.html /mentions-legales.html /decouvrir /assistance /confidentialite /cgu /dpa /mentions-legales
 	handle @legal {
 		root * /srv/site
-		@lhtml path *.html /assistance /confidentialite /cgu /dpa /mentions-legales
+		@lhtml path *.html /decouvrir /assistance /confidentialite /cgu /dpa /mentions-legales
 		header @lhtml Cache-Control "no-cache"
 		try_files {path} {path}.html
 		file_server
