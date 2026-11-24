@@ -1,4 +1,12 @@
 <!doctype html><html lang="fr"><head><meta charset="utf-8">
+<script>
+/* oplaa.pro/ est la vitrine ; l'app web vit sur app.oplaa.pro.
+   On y renvoie les liens d'e-mails Supabase (jeton dans l'URL) et l'app installée sur l'écran d'accueil (PWA). */
+(function(){var h=location.hash||'',s=location.search||'';
+var auth=/access_token=|refresh_token=|type=(recovery|signup|invite|magiclink|email_change)|error_description=/.test(h+s)||/[?&]code=/.test(s);
+var pwa=(window.matchMedia&&matchMedia('(display-mode: standalone)').matches)||navigator.standalone===true;
+if(auth||pwa){location.replace('https://app.oplaa.pro/'+s+h);}})();
+</script>
 <title>Oplaa — Le planning de votre équipe, simple</title>
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="description" content="Créez le planning de la semaine en glissant les services, publiez-le, et chaque employé reçoit le sien. Pour les restaurants, cafés, commerces et hôtels.">
@@ -10,10 +18,10 @@
 <meta property="og:site_name" content="Oplaa">
 <meta property="og:title" content="Oplaa — Le planning de votre équipe, simple">
 <meta property="og:description" content="Créez, publiez et partagez le planning de votre équipe. Chaque employé voit le sien, jamais les salaires.">
-<meta property="og:url" content="https://oplaa.pro/decouvrir">
+<meta property="og:url" content="https://oplaa.pro/">
 <meta property="og:image" content="https://oplaa.pro/og-image.png">
 <meta name="twitter:card" content="summary_large_image">
-<link rel="canonical" href="https://oplaa.pro/decouvrir">
+<link rel="canonical" href="https://oplaa.pro/">
 <link rel="preload" href="/fonts/bricolage-grotesque-latin-wght-normal.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="stylesheet" href="/site.css">
 </head><body>
@@ -39,7 +47,7 @@
 
 <header class="top">
   <div class="top-in">
-    <a class="brand" href="/decouvrir" aria-label="Oplaa, accueil">
+    <a class="brand" href="/" aria-label="Oplaa, accueil">
       <svg viewBox="0 0 128 128" aria-hidden="true"><rect width="128" height="128" rx="30" fill="#C4562F"/><circle cx="64" cy="64" r="33" fill="none" stroke="#FBF6F1" stroke-width="8"/><circle cx="64" cy="64" r="29" fill="#FBF6F1"/><path d="M64 64 L44.14 85.14 A29 29 0 0 1 64 35 Z" fill="#C4562F"/></svg>
       <span class="wm">oplaa</span>
     </a>
@@ -48,7 +56,7 @@
       <a href="#equipe">L'équipe</a>
       <a href="#tarif">Tarif</a>
       <a href="/assistance">Aide</a>
-      <a class="btn p" href="/">Ouvrir l'app</a>
+      <a class="btn p" href="https://app.oplaa.pro/">Ouvrir l'app</a>
     </nav>
   </div>
 </header>
@@ -61,7 +69,7 @@
       <h1 id="t-hero">Le planning de votre équipe, <span class="hl">simple.</span></h1>
       <p class="sec-lead">Glissez les services, publiez la semaine, et chacun reçoit son planning sur son téléphone. Fini les photos du tableau blanc et les messages à rallonge.</p>
       <div class="cta">
-        <a class="btn p" href="/"><span class="pic" aria-hidden="true"><svg><use href="#p-rocket"/></svg></span>Essayer gratuitement</a>
+        <a class="btn p" href="https://app.oplaa.pro/"><span class="pic" aria-hidden="true"><svg><use href="#p-rocket"/></svg></span>Essayer gratuitement</a>
         <a class="btn s" href="https://apps.apple.com/fr/app/id6810034842"><span class="pic" aria-hidden="true"><svg><use href="#p-phone"/></svg></span>Télécharger sur l'App Store</a>
       </div>
       <div class="reassure">
@@ -198,7 +206,7 @@
         <h2 class="h2" id="t-final">Votre prochaine semaine est déjà plus simple.</h2>
         <p class="sec-lead" style="margin:0 auto">Testez la démo en un clic, sans créer de compte.</p>
         <div class="cta">
-          <a class="btn p" href="/">Ouvrir l'app</a>
+          <a class="btn p" href="https://app.oplaa.pro/">Ouvrir l'app</a>
           <a class="btn s" href="https://apps.apple.com/fr/app/id6810034842">App Store</a>
         </div>
       </div>

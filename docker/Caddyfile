@@ -4,7 +4,7 @@
 	admin off
 }
 
-# oplaa.pro → l'application directement
+# oplaa.pro → vitrine sur « / », le reste (fichiers de l'app, anciens liens) → l'application
 # (les pages légales/support restent servies depuis la vitrine)
 :80 {
 	encode zstd gzip
@@ -19,11 +19,23 @@
 		-Server
 	}
 
-	# Vitrine (/decouvrir), aide et pages légales : servies depuis /srv/site (les polices viennent de /srv/app/fonts)
-	@legal path /decouvrir.html /site.css /assistance.html /confidentialite.html /cgu.html /dpa.html /mentions-legales.html /decouvrir /assistance /confidentialite /cgu /dpa /mentions-legales
+	# Page d'accueil oplaa.pro/ = vitrine ; l'app web est sur app.oplaa.pro
+	# (les liens d'e-mails et la PWA installée y sont renvoyés par un petit script de la vitrine)
+	redir /decouvrir / 301
+	redir /decouvrir.html / 301
+	@home path /
+	handle @home {
+		root * /srv/site
+		header Cache-Control "no-cache"
+		rewrite * /decouvrir.html
+		file_server
+	}
+
+	# Aide et pages légales : servies depuis /srv/site (les polices viennent de /srv/app/fonts)
+	@legal path /site.css /assistance.html /confidentialite.html /cgu.html /dpa.html /mentions-legales.html /assistance /confidentialite /cgu /dpa /mentions-legales
 	handle @legal {
 		root * /srv/site
-		@lhtml path *.html /decouvrir /assistance /confidentialite /cgu /dpa /mentions-legales
+		@lhtml path *.html /assistance /confidentialite /cgu /dpa /mentions-legales
 		header @lhtml Cache-Control "no-cache"
 		try_files {path} {path}.html
 		file_server

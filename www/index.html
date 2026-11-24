@@ -16,7 +16,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
 <title>Oplaa — Le planning d'équipe, simplifié</title>
 <meta name="description" content="Oplaa : créez, partagez et suivez les plannings de votre équipe. Restauration, café, commerce, hôtellerie. Heures, congés, absences, export comptable. Chaque employé voit son planning." />
-<link rel="canonical" href="https://oplaa.pro/" />
+<link rel="canonical" href="https://app.oplaa.pro/" />
 <meta name="robots" content="index, follow" />
 
 <!-- Aperçus de partage (Messages, WhatsApp, LinkedIn, Google) -->
@@ -24,7 +24,7 @@
 <meta property="og:site_name" content="Oplaa" />
 <meta property="og:title" content="Oplaa — Le planning d'équipe, simplifié" />
 <meta property="og:description" content="Créez, partagez et suivez les plannings de votre équipe. Restauration, commerce, hôtellerie. Chaque employé consulte son planning." />
-<meta property="og:url" content="https://oplaa.pro/" />
+<meta property="og:url" content="https://app.oplaa.pro/" />
 <meta property="og:image" content="https://oplaa.pro/og-image.png" />
 <meta property="og:image:width" content="1200" />
 <meta property="og:image:height" content="630" />
@@ -5684,7 +5684,7 @@ document.getElementById('cloudCodeBack').addEventListener('click', ()=>{ _signup
 // ── Mot de passe oublié : e-mail de réinitialisation (Supabase) puis, au retour par le lien, nouveau mot de passe
 // Deux chemins vers le même écran :
 //  • dans l'app : « Mot de passe oublié ? » → e-mail avec un CODE → saisie du code + nouveau mot de passe (sans quitter l'app)
-//  • depuis l'e-mail : le bouton/lien ouvre oplaa.pro déjà authentifié → nouveau mot de passe seulement
+//  • depuis l'e-mail : le bouton/lien ouvre app.oplaa.pro déjà authentifié → nouveau mot de passe seulement
 let _pwRecovery = false;      // arrivé par le lien de l'e-mail (session de récupération ouverte)
 let _pwCodeEmail = null;      // code demandé pour cette adresse, en attente de saisie
 function showRecover(email){
@@ -5698,7 +5698,7 @@ function showRecover(email){
   setTimeout(()=>{ const f=document.getElementById(withCode?'cloudRecoverCode':'cloudNewPassword'); if(f) f.focus(); }, 150);
 }
 async function sendRecoveryCode(email){
-  const { error } = await sb.auth.resetPasswordForEmail(email, { redirectTo: 'https://oplaa.pro/' });
+  const { error } = await sb.auth.resetPasswordForEmail(email, { redirectTo: 'https://app.oplaa.pro/' });
   return error ? traduireErreur(error.message) : null;
 }
 document.getElementById('cloudForgot').addEventListener('click', async ()=>{
