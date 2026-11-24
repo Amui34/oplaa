@@ -2,7 +2,7 @@
 
 ## État au 17/11/2026
 - **Site oplaa.pro** : à jour (dernier commit `ae04fae`). Tout ce qui a été fait aujourd'hui y est.
-- **iPhone** : 1.0.13 (build 301) **en vente depuis le 19/11/2026** : compte obligatoire + démo éphémère. **1.0.15 (build 305) en vente depuis le 22/11/2026** (passe « propre et pro » : barre latérale ordinateur, grille allégée, vue Jour en liste sur iPhone, accueil deux colonnes). 1.0.14 (build 302) en vente depuis le 21/11/2026 : refonte visuelle, correctif import, postes de travail, haptique. Noa a autorisé les soumissions sans redemander.
+- **iPhone** : 1.0.13 (build 301) **en vente depuis le 19/11/2026** : compte obligatoire + démo éphémère. **1.0.15 (build 305) en vente depuis le 22/11/2026** ; **1.0.16 (build 306, style « Bonbon ») soumise le 24/11/2026** (passe « propre et pro » : barre latérale ordinateur, grille allégée, vue Jour en liste sur iPhone, accueil deux colonnes). 1.0.14 (build 302) en vente depuis le 21/11/2026 : refonte visuelle, correctif import, postes de travail, haptique. Noa a autorisé les soumissions sans redemander.
 - **Notifications** : fonction `notify` déployée, clé APNs créée, 5 secrets posés. **Jamais testées en réel.**
 - **Workflows Xcode Cloud** : désactivés (plus de collision de numéros de build).
 
@@ -30,10 +30,11 @@
 - Le vrai export Combo (`docs/exemples/*.xlsx`) et les clés `.p8` ne vont jamais dans le dépôt (`.gitignore`).
 - Numéros de build manuels > 301 ; après chaque lot : pousser `main` (déploie oplaa.pro), `npx cap copy ios` avant un build iPhone.
 
-## Direction visuelle retenue (21/11/2026)
-- Noa a refusé la maquette « éditorial minimaliste » (fond papier, cadres partout, Space Mono) proposée par Lucas : trop de carrés, on s'y perd.
-- Direction validée : « propre et pro » — beaucoup de blanc, très peu de traits, barre latérale sur ordinateur, pastilles de couleur par personne, un seul bouton accent par écran, police système. Maquettes dans `docs/maquettes/` (style-propre.html = référence).
-- Appliquée en trois passes le 21/11 (ordinateur, iPhone, accueil) ; reste à affiner : vue Équipe en liste dense (une ligne par personne), Suivi et Conformité au même niveau, mode sombre à revérifier.
+## Direction visuelle retenue (24/11/2026) : « Coloré et ludique », variante A « Bonbon »
+- Historique : « éditorial » de Lucas refusé (21/11) ; « propre et pro » appliqué le 21/11 puis jugé trop « IA » par Noa ; maquettes « service » et « quatre versions » refusées.
+- **Validée le 24/11 : variante A « Bonbon »** (`docs/maquettes/style-ludique.html`) : fond crème, encre prune, accent corail, coins très arrondis, police Bricolage Grotesque (embarquée dans `www/fonts`, hors ligne), une couleur par personne sur les cartes, aperçu compact de la semaine en haut, week-end teinté, jours passés atténués, ligne « Maintenant », états vides illustrés (« Journée calme »), confettis à la publication, micro-animations au glisser-déposer.
+- Logo Oplaa (carré terracotta) et icônes « trait fin » conservés ; **aucun emoji système dans l'interface** : pictos maison (feuille, parasol, flamme, fête…) et pastilles colorées pour les types d'absence et de pause.
+- Appliquée le 24/11 et embarquée dans la 1.0.16 (build 306). Reste à affiner : vues Équipe, Suivi et Conformité dans le même esprit.
 
 ## Sécurité (audit du 22/11/2026)
 - Correctifs codés, testés sur une base Postgres Supabase locale (attaques bloquées, usages normaux OK) et poussés : `supabase/migrations/2026-11-22-securite.sql` (aussi dans schema.sql).
