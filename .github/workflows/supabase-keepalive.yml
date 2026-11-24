@@ -21,8 +21,8 @@ jobs:
       - name: Oplaa (prod) · Restostock (prod) · Oplaa (test) · Chope (prod)
         run: |
           set -u
-          ping() {  # url clé nom chemin-REST critique(1/0) — chemin = table (select id) ou rpc/<fonction>?params
-            case "$4" in rpc/*) q="$1/rest/v1/$4" ;; *) q="$1/rest/v1/$4?select=id&limit=1" ;; esac
+          ping() {  # url clé nom chemin-REST critique(1/0) — chemin = table (select id), rpc/<fonction>?params ou auth/v1/health
+            case "$4" in rpc/*) q="$1/rest/v1/$4" ;; auth/*) q="$1/$4" ;; *) q="$1/rest/v1/$4?select=id&limit=1" ;; esac
             code=$(curl -s -o /dev/null -w "%{http_code}" --max-time 30 \
               "$q" -H "apikey: $2" -H "Authorization: Bearer $2") || code=000
             if [ "$code" = "200" ]; then echo "✓ $3 → HTTP $code"
@@ -31,7 +31,8 @@ jobs:
             return 0
           }
           FAIL=0
-          ping https://kldkqxqbmxtdedzjoghw.supabase.co sb_publishable_Ma29Syo4LkbtLLxIP4s9EA_8UIef3EL "Oplaa (prod)"       establishments 1
+          # Oplaa (prod) : depuis l'audit sécurité du 22/11, les tables sont fermées à anon (42501) → on ping la santé de l'auth.
+          ping https://kldkqxqbmxtdedzjoghw.supabase.co sb_publishable_Ma29Syo4LkbtLLxIP4s9EA_8UIef3EL "Oplaa (prod)"       auth/v1/health 1
           ping https://iuzmerktgvgskhsojdha.supabase.co sb_publishable_7Hjw8Xk3E2dzUsPRAvPpkA_XYT-LIMt "Restostock (prod)"  companies      1
           ping https://rourjugjspqppjhrizxw.supabase.co sb_publishable_0YHzUC53GjuvekVfb8Azvg_Ze3fSUOF "Oplaa (test)"       establishments 0
           # Chope (org gratuite « Amui gratuit ») : tables fermées à anon, on appelle une RPC en lecture.
