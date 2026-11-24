@@ -2,7 +2,7 @@
 
 ## État au 17/11/2026
 - **Site oplaa.pro** : depuis le 24/11/2026, **oplaa.pro/ = vitrine « Bonbon »** et **l'app web = app.oplaa.pro** (bouton « Ouvrir l'app »). Les liens d'e-mails Supabase et l'app installée sur l'écran d'accueil arrivant sur oplaa.pro/ sont renvoyés vers app.oplaa.pro par un script de la vitrine. Option : ajouter `https://app.oplaa.pro/**` aux Redirect URLs de Supabase (Auth → URL Configuration).
-- **iPhone** : 1.0.13 (build 301) **en vente depuis le 19/11/2026** : compte obligatoire + démo éphémère. **1.0.15 (build 305) en vente depuis le 22/11/2026** ; **1.0.16 (build 306, style « Bonbon ») soumise le 24/11/2026** (passe « propre et pro » : barre latérale ordinateur, grille allégée, vue Jour en liste sur iPhone, accueil deux colonnes). 1.0.14 (build 302) en vente depuis le 21/11/2026 : refonte visuelle, correctif import, postes de travail, haptique. Noa a autorisé les soumissions sans redemander.
+- **iPhone** : 1.0.13 (build 301) **en vente depuis le 19/11/2026** : compte obligatoire + démo éphémère. **1.0.15 (build 305) en vente depuis le 22/11/2026** ; **1.0.16 (build 306, style « Bonbon ») en vente depuis le 24/11/2026** (prochain build 307) (passe « propre et pro » : barre latérale ordinateur, grille allégée, vue Jour en liste sur iPhone, accueil deux colonnes). 1.0.14 (build 302) en vente depuis le 21/11/2026 : refonte visuelle, correctif import, postes de travail, haptique. Noa a autorisé les soumissions sans redemander.
 - **Notifications** : fonction `notify` déployée, clé APNs créée, 5 secrets posés. **Jamais testées en réel.**
 - **Workflows Xcode Cloud** : désactivés (plus de collision de numéros de build).
 
