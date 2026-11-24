@@ -1,0 +1,355 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Oplaa — maquette « Coloré et ludique »</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,600;12..96,800&family=Outfit:wght@400;600;800&family=Nunito:wght@400;700;900&display=swap" rel="stylesheet">
+<style>
+/* ---------- Variantes (seules ces variables changent) ---------- */
+body[data-v="bonbon"]{ --font:'Bricolage Grotesque',system-ui,sans-serif; --bg:#FFF8F1; --card:#FFFFFF; --ink:#2B2135; --muted:#8A7F93; --accent:#FF6B4A; --accent-soft:#FFE3DA; --line:#F1E6DC; --weekend:#FFF1E6; }
+body[data-v="pop"]{    --font:'Outfit',system-ui,sans-serif; --bg:#F6F4FF; --card:#FFFFFF; --ink:#1F1A3A; --muted:#7D78A0; --accent:#6C4CF5; --accent-soft:#E7E1FF; --line:#E7E3F7; --weekend:#EFEBFF; }
+body[data-v="douceur"]{--font:'Nunito',system-ui,sans-serif; --bg:#F1FAF7; --card:#FFFFFF; --ink:#173A35; --muted:#6F8C86; --accent:#14A38B; --accent-soft:#D3F2EA; --line:#DDEFEA; --weekend:#E6F6F1; }
+
+/* Une couleur par personne, toujours la même */
+:root{
+  --lea:#FF8A5B;  --lea-bg:#FFE6DB;
+  --karim:#3E8BFF; --karim-bg:#DDEBFF;
+  --sofia:#22B07D; --sofia-bg:#D6F4E7;
+  --paul:#9B5DE5;  --paul-bg:#EEE2FC;
+  --ines:#F4B400;  --ines-bg:#FFF1C2;
+  --tom:#F15BB5;   --tom-bg:#FDDDF0;
+}
+*{box-sizing:border-box}
+body{margin:0;font-family:var(--font);background:var(--bg);color:var(--ink);transition:background .3s}
+.top{display:flex;align-items:center;gap:16px;flex-wrap:wrap;padding:20px 28px}
+.top h1{font-size:20px;margin:0;font-weight:800}
+.top p{margin:0;color:var(--muted);font-size:14px}
+.switch{display:flex;gap:8px;margin-left:auto}
+.switch button{font:inherit;font-weight:700;border:2px solid var(--line);background:var(--card);color:var(--ink);padding:8px 16px;border-radius:999px;cursor:pointer}
+.switch button.on{background:var(--ink);color:#fff;border-color:var(--ink)}
+.label{font-size:12px;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);font-weight:700;margin:8px 28px}
+
+/* ---------- Ordinateur ---------- */
+.desk{margin:0 28px 36px;background:var(--card);border-radius:28px;box-shadow:0 10px 40px rgba(40,20,60,.08);display:grid;grid-template-columns:210px 1fr;overflow:hidden;min-width:1100px}
+.side{background:var(--bg);padding:22px 16px;display:flex;flex-direction:column;gap:6px}
+.logo{display:flex;align-items:center;gap:10px;font-weight:800;font-size:22px;margin:0 6px 18px}
+.logo i{width:34px;height:34px;border-radius:12px;background:var(--accent);display:grid;place-items:center;color:#fff;font-style:normal;font-size:18px;transform:rotate(-6deg)}
+.nav{display:flex;align-items:center;gap:10px;padding:11px 14px;border-radius:16px;font-weight:600;color:var(--muted);font-size:15px}
+.nav.on{background:var(--card);color:var(--ink);box-shadow:0 2px 10px rgba(40,20,60,.06)}
+.nav span{font-size:17px}
+.side .who{margin-top:auto;display:flex;gap:10px;align-items:center;padding:10px;border-radius:16px;background:var(--card);font-size:13px}
+.side .who b{display:block;font-size:14px}
+.av{width:34px;height:34px;border-radius:50%;display:grid;place-items:center;font-weight:800;color:#fff;font-size:14px;flex:none}
+
+.main{padding:24px 26px 28px}
+.head{display:flex;align-items:center;gap:14px;margin-bottom:18px}
+.head h2{margin:0;font-size:28px;font-weight:800}
+.head .sub{color:var(--muted);font-size:15px}
+.btn{font:inherit;font-weight:700;border:none;border-radius:999px;padding:10px 18px;cursor:pointer;background:var(--accent-soft);color:var(--ink)}
+.btn.main-btn{background:var(--accent);color:#fff;margin-left:auto}
+.arrows{display:flex;gap:6px}
+.arrows button{width:38px;height:38px;border-radius:50%;border:2px solid var(--line);background:var(--card);font-size:16px;cursor:pointer;color:var(--ink)}
+
+/* aperçu semaine compact */
+.strip{display:grid;grid-template-columns:repeat(7,1fr);gap:10px;margin-bottom:18px}
+.chip{background:var(--bg);border-radius:18px;padding:10px 12px;display:flex;flex-direction:column;gap:6px}
+.chip .d{font-size:13px;color:var(--muted);font-weight:600}
+.chip .n{font-size:20px;font-weight:800}
+.chip .dots{display:flex;gap:3px;flex-wrap:wrap;min-height:10px}
+.chip .dots i{width:9px;height:9px;border-radius:50%}
+.chip.today{background:var(--accent);color:#fff}
+.chip.today .d{color:rgba(255,255,255,.85)}
+.chip.past{opacity:.5}
+.chip .calm{font-size:12px;color:var(--muted)}
+
+/* bac à placer */
+.tray{display:flex;align-items:center;gap:12px;background:var(--accent-soft);border-radius:20px;padding:12px 16px;margin-bottom:16px;min-height:60px}
+.tray .t{font-weight:700;font-size:15px}
+.tray .hint{color:var(--muted);font-size:13px}
+.tray.done{background:#E3F7E9}
+
+/* grille */
+.grid{display:grid;grid-template-columns:170px repeat(7,minmax(112px,1fr));border-radius:20px;overflow:hidden;border:2px solid var(--line)}
+.grid > div{border-bottom:2px solid var(--line);border-right:2px solid var(--line);padding:8px;min-height:68px}
+.grid .hd{min-height:0;font-weight:700;font-size:13px;color:var(--muted);text-align:center;padding:10px 6px;background:var(--card)}
+.grid .hd.today{color:var(--accent)}
+.grid .team{grid-column:1/-1;min-height:0;padding:8px 14px;font-weight:800;font-size:13px;background:var(--bg);text-transform:uppercase;letter-spacing:.06em;color:var(--muted)}
+.grid .name{display:flex;align-items:center;gap:10px;font-weight:700;font-size:15px}
+.grid .name small{display:block;font-weight:400;color:var(--muted);font-size:12px}
+.cell{display:flex;flex-direction:column;gap:6px;transition:background .2s, transform .2s}
+.cell.we{background:var(--weekend)}
+.cell.past{opacity:.45}
+.cell.today{background:color-mix(in srgb,var(--accent) 7%,transparent)}
+.cell.over{background:var(--accent-soft);transform:scale(1.03);box-shadow:inset 0 0 0 2px var(--accent);border-radius:14px}
+.off{font-size:12.5px;color:var(--muted);padding:6px 4px}
+.leave{font-size:12.5px;border-radius:12px;padding:8px;font-weight:600}
+
+.pill{border-radius:14px;padding:7px 10px;font-weight:700;font-size:13px;cursor:grab;user-select:none;transition:transform .18s cubic-bezier(.3,1.6,.5,1), box-shadow .18s;white-space:nowrap}
+.pill:hover{transform:translateY(-2px);box-shadow:0 6px 14px rgba(40,20,60,.12)}
+.pill.drag{transform:rotate(-4deg) scale(1.08);box-shadow:0 12px 24px rgba(40,20,60,.2);opacity:.9}
+.pill.pop{animation:pop .45s cubic-bezier(.3,1.8,.5,1)}
+@keyframes pop{0%{transform:scale(.6)}100%{transform:scale(1)}}
+.pill.todo{background:#fff;border:2px dashed var(--accent);color:var(--ink)}
+
+/* ---------- iPhone ---------- */
+.phones{display:flex;gap:36px;flex-wrap:wrap;margin:0 28px 60px}
+.phone{width:375px;height:780px;background:var(--card);border-radius:46px;box-shadow:0 10px 40px rgba(40,20,60,.1);overflow:hidden;display:flex;flex-direction:column;border:10px solid #1d1d1f}
+.ph-top{padding:18px 20px 10px}
+.ph-status{display:flex;justify-content:space-between;font-size:13px;font-weight:700;margin-bottom:12px}
+.ph-top h3{margin:0;font-size:26px;font-weight:800}
+.ph-top .sub{color:var(--muted);font-size:14px;margin-top:2px}
+.mini{display:grid;grid-template-columns:repeat(7,1fr);gap:5px;padding:4px 16px 12px}
+.mini div{text-align:center;border-radius:14px;padding:7px 0;font-size:12px;color:var(--muted);font-weight:600}
+.mini div b{display:block;font-size:16px;color:var(--ink)}
+.mini div.on{background:var(--accent);color:rgba(255,255,255,.85)}
+.mini div.on b{color:#fff}
+.mini div.past{opacity:.45}
+.mini div.we{background:var(--weekend)}
+.mini div.we.on{background:var(--accent)}
+.list{flex:1;overflow:auto;padding:4px 16px 16px;display:flex;flex-direction:column;gap:10px}
+.card{border-radius:20px;padding:14px 16px;display:flex;gap:12px;align-items:center}
+.card .h{font-weight:800;font-size:15px}
+.card .r{font-size:13px;opacity:.75}
+.card.done{opacity:.45}
+.now{display:flex;align-items:center;gap:8px;color:var(--accent);font-weight:800;font-size:13px;margin:2px 0}
+.now::before{content:"";width:12px;height:12px;border-radius:50%;background:var(--accent);box-shadow:0 0 0 5px var(--accent-soft);animation:beat 1.6s infinite}
+.now::after{content:"";flex:1;height:3px;border-radius:3px;background:var(--accent)}
+@keyframes beat{50%{box-shadow:0 0 0 9px var(--accent-soft)}}
+.note{background:var(--paul-bg);border-radius:18px;padding:12px 14px;font-size:14px;font-weight:600}
+.tabbar{display:flex;justify-content:space-around;padding:10px 0 22px;border-top:2px solid var(--line);font-size:12px;color:var(--muted);font-weight:700}
+.tabbar div{display:flex;flex-direction:column;align-items:center;gap:3px}
+.tabbar div span{font-size:20px}
+.tabbar .on{color:var(--accent)}
+.empty{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:30px;gap:10px}
+.empty h4{margin:8px 0 0;font-size:22px;font-weight:800}
+.empty p{margin:0;color:var(--muted);font-size:15px;line-height:1.45}
+.empty svg{animation:sway 4s ease-in-out infinite;transform-origin:50% 100%}
+@keyframes sway{50%{transform:rotate(3deg)}}
+
+/* confetti */
+.confetti{position:fixed;top:-20px;width:10px;height:14px;border-radius:3px;pointer-events:none;z-index:99;animation:fall linear forwards}
+@keyframes fall{to{transform:translateY(105vh) rotate(720deg)}}
+.toast{position:fixed;left:50%;top:28px;transform:translateX(-50%) translateY(-120px);background:var(--ink);color:#fff;padding:14px 22px;border-radius:999px;font-weight:800;font-size:16px;transition:transform .45s cubic-bezier(.3,1.6,.5,1);z-index:100}
+.toast.show{transform:translateX(-50%) translateY(0)}
+.wrap{overflow-x:auto}
+</style>
+</head>
+<body data-v="bonbon">
+
+<div class="top">
+  <div>
+    <h1>Oplaa · « Coloré et ludique »</h1>
+    <p>Trois variantes du même style. Essaie de glisser le créneau « à placer » sur une case du samedi.</p>
+  </div>
+  <div class="switch">
+    <button data-v="bonbon" class="on">A · Bonbon</button>
+    <button data-v="pop">B · Pop</button>
+    <button data-v="douceur">C · Douceur</button>
+  </div>
+</div>
+
+<div class="label">Ordinateur · semaine</div>
+<div class="wrap">
+<div class="desk">
+  <aside class="side">
+    <div class="logo"><i>o</i>Oplaa</div>
+    <div class="nav on"><span>🗓️</span>Planning</div>
+    <div class="nav"><span>👋</span>Équipe</div>
+    <div class="nav"><span>🌴</span>Congés</div>
+    <div class="nav"><span>📊</span>Heures & paie</div>
+    <div class="nav"><span>⚙️</span>Réglages</div>
+    <div class="who"><div class="av" style="background:var(--accent)">N</div><div><b>Le Petit Zinc</b>Admin</div></div>
+  </aside>
+  <section class="main">
+    <div class="head">
+      <div class="arrows"><button>‹</button><button>›</button></div>
+      <div><h2>Semaine du 23 novembre</h2><div class="sub">6 personnes · 212 h prévues</div></div>
+      <button class="btn">Copier la semaine</button>
+      <button class="btn main-btn">＋ Ajouter un créneau</button>
+    </div>
+
+    <div class="strip" id="strip"></div>
+
+    <div class="tray" id="tray">
+      <div class="t">1 créneau à placer</div>
+      <div class="pill todo" draggable="true" id="todo" data-day="5">Sam. · Salle 19:00–23:30</div>
+      <div class="hint">Glisse-le sur quelqu'un, samedi 👉</div>
+    </div>
+
+    <div class="grid" id="grid"></div>
+  </section>
+</div>
+</div>
+
+<div class="label">iPhone · jour</div>
+<div class="phones">
+  <div class="phone">
+    <div class="ph-top">
+      <div class="ph-status"><span>14:32</span><span>●●● 🔋</span></div>
+      <h3>Mardi 24</h3>
+      <div class="sub">5 personnes au travail aujourd'hui</div>
+    </div>
+    <div class="mini" id="mini1"></div>
+    <div class="list" id="dayList"></div>
+    <div class="tabbar"><div class="on"><span>🗓️</span>Planning</div><div><span>👋</span>Équipe</div><div><span>🌴</span>Congés</div><div><span>⚙️</span>Réglages</div></div>
+  </div>
+
+  <div class="phone">
+    <div class="ph-top">
+      <div class="ph-status"><span>14:32</span><span>●●● 🔋</span></div>
+      <h3>Dimanche 29</h3>
+      <div class="sub">Le restaurant est fermé</div>
+    </div>
+    <div class="mini" id="mini2"></div>
+    <div class="empty">
+      <svg width="150" height="150" viewBox="0 0 150 150" aria-hidden="true">
+        <ellipse cx="75" cy="135" rx="46" ry="8" fill="var(--line)"/>
+        <path d="M52 100h46l-6 34H58z" fill="var(--accent)"/>
+        <path d="M75 100C75 70 60 55 40 50c4 22 16 40 35 50z" fill="#22B07D"/>
+        <path d="M75 100c0-34 14-52 38-58-3 26-16 47-38 58z" fill="#38C98F"/>
+        <path d="M75 100V60" stroke="#178a61" stroke-width="4" stroke-linecap="round"/>
+        <circle cx="112" cy="30" r="10" fill="#F4B400"/>
+      </svg>
+      <h4>Journée calme 🌿</h4>
+      <p>Personne ne travaille dimanche.<br>Profitez-en, l'équipe revient lundi à 9:00.</p>
+      <button class="btn" style="margin-top:10px">＋ Ouvrir exceptionnellement</button>
+    </div>
+    <div class="tabbar"><div class="on"><span>🗓️</span>Planning</div><div><span>👋</span>Équipe</div><div><span>🌴</span>Congés</div><div><span>⚙️</span>Réglages</div></div>
+  </div>
+
+  <div class="phone">
+    <div class="ph-top">
+      <div class="ph-status"><span>14:32</span><span>●●● 🔋</span></div>
+      <h3>Mon planning</h3>
+      <div class="sub">Vue de Sofia · 31 h cette semaine</div>
+    </div>
+    <div class="mini" id="mini3"></div>
+    <div class="list" id="myList"></div>
+    <div class="tabbar"><div class="on"><span>🗓️</span>Planning</div><div><span>🌴</span>Congés</div><div><span>💬</span>Messages</div><div><span>⚙️</span>Réglages</div></div>
+  </div>
+</div>
+
+<div class="toast" id="toast">Semaine complète, bravo l'équipe 🎉</div>
+
+<script>
+const DAYS=['Lun.','Mar.','Mer.','Jeu.','Ven.','Sam.','Dim.'], NUM=[23,24,25,26,27,28,29], TODAY=1;
+const P=[
+ {id:'lea',name:'Léa',role:'Cheffe',team:'Cuisine'},
+ {id:'karim',name:'Karim',role:'Commis',team:'Cuisine'},
+ {id:'tom',name:'Tom',role:'Plonge',team:'Cuisine'},
+ {id:'sofia',name:'Sofia',role:'Responsable salle',team:'Salle'},
+ {id:'paul',name:'Paul',role:'Serveur',team:'Salle'},
+ {id:'ines',name:'Inès',role:'Serveuse',team:'Salle'},
+];
+const M='10:00–15:00', S='18:30–23:00', L='11:30–15:00';
+// planning[person][day] = liste de créneaux, 'off' = repos, 'leave' = congé
+const plan={
+ lea:  [[M,S],[M,S],[M],'off',[M,S],[M,S],'closed'],
+ karim:[[M],[M,S],'off',[M,S],[M],[S],'closed'],
+ tom:  [[S],'off',[S],[S],[S],[M,S],'closed'],
+ sofia:[[M,S],[M],[M,S],'off',[S],[M,S],'closed'],
+ paul: [[L],[S],[L,S],'leave','leave',[],'closed'],
+ ines: ['off',[L,S],[S],[L,S],[L,S],[M],'closed'],
+};
+const OFF=['Jour off ☕','Repos bien mérité','Jour off 🛋️'];
+
+function strip(){
+  const el=document.getElementById('strip'); el.innerHTML='';
+  DAYS.forEach((d,i)=>{
+    const who=P.filter(p=>Array.isArray(plan[p.id][i])&&plan[p.id][i].length);
+    const c=document.createElement('div');
+    c.className='chip'+(i===TODAY?' today':'')+(i<TODAY?' past':'');
+    c.innerHTML=`<div class="d">${d}</div><div class="n">${NUM[i]}</div>`+
+      (who.length?`<div class="dots">${who.map(p=>`<i style="background:var(--${p.id})"></i>`).join('')}</div>`:`<div class="calm">Journée calme 🌿</div>`);
+    el.appendChild(c);
+  });
+}
+function grid(){
+  const g=document.getElementById('grid'); g.innerHTML='<div class="hd"></div>'+DAYS.map((d,i)=>`<div class="hd${i===TODAY?' today':''}">${d} ${NUM[i]}${i===TODAY?' · aujourd’hui':''}</div>`).join('');
+  let team='';
+  P.forEach((p,pi)=>{
+    if(p.team!==team){team=p.team; g.insertAdjacentHTML('beforeend',`<div class="team">${team==='Cuisine'?'🍳':'🍷'} ${team}</div>`);}
+    g.insertAdjacentHTML('beforeend',`<div class="name"><div class="av" style="background:var(--${p.id})">${p.name[0]}</div><div>${p.name}<small>${p.role}</small></div></div>`);
+    plan[p.id].forEach((v,i)=>{
+      const c=document.createElement('div');
+      c.className='cell'+(i>=5?' we':'')+(i<TODAY?' past':'')+(i===TODAY?' today':'');
+      c.dataset.p=p.id; c.dataset.d=i;
+      if(v==='off') c.innerHTML=`<div class="off">${OFF[(pi+i)%3]}</div>`;
+      else if(v==='leave') c.innerHTML=`<div class="leave" style="background:var(--${p.id}-bg)">🌴 ${p.name} est en congé</div>`;
+      else if(v==='closed') c.innerHTML=`<div class="off">Fermé 🌿</div>`;
+      else v.forEach((s,k)=>c.insertAdjacentHTML('beforeend',`<div class="pill" draggable="true" data-p="${p.id}" data-d="${i}" data-k="${k}" style="background:var(--${p.id}-bg);color:color-mix(in srgb,var(--${p.id}) 70%,#000)">${s}</div>`));
+      g.appendChild(c);
+    });
+  });
+  bindDrag();
+}
+let dragInfo=null;
+function bindDrag(){
+  document.querySelectorAll('.pill[draggable]').forEach(el=>{
+    el.ondragstart=e=>{ dragInfo={el,todo:el.id==='todo',p:el.dataset.p,d:+el.dataset.d,k:+el.dataset.k,text:el.id==='todo'?'19:00–23:30':el.textContent}; e.dataTransfer.setData('text','x'); setTimeout(()=>el.classList.add('drag')); };
+    el.ondragend=()=>el.classList.remove('drag');
+  });
+  document.querySelectorAll('.cell').forEach(c=>{
+    const ok=()=>{ const v=plan[c.dataset.p][c.dataset.d]; if(!dragInfo||v==='leave'||v==='closed') return false; return dragInfo.todo? +c.dataset.d===5 : true; };
+    c.ondragover=e=>{ if(ok()){e.preventDefault(); c.classList.add('over');} };
+    c.ondragleave=()=>c.classList.remove('over');
+    c.ondrop=e=>{
+      e.preventDefault(); c.classList.remove('over'); if(!ok()) return;
+      const p=c.dataset.p, d=+c.dataset.d;
+      if(!dragInfo.todo){ plan[dragInfo.p][dragInfo.d].splice(dragInfo.k,1); }
+      if(!Array.isArray(plan[p][d])) plan[p][d]=[];
+      plan[p][d].push(dragInfo.text);
+      const wasTodo=dragInfo.todo; dragInfo=null;
+      grid(); strip();
+      const pills=document.querySelectorAll(`.cell[data-p="${p}"][data-d="${d}"] .pill`); pills[pills.length-1]?.classList.add('pop');
+      if(wasTodo) complete();
+    };
+  });
+}
+function complete(){
+  const t=document.getElementById('tray'); t.classList.add('done');
+  t.innerHTML='<div class="t">✅ Tous les créneaux sont placés</div><div class="hint">La semaine peut être envoyée à l\'équipe.</div><button class="btn main-btn" onclick="location.reload()">Recommencer la démo</button>';
+  const cols=['var(--lea)','var(--karim)','var(--sofia)','var(--paul)','var(--ines)','var(--tom)'];
+  for(let i=0;i<90;i++){ const c=document.createElement('div'); c.className='confetti';
+    c.style.left=Math.random()*100+'vw'; c.style.background=cols[i%6];
+    c.style.animationDuration=(1.6+Math.random()*1.6)+'s'; c.style.animationDelay=Math.random()*.4+'s';
+    document.body.appendChild(c); setTimeout(()=>c.remove(),3800); }
+  const toast=document.getElementById('toast'); toast.classList.add('show'); setTimeout(()=>toast.classList.remove('show'),2600);
+}
+function mini(id,on){
+  document.getElementById(id).innerHTML=DAYS.map((d,i)=>`<div class="${i===on?'on':''}${i<TODAY&&i!==on?' past':''}${i>=5?' we':''}">${d[0]}<b>${NUM[i]}</b></div>`).join('');
+}
+function dayList(){
+  const rows=[];
+  P.forEach(p=>{ const v=plan[p.id][TODAY]; if(Array.isArray(v)) v.forEach(s=>rows.push({p,s})); });
+  rows.sort((a,b)=>a.s.localeCompare(b.s));
+  const now='14:32'; let h=''; let placed=false;
+  rows.forEach(r=>{
+    const [a,b]=r.s.split('–');
+    if(!placed && a>now){ h+=`<div class="now">Maintenant · ${now}</div>`; placed=true; }
+    const done=b<now;
+    h+=`<div class="card${done?' done':''}" style="background:var(--${r.p.id}-bg)"><div class="av" style="background:var(--${r.p.id})">${r.p.name[0]}</div><div><div class="h">${r.p.name} · ${r.s}</div><div class="r">${r.p.role} · ${r.p.team}${a<=now&&b>now?' · en service 🔥':''}</div></div></div>`;
+  });
+  h+=`<div class="note">🌴 Paul est en congé jeudi et vendredi</div>`;
+  document.getElementById('dayList').innerHTML=h;
+}
+function myList(){
+  const p=P.find(x=>x.id==='sofia'); let h='';
+  plan.sofia.forEach((v,i)=>{
+    if(i<TODAY) return;
+    const label=`${DAYS[i]} ${NUM[i]}`;
+    if(Array.isArray(v)&&v.length) h+=`<div class="card" style="background:var(--sofia-bg)"><div class="av" style="background:var(--sofia)">${NUM[i]}</div><div><div class="h">${label}${i===TODAY?' · aujourd’hui':''}</div><div class="r">${v.join(' puis ')}</div></div></div>`;
+    else h+=`<div class="card" style="background:var(--bg)"><div class="av" style="background:var(--line);color:var(--muted)">☕</div><div><div class="h">${label}</div><div class="r">${v==='closed'?'Le resto est fermé, bon dimanche 🌿':'Jour off, repose-toi bien'}</div></div></div>`;
+  });
+  document.getElementById('myList').innerHTML=h;
+}
+document.querySelectorAll('.switch button').forEach(b=>b.onclick=()=>{
+  document.body.dataset.v=b.dataset.v;
+  document.querySelectorAll('.switch button').forEach(x=>x.classList.toggle('on',x===b));
+});
+strip(); grid(); mini('mini1',TODAY); mini('mini2',6); mini('mini3',TODAY); dayList(); myList();
+</script>
+</body>
+</html>
