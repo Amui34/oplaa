@@ -1,7 +1,7 @@
 # Oplaa — À faire (mis à jour le 21/11/2026)
 
 ## État au 17/11/2026
-- **Site oplaa.pro** : à jour (dernier commit `ae04fae`). Tout ce qui a été fait aujourd'hui y est.
+- **Site oplaa.pro** : à jour. Vitrine « Bonbon » en ligne sur oplaa.pro/decouvrir depuis le 24/11/2026 (aide et pages légales au même style) ; oplaa.pro/ reste l'app. À faire : décider si la vitrine passe en page d'accueil (attention aux liens d'e-mails Supabase qui pointent sur oplaa.pro/).
 - **iPhone** : 1.0.13 (build 301) **en vente depuis le 19/11/2026** : compte obligatoire + démo éphémère. **1.0.15 (build 305) en vente depuis le 22/11/2026** ; **1.0.16 (build 306, style « Bonbon ») soumise le 24/11/2026** (passe « propre et pro » : barre latérale ordinateur, grille allégée, vue Jour en liste sur iPhone, accueil deux colonnes). 1.0.14 (build 302) en vente depuis le 21/11/2026 : refonte visuelle, correctif import, postes de travail, haptique. Noa a autorisé les soumissions sans redemander.
 - **Notifications** : fonction `notify` déployée, clé APNs créée, 5 secrets posés. **Jamais testées en réel.**
 - **Workflows Xcode Cloud** : désactivés (plus de collision de numéros de build).
