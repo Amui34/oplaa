@@ -136,6 +136,10 @@ body{margin:0;font-family:var(--font);background:var(--bg);color:var(--ink);tran
 .toast{position:fixed;left:50%;top:28px;transform:translateX(-50%) translateY(-120px);background:var(--ink);color:#fff;padding:14px 22px;border-radius:999px;font-weight:800;font-size:16px;transition:transform .45s cubic-bezier(.3,1.6,.5,1);z-index:100}
 .toast.show{transform:translateX(-50%) translateY(0)}
 .wrap{overflow-x:auto}
+.st{display:inline-block;width:1.15em;height:1.15em;vertical-align:-.2em}
+.st svg{width:100%;height:100%;display:block}
+.leave .st,.note .st{margin-right:2px}
+
 </style>
 </head>
 <body data-v="bonbon">
@@ -216,7 +220,7 @@ body{margin:0;font-family:var(--font);background:var(--bg);color:var(--ink);tran
         <path d="M75 100V60" stroke="#178a61" stroke-width="4" stroke-linecap="round"/>
         <circle cx="112" cy="30" r="10" fill="#F4B400"/>
       </svg>
-      <h4>Journée calme 🌿</h4>
+      <h4>Journée calme <span class="st" data-st="leaf"></span></h4>
       <p>Personne ne travaille dimanche.<br>Profitez-en, l'équipe revient lundi à 9:00.</p>
       <button class="btn" style="margin-top:10px"><span class="ic" data-ic="plus" data-s="16"></span> Ouvrir exceptionnellement</button>
     </div>
@@ -235,7 +239,7 @@ body{margin:0;font-family:var(--font);background:var(--bg);color:var(--ink);tran
   </div>
 </div>
 
-<div class="toast" id="toast">Semaine complète, bravo l'équipe 🎉</div>
+<div class="toast" id="toast">Semaine complète, bravo l'équipe <span class="st" data-st="party"></span></div>
 
 <script>
 
@@ -254,6 +258,16 @@ const IC={
  coffee:'<path d="M5 9h11v4a5 5 0 0 1-5 5H10a5 5 0 0 1-5-5V9Z"/><path d="M16 10h1.8a2.2 2.2 0 0 1 0 4.4H16"/><path d="M8 3.5v2M11.5 3v2.5"/>',
  checkCircle:'<circle cx="12" cy="12" r="8.4"/><path d="M8.5 12.3l2.4 2.4 4.6-5"/>',
 };
+
+// Pictos maison (remplacent les emojis système) : formes pleines arrondies, couleurs de la palette
+const ST={
+ leaf:'<path d="M5 19C5 10 10 5 20 4c0 10-5 15-14 15Z" fill="#38C98F"/><path d="M5 19C9 14 12 11 16 8" stroke="#178A61" stroke-width="2" stroke-linecap="round" fill="none"/>',
+ parasol:'<path d="M3 12a9 9 0 0 1 18 0Z" fill="#FF8A5B"/><path d="M9 12a3 9 0 0 1 6 0Z" fill="#FFD166"/><path d="M12 12v8" stroke="#8A6A55" stroke-width="2" stroke-linecap="round"/><path d="M6 21h12" stroke="#F4B400" stroke-width="2.4" stroke-linecap="round"/>',
+ flame:'<path d="M12 2c1 4 6 6 6 12a6 6 0 0 1-12 0c0-3 2-5 3-6 0 2 1 3 2 3 0-4-1-6 1-9Z" fill="#FF7A3D"/><path d="M12 13c1.5 1.5 3 2.5 3 4.5a3 3 0 0 1-6 0c0-1.6 1.2-2.6 3-4.5Z" fill="#FFD166"/>',
+ party:'<path d="M3 21l5-13 8 8Z" fill="#FFD166"/><path d="M5.2 15.2l3.6 3.6M6.6 11.6l5.8 5.8" stroke="#FF8A5B" stroke-width="1.8" stroke-linecap="round"/><circle cx="17" cy="5" r="1.6" fill="#3E8BFF"/><circle cx="20" cy="10" r="1.4" fill="#F15BB5"/><circle cx="13" cy="3.5" r="1.2" fill="#22B07D"/><path d="M14 9c1.5-2 3.5-2.5 5-2" stroke="#9B5DE5" stroke-width="1.8" stroke-linecap="round" fill="none"/>',
+};
+function paintStickers(){ document.querySelectorAll('.st[data-st]:not([data-done])').forEach(el=>{ el.innerHTML='<svg viewBox="0 0 24 24" aria-hidden="true">'+(ST[el.dataset.st]||'')+'</svg>'; el.dataset.done=1; }); }
+new MutationObserver(paintStickers).observe(document.body,{childList:true,subtree:true});
 function paintIcons(){ document.querySelectorAll('.ic[data-ic]:not([data-done])').forEach(el=>{ const z=el.dataset.s||18; el.innerHTML='<svg viewBox="0 0 24 24" width="'+z+'" height="'+z+'" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">'+(IC[el.dataset.ic]||'')+'</svg>'; el.dataset.done=1; }); }
 new MutationObserver(paintIcons).observe(document.body,{childList:true,subtree:true});
 const DAYS=['Lun.','Mar.','Mer.','Jeu.','Ven.','Sam.','Dim.'], NUM=[23,24,25,26,27,28,29], TODAY=1;
@@ -284,7 +298,7 @@ function strip(){
     const c=document.createElement('div');
     c.className='chip'+(i===TODAY?' today':'')+(i<TODAY?' past':'');
     c.innerHTML=`<div class="d">${d}</div><div class="n">${NUM[i]}</div>`+
-      (who.length?`<div class="dots">${who.map(p=>`<i style="background:var(--${p.id})"></i>`).join('')}</div>`:`<div class="calm">Journée calme 🌿</div>`);
+      (who.length?`<div class="dots">${who.map(p=>`<i style="background:var(--${p.id})"></i>`).join('')}</div>`:`<div class="calm">Journée calme <span class="st" data-st="leaf"></span></div>`);
     el.appendChild(c);
   });
 }
@@ -299,8 +313,8 @@ function grid(){
       c.className='cell'+(i>=5?' we':'')+(i<TODAY?' past':'')+(i===TODAY?' today':'');
       c.dataset.p=p.id; c.dataset.d=i;
       if(v==='off') c.innerHTML=`<div class="off">${OFF[(pi+i)%3]}</div>`;
-      else if(v==='leave') c.innerHTML=`<div class="leave" style="background:var(--${p.id}-bg)">🌴 ${p.name} est en congé</div>`;
-      else if(v==='closed') c.innerHTML=`<div class="off">Fermé 🌿</div>`;
+      else if(v==='leave') c.innerHTML=`<div class="leave" style="background:var(--${p.id}-bg)"><span class="st" data-st="parasol"></span> ${p.name} est en congé</div>`;
+      else if(v==='closed') c.innerHTML=`<div class="off">Fermé <span class="st" data-st="leaf"></span></div>`;
       else v.forEach((s,k)=>c.insertAdjacentHTML('beforeend',`<div class="pill" draggable="true" data-p="${p.id}" data-d="${i}" data-k="${k}" style="background:var(--${p.id}-bg);color:color-mix(in srgb,var(--${p.id}) 70%,#000)">${s}</div>`));
       g.appendChild(c);
     });
@@ -352,9 +366,9 @@ function dayList(){
     const [a,b]=r.s.split('–');
     if(!placed && a>now){ h+=`<div class="now">Maintenant · ${now}</div>`; placed=true; }
     const done=b<now;
-    h+=`<div class="card${done?' done':''}" style="background:var(--${r.p.id}-bg)"><div class="av" style="background:var(--${r.p.id})">${r.p.name[0]}</div><div><div class="h">${r.p.name} · ${r.s}</div><div class="r">${r.p.role} · ${r.p.team}${a<=now&&b>now?' · en service 🔥':''}</div></div></div>`;
+    h+=`<div class="card${done?' done':''}" style="background:var(--${r.p.id}-bg)"><div class="av" style="background:var(--${r.p.id})">${r.p.name[0]}</div><div><div class="h">${r.p.name} · ${r.s}</div><div class="r">${r.p.role} · ${r.p.team}${a<=now&&b>now?' · en service <span class="st" data-st="flame"></span>':''}</div></div></div>`;
   });
-  h+=`<div class="note">🌴 Paul est en congé jeudi et vendredi</div>`;
+  h+=`<div class="note"><span class="st" data-st="parasol"></span> Paul est en congé jeudi et vendredi</div>`;
   document.getElementById('dayList').innerHTML=h;
 }
 function myList(){
@@ -363,7 +377,7 @@ function myList(){
     if(i<TODAY) return;
     const label=`${DAYS[i]} ${NUM[i]}`;
     if(Array.isArray(v)&&v.length) h+=`<div class="card" style="background:var(--sofia-bg)"><div class="av" style="background:var(--sofia)">${NUM[i]}</div><div><div class="h">${label}${i===TODAY?' · aujourd’hui':''}</div><div class="r">${v.join(' puis ')}</div></div></div>`;
-    else h+=`<div class="card" style="background:var(--bg)"><div class="av" style="background:var(--line);color:var(--muted)"><span class="ic" data-ic="coffee" data-s="18"></span></div><div><div class="h">${label}</div><div class="r">${v==='closed'?'Le resto est fermé, bon dimanche 🌿':'Jour off, repose-toi bien'}</div></div></div>`;
+    else h+=`<div class="card" style="background:var(--bg)"><div class="av" style="background:var(--line);color:var(--muted)"><span class="ic" data-ic="coffee" data-s="18"></span></div><div><div class="h">${label}</div><div class="r">${v==='closed'?'Le resto est fermé, bon dimanche <span class="st" data-st="leaf"></span>':'Jour off, repose-toi bien'}</div></div></div>`;
   });
   document.getElementById('myList').innerHTML=h;
 }
@@ -371,7 +385,7 @@ document.querySelectorAll('.switch button').forEach(b=>b.onclick=()=>{
   document.body.dataset.v=b.dataset.v;
   document.querySelectorAll('.switch button').forEach(x=>x.classList.toggle('on',x===b));
 });
-paintIcons();
+paintIcons(); paintStickers();
 strip(); grid(); mini('mini1',TODAY); mini('mini2',6); mini('mini3',TODAY); dayList(); myList();
 </script>
 </body>
