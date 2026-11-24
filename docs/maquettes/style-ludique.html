@@ -35,10 +35,12 @@ body{margin:0;font-family:var(--font);background:var(--bg);color:var(--ink);tran
 .desk{margin:0 28px 36px;background:var(--card);border-radius:28px;box-shadow:0 10px 40px rgba(40,20,60,.08);display:grid;grid-template-columns:210px 1fr;overflow:hidden;min-width:1100px}
 .side{background:var(--bg);padding:22px 16px;display:flex;flex-direction:column;gap:6px}
 .logo{display:flex;align-items:center;gap:10px;font-weight:800;font-size:22px;margin:0 6px 18px}
-.logo i{width:34px;height:34px;border-radius:12px;background:var(--accent);display:grid;place-items:center;color:#fff;font-style:normal;font-size:18px;transform:rotate(-6deg)}
+.logo .mark{width:36px;height:36px;transition:transform .3s cubic-bezier(.3,1.6,.5,1)}.logo:hover .mark{transform:rotate(-8deg) scale(1.06)}
+.logo .word{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;font-weight:800;letter-spacing:-.05em;color:#C4562F;font-size:26px}
+.ic{display:inline-flex}
 .nav{display:flex;align-items:center;gap:10px;padding:11px 14px;border-radius:16px;font-weight:600;color:var(--muted);font-size:15px}
 .nav.on{background:var(--card);color:var(--ink);box-shadow:0 2px 10px rgba(40,20,60,.06)}
-.nav span{font-size:17px}
+.nav .ic{color:inherit}
 .side .who{margin-top:auto;display:flex;gap:10px;align-items:center;padding:10px;border-radius:16px;background:var(--card);font-size:13px}
 .side .who b{display:block;font-size:14px}
 .av{width:34px;height:34px;border-radius:50%;display:grid;place-items:center;font-weight:800;color:#fff;font-size:14px;flex:none}
@@ -47,7 +49,7 @@ body{margin:0;font-family:var(--font);background:var(--bg);color:var(--ink);tran
 .head{display:flex;align-items:center;gap:14px;margin-bottom:18px}
 .head h2{margin:0;font-size:28px;font-weight:800}
 .head .sub{color:var(--muted);font-size:15px}
-.btn{font:inherit;font-weight:700;border:none;border-radius:999px;padding:10px 18px;cursor:pointer;background:var(--accent-soft);color:var(--ink)}
+.btn{display:inline-flex;align-items:center;gap:6px;font:inherit;font-weight:700;border:none;border-radius:999px;padding:10px 18px;cursor:pointer;background:var(--accent-soft);color:var(--ink)}
 .btn.main-btn{background:var(--accent);color:#fff;margin-left:auto}
 .arrows{display:flex;gap:6px}
 .arrows button{width:38px;height:38px;border-radius:50%;border:2px solid var(--line);background:var(--card);font-size:16px;cursor:pointer;color:var(--ink)}
@@ -120,7 +122,7 @@ body{margin:0;font-family:var(--font);background:var(--bg);color:var(--ink);tran
 .note{background:var(--paul-bg);border-radius:18px;padding:12px 14px;font-size:14px;font-weight:600}
 .tabbar{display:flex;justify-content:space-around;padding:10px 0 22px;border-top:2px solid var(--line);font-size:12px;color:var(--muted);font-weight:700}
 .tabbar div{display:flex;flex-direction:column;align-items:center;gap:3px}
-.tabbar div span{font-size:20px}
+
 .tabbar .on{color:var(--accent)}
 .empty{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:30px;gap:10px}
 .empty h4{margin:8px 0 0;font-size:22px;font-weight:800}
@@ -141,7 +143,7 @@ body{margin:0;font-family:var(--font);background:var(--bg);color:var(--ink);tran
 <div class="top">
   <div>
     <h1>Oplaa · « Coloré et ludique »</h1>
-    <p>Trois variantes du même style. Essaie de glisser le créneau « à placer » sur une case du samedi.</p>
+    <p>Logo et icônes « trait fin » de l'app conservés. Trois variantes du même style. Essaie de glisser le créneau « à placer » sur une case du samedi.</p>
   </div>
   <div class="switch">
     <button data-v="bonbon" class="on">A · Bonbon</button>
@@ -154,20 +156,22 @@ body{margin:0;font-family:var(--font);background:var(--bg);color:var(--ink);tran
 <div class="wrap">
 <div class="desk">
   <aside class="side">
-    <div class="logo"><i>o</i>Oplaa</div>
-    <div class="nav on"><span>🗓️</span>Planning</div>
-    <div class="nav"><span>👋</span>Équipe</div>
-    <div class="nav"><span>🌴</span>Congés</div>
-    <div class="nav"><span>📊</span>Heures & paie</div>
-    <div class="nav"><span>⚙️</span>Réglages</div>
+    <div class="logo"><svg viewBox="0 0 128 128" class="mark" role="img" aria-label="Oplaa"><rect width="128" height="128" rx="30" fill="#C4562F"/><circle cx="64" cy="64" r="33" fill="none" stroke="#FBF6F1" stroke-width="8"/><circle cx="64" cy="64" r="29" fill="#FBF6F1"/><path d="M64 64 L44.14 85.14 A29 29 0 0 1 64 35 Z" fill="#C4562F"/></svg><span class="word">oplaa</span></div>
+    <div class="nav on"><span class="ic" data-ic="calendar"></span>Planning</div>
+    <div class="nav"><span class="ic" data-ic="users"></span>Équipe</div>
+    <div class="nav"><span class="ic" data-ic="clock"></span>Suivi des heures</div>
+    <div class="nav"><span class="ic" data-ic="shield"></span>Conformité</div>
+    <div class="nav"><span class="ic" data-ic="holiday"></span>Congés</div>
+    <div class="nav" style="margin-top:10px"><span class="ic" data-ic="settings"></span>Réglages</div>
+    <div class="nav"><span class="ic" data-ic="bulb"></span>Aide</div>
     <div class="who"><div class="av" style="background:var(--accent)">N</div><div><b>Le Petit Zinc</b>Admin</div></div>
   </aside>
   <section class="main">
     <div class="head">
       <div class="arrows"><button>‹</button><button>›</button></div>
       <div><h2>Semaine du 23 novembre</h2><div class="sub">6 personnes · 212 h prévues</div></div>
-      <button class="btn">Copier la semaine</button>
-      <button class="btn main-btn">＋ Ajouter un créneau</button>
+      <button class="btn"><span class="ic" data-ic="copy" data-s="16"></span> Copier la semaine</button>
+      <button class="btn main-btn"><span class="ic" data-ic="plus" data-s="16"></span> Ajouter un créneau</button>
     </div>
 
     <div class="strip" id="strip"></div>
@@ -175,7 +179,7 @@ body{margin:0;font-family:var(--font);background:var(--bg);color:var(--ink);tran
     <div class="tray" id="tray">
       <div class="t">1 créneau à placer</div>
       <div class="pill todo" draggable="true" id="todo" data-day="5">Sam. · Salle 19:00–23:30</div>
-      <div class="hint">Glisse-le sur quelqu'un, samedi 👉</div>
+      <div class="hint">Glisse-le sur quelqu'un, le samedi</div>
     </div>
 
     <div class="grid" id="grid"></div>
@@ -187,18 +191,18 @@ body{margin:0;font-family:var(--font);background:var(--bg);color:var(--ink);tran
 <div class="phones">
   <div class="phone">
     <div class="ph-top">
-      <div class="ph-status"><span>14:32</span><span>●●● 🔋</span></div>
+      <div class="ph-status"><span>14:32</span><span>●●●</span></div>
       <h3>Mardi 24</h3>
       <div class="sub">5 personnes au travail aujourd'hui</div>
     </div>
     <div class="mini" id="mini1"></div>
     <div class="list" id="dayList"></div>
-    <div class="tabbar"><div class="on"><span>🗓️</span>Planning</div><div><span>👋</span>Équipe</div><div><span>🌴</span>Congés</div><div><span>⚙️</span>Réglages</div></div>
+    <div class="tabbar"><div class="on"><span class="ic" data-ic="calendar" data-s="22"></span>Planning</div><div><span class="ic" data-ic="users" data-s="22"></span>Équipe</div><div><span class="ic" data-ic="clock" data-s="22"></span>Suivi</div><div><span class="ic" data-ic="shield" data-s="22"></span>Conformité</div></div>
   </div>
 
   <div class="phone">
     <div class="ph-top">
-      <div class="ph-status"><span>14:32</span><span>●●● 🔋</span></div>
+      <div class="ph-status"><span>14:32</span><span>●●●</span></div>
       <h3>Dimanche 29</h3>
       <div class="sub">Le restaurant est fermé</div>
     </div>
@@ -214,26 +218,44 @@ body{margin:0;font-family:var(--font);background:var(--bg);color:var(--ink);tran
       </svg>
       <h4>Journée calme 🌿</h4>
       <p>Personne ne travaille dimanche.<br>Profitez-en, l'équipe revient lundi à 9:00.</p>
-      <button class="btn" style="margin-top:10px">＋ Ouvrir exceptionnellement</button>
+      <button class="btn" style="margin-top:10px"><span class="ic" data-ic="plus" data-s="16"></span> Ouvrir exceptionnellement</button>
     </div>
-    <div class="tabbar"><div class="on"><span>🗓️</span>Planning</div><div><span>👋</span>Équipe</div><div><span>🌴</span>Congés</div><div><span>⚙️</span>Réglages</div></div>
+    <div class="tabbar"><div class="on"><span class="ic" data-ic="calendar" data-s="22"></span>Planning</div><div><span class="ic" data-ic="users" data-s="22"></span>Équipe</div><div><span class="ic" data-ic="clock" data-s="22"></span>Suivi</div><div><span class="ic" data-ic="shield" data-s="22"></span>Conformité</div></div>
   </div>
 
   <div class="phone">
     <div class="ph-top">
-      <div class="ph-status"><span>14:32</span><span>●●● 🔋</span></div>
+      <div class="ph-status"><span>14:32</span><span>●●●</span></div>
       <h3>Mon planning</h3>
       <div class="sub">Vue de Sofia · 31 h cette semaine</div>
     </div>
     <div class="mini" id="mini3"></div>
     <div class="list" id="myList"></div>
-    <div class="tabbar"><div class="on"><span>🗓️</span>Planning</div><div><span>🌴</span>Congés</div><div><span>💬</span>Messages</div><div><span>⚙️</span>Réglages</div></div>
+    <div class="tabbar"><div class="on"><span class="ic" data-ic="calendar" data-s="22"></span>Planning</div><div><span class="ic" data-ic="holiday" data-s="22"></span>Congés</div><div><span class="ic" data-ic="message" data-s="22"></span>Messages</div><div><span class="ic" data-ic="settings" data-s="22"></span>Réglages</div></div>
   </div>
 </div>
 
 <div class="toast" id="toast">Semaine complète, bravo l'équipe 🎉</div>
 
 <script>
+
+// Jeu d'icônes « trait fin » repris tel quel de l'app (www/index.html)
+const IC={
+ calendar:'<rect x="3.5" y="5" width="17" height="15.5" rx="2.5"/><path d="M3.5 9.5h17"/><path d="M8 3v4M16 3v4"/>',
+ users:'<circle cx="9" cy="8" r="3.2"/><path d="M3.2 20a5.8 5.8 0 0 1 11.6 0"/><path d="M16 5.3a3 3 0 0 1 0 5.4"/><path d="M15.6 14.4A5.8 5.8 0 0 1 20.8 20"/>',
+ clock:'<circle cx="12" cy="12" r="8.4"/><path d="M12 7.5V12l3 2"/>',
+ shield:'<path d="M12 3l7 3v5c0 4.6-3.1 7.6-7 9-3.9-1.4-7-4.4-7-9V6Z"/><path d="M9 12l2 2 4-4"/>',
+ holiday:'<path d="M12 21v-9.5"/><path d="M4.5 11.5a7.5 7.5 0 0 1 15 0Z"/><path d="M12 4V3"/>',
+ settings:'<circle cx="12" cy="12" r="3"/><path d="M12 2.6v2.3M12 19.1v2.3M4.7 12H2.4M21.6 12h-2.3M5.7 5.7l1.6 1.6M16.7 16.7l1.6 1.6M18.3 5.7l-1.6 1.6M7.3 16.7l-1.6 1.6"/>',
+ bulb:'<path d="M9 18h6"/><path d="M10 21h4"/><path d="M8 14a5 5 0 1 1 8 0c-.7.9-1 1.4-1 2.5H9c0-1.1-.3-1.6-1-2.5Z"/>',
+ copy:'<rect x="8" y="8" width="12" height="12" rx="2"/><path d="M16 8V6a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h2"/>',
+ plus:'<path d="M12 5v14M5 12h14"/>',
+ message:'<path d="M4 5h16v11H9l-5 4V5Z"/>',
+ coffee:'<path d="M5 9h11v4a5 5 0 0 1-5 5H10a5 5 0 0 1-5-5V9Z"/><path d="M16 10h1.8a2.2 2.2 0 0 1 0 4.4H16"/><path d="M8 3.5v2M11.5 3v2.5"/>',
+ checkCircle:'<circle cx="12" cy="12" r="8.4"/><path d="M8.5 12.3l2.4 2.4 4.6-5"/>',
+};
+function paintIcons(){ document.querySelectorAll('.ic[data-ic]:not([data-done])').forEach(el=>{ const z=el.dataset.s||18; el.innerHTML='<svg viewBox="0 0 24 24" width="'+z+'" height="'+z+'" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">'+(IC[el.dataset.ic]||'')+'</svg>'; el.dataset.done=1; }); }
+new MutationObserver(paintIcons).observe(document.body,{childList:true,subtree:true});
 const DAYS=['Lun.','Mar.','Mer.','Jeu.','Ven.','Sam.','Dim.'], NUM=[23,24,25,26,27,28,29], TODAY=1;
 const P=[
  {id:'lea',name:'Léa',role:'Cheffe',team:'Cuisine'},
@@ -253,7 +275,7 @@ const plan={
  paul: [[L],[S],[L,S],'leave','leave',[],'closed'],
  ines: ['off',[L,S],[S],[L,S],[L,S],[M],'closed'],
 };
-const OFF=['Jour off ☕','Repos bien mérité','Jour off 🛋️'];
+const OFF=['Jour off','Repos bien mérité','Jour off'];
 
 function strip(){
   const el=document.getElementById('strip'); el.innerHTML='';
@@ -270,7 +292,7 @@ function grid(){
   const g=document.getElementById('grid'); g.innerHTML='<div class="hd"></div>'+DAYS.map((d,i)=>`<div class="hd${i===TODAY?' today':''}">${d} ${NUM[i]}${i===TODAY?' · aujourd’hui':''}</div>`).join('');
   let team='';
   P.forEach((p,pi)=>{
-    if(p.team!==team){team=p.team; g.insertAdjacentHTML('beforeend',`<div class="team">${team==='Cuisine'?'🍳':'🍷'} ${team}</div>`);}
+    if(p.team!==team){team=p.team; g.insertAdjacentHTML('beforeend',`<div class="team">${team}</div>`);}
     g.insertAdjacentHTML('beforeend',`<div class="name"><div class="av" style="background:var(--${p.id})">${p.name[0]}</div><div>${p.name}<small>${p.role}</small></div></div>`);
     plan[p.id].forEach((v,i)=>{
       const c=document.createElement('div');
@@ -310,7 +332,7 @@ function bindDrag(){
 }
 function complete(){
   const t=document.getElementById('tray'); t.classList.add('done');
-  t.innerHTML='<div class="t">✅ Tous les créneaux sont placés</div><div class="hint">La semaine peut être envoyée à l\'équipe.</div><button class="btn main-btn" onclick="location.reload()">Recommencer la démo</button>';
+  t.innerHTML='<div class="t" style="display:flex;align-items:center;gap:8px;color:#178a61"><span class="ic" data-ic="checkCircle" data-s="20"></span>Tous les créneaux sont placés</div><div class="hint">La semaine peut être envoyée à l\'équipe.</div><button class="btn main-btn" onclick="location.reload()">Recommencer la démo</button>';
   const cols=['var(--lea)','var(--karim)','var(--sofia)','var(--paul)','var(--ines)','var(--tom)'];
   for(let i=0;i<90;i++){ const c=document.createElement('div'); c.className='confetti';
     c.style.left=Math.random()*100+'vw'; c.style.background=cols[i%6];
@@ -341,7 +363,7 @@ function myList(){
     if(i<TODAY) return;
     const label=`${DAYS[i]} ${NUM[i]}`;
     if(Array.isArray(v)&&v.length) h+=`<div class="card" style="background:var(--sofia-bg)"><div class="av" style="background:var(--sofia)">${NUM[i]}</div><div><div class="h">${label}${i===TODAY?' · aujourd’hui':''}</div><div class="r">${v.join(' puis ')}</div></div></div>`;
-    else h+=`<div class="card" style="background:var(--bg)"><div class="av" style="background:var(--line);color:var(--muted)">☕</div><div><div class="h">${label}</div><div class="r">${v==='closed'?'Le resto est fermé, bon dimanche 🌿':'Jour off, repose-toi bien'}</div></div></div>`;
+    else h+=`<div class="card" style="background:var(--bg)"><div class="av" style="background:var(--line);color:var(--muted)"><span class="ic" data-ic="coffee" data-s="18"></span></div><div><div class="h">${label}</div><div class="r">${v==='closed'?'Le resto est fermé, bon dimanche 🌿':'Jour off, repose-toi bien'}</div></div></div>`;
   });
   document.getElementById('myList').innerHTML=h;
 }
@@ -349,6 +371,7 @@ document.querySelectorAll('.switch button').forEach(b=>b.onclick=()=>{
   document.body.dataset.v=b.dataset.v;
   document.querySelectorAll('.switch button').forEach(x=>x.classList.toggle('on',x===b));
 });
+paintIcons();
 strip(); grid(); mini('mini1',TODAY); mini('mini2',6); mini('mini3',TODAY); dayList(); myList();
 </script>
 </body>
