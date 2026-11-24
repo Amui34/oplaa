@@ -6,6 +6,7 @@
 		"FilesystemPlugin",
 		"HapticsPlugin",
 		"PushNotificationsPlugin",
-		"SharePlugin"
+		"SharePlugin",
+		"PurchasesPlugin"
 	]
 }
